@@ -1,34 +1,22 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.plaf.FontUIResource;
-import javax.swing.plaf.TabbedPaneUI;
-import javax.swing.plaf.basic.BasicBorders;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
-import javax.swing.plaf.metal.MetalTabbedPaneUI;
-import javax.swing.plaf.multi.MultiTabbedPaneUI;
-
-import org.kordamp.ikonli.dashicons.Dashicons;
-import org.kordamp.ikonli.material.Material;
-import org.kordamp.ikonli.openiconic.Openiconic;
-import org.kordamp.ikonli.swing.FontIcon;
-
 import java.awt.*;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.MouseListener;
-import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
-import java.awt.image.ImageProducer;
-import java.io.File;
-import java.net.URL;
 
 public class MainPane extends JFrame {
 
-    public static final String IMAGE_RES_PATH = "src/main/resources/images/";
+    static final int WIDTH = 428;
+    static final int HEIGHT = 533;
+
+    static final Font TEXT_LABEL_FONT = new Font("SansSerif", Font.BOLD, 10);
+
+    static final Color APP_COLOR = new Color(25, 163, 219);
+    static final Color SELECTION_COLOR = new Color(25, 163, 219, 50);
+
+    static final String IMAGE_RES_PATH = "src/main/resources/images/";
 
     private static final String TOPIC_LIST_SELECTED_IMG = "ic_topic_list_blue.png";
     private static final String SEND_MSG_SELECTED_IMG = "ic_send_msg_blue.png";
@@ -40,15 +28,15 @@ public class MainPane extends JFrame {
     private static final String MSG_LIST_IMG = "ic_msg_list_gray.png";
     private static final String LOGOUT_IMG = "ic_logout_gray.png";
 
-    public static final String BG_IMG = "img_background.jpg";
+    static final String BG_IMG = "img_background.jpg";
 
-    public static final String IC_SETTINGS = "ic_settings.png";
+    static final String IC_SETTINGS = "ic_settings.png";
 
     private JPanel imagesPanel;
     private JFrame mainFrame;
 
 
-    public MainPane() {
+    private MainPane() {
 
         UIDefaults def = UIManager.getLookAndFeelDefaults();
 ////        UIDefaults def = new BasicTabbedPaneUI();
@@ -74,7 +62,7 @@ public class MainPane extends JFrame {
 //        def.put("TabbedPane.contentAreaColor", new Color( 122,122,0));
 
         for(Object key : UIManager.getLookAndFeelDefaults().keySet()){
-            boolean tbp = key.toString().startsWith("TabbedPane");
+            boolean tbp = key.toString().startsWith("ComboBox");
             if (tbp)
                 System.out.println(key + " = " + UIManager.get(key));
         }
@@ -87,6 +75,7 @@ public class MainPane extends JFrame {
 
         jtp.setUI(new BasicTabbedPaneUI() {
             private final Insets borderInsets = new Insets(0, 0, 0, 0);
+
             @Override
             protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {
             }
@@ -97,12 +86,6 @@ public class MainPane extends JFrame {
             }
 
         });
-
-        setTitle("MQTT");
-        pack();
-        setVisible(true);;
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setSize(new Dimension(428, 533));
 
         JPanel topicListJP = new TopicListPane();
 //        topicListJP.setBackground(Color.white);
@@ -122,7 +105,6 @@ public class MainPane extends JFrame {
         JLabel logoutLbl = new JLabel();
         logoutLbl.setText("You are in area of logoutLbl");
 
-//        topicListJP.add(topicListLbl);
         sendMsgJP.add(sendMsgLbl);
         msgListJP.add(msgListLbl);
         logoutJP.add(logoutLbl);
@@ -193,10 +175,22 @@ public class MainPane extends JFrame {
 
     }
 
+    private static void createAndShowGUI() {
+        MainPane tp = new MainPane();
+        tp.setTitle("MQTT");
+        tp.pack();
+        tp.setVisible(true);;
+        tp.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        tp.setSize(new Dimension(WIDTH, HEIGHT));
+    }
+
     public static void main(String[] args) {
 
-        MainPane tp = new MainPane();
-
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                createAndShowGUI();
+            }
+        });
     }
 
     class MyPanel extends JPanel {
