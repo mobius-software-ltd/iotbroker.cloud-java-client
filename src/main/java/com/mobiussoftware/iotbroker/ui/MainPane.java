@@ -11,8 +11,6 @@ public class MainPane extends JFrame {
     static final int WIDTH = 428;
     static final int HEIGHT = 533;
 
-    static final Font TEXT_LABEL_FONT = new Font("SansSerif", Font.BOLD, 10);
-
     static final Color APP_COLOR = new Color(25, 163, 219);
     static final Color SELECTION_COLOR = new Color(25, 163, 219, 50);
 
@@ -30,7 +28,15 @@ public class MainPane extends JFrame {
 
     static final String BG_IMG = "img_background.jpg";
 
-    static final String IC_SETTINGS = "ic_settings.png";
+    static final String IC_SETTINGS_FILE_PATH = "ic_settings.png";
+    static final String IC_TRASH_FILE_PATH = "ic_trash.png";
+
+    static final Font TEXT_LABEL_FONT = new Font("SansSerif", Font.BOLD, 10);
+    static final Font REGULAR_FONT = new Font("SansSerif", Font.PLAIN, 12);
+
+    static final Image BG_IMAGE = new ImageIcon(MainPane.IMAGE_RES_PATH + MainPane.BG_IMG).getImage();
+    static final ImageIcon IC_TRASH = new ImageIcon(MainPane.IMAGE_RES_PATH + MainPane.IC_TRASH_FILE_PATH);
+    static final ImageIcon IC_SETTINGS = new ImageIcon(MainPane.IMAGE_RES_PATH + MainPane.IC_SETTINGS_FILE_PATH);
 
     private JPanel imagesPanel;
     private JFrame mainFrame;
@@ -87,25 +93,18 @@ public class MainPane extends JFrame {
 
         });
 
-        JPanel topicListJP = new TopicListPane();
-//        topicListJP.setBackground(Color.white);
-        JPanel sendMsgJP = new MyPanel();
-//        sendMsgJP.setBackground(Color.white);
         JPanel msgListJP = new MyPanel();
 //        msgListJP.setBackground(Color.white);
         JPanel logoutJP = new MyPanel();
 //        logoutJP.setBackground(Color.white);
 
-//        JLabel topicListLbl = new JLabel();
-//        topicListLbl.setText("You are in area of topicListLbl");
-        JLabel sendMsgLbl = new JLabel();
-        sendMsgLbl.setText("You are in area of sendMsgLbl");
+
         JLabel msgListLbl = new JLabel();
         msgListLbl.setText("You are in area of msgListLbl");
         JLabel logoutLbl = new JLabel();
         logoutLbl.setText("You are in area of logoutLbl");
 
-        sendMsgJP.add(sendMsgLbl);
+
         msgListJP.add(msgListLbl);
         logoutJP.add(logoutLbl);
 
@@ -147,6 +146,25 @@ public class MainPane extends JFrame {
                 jtp.setIconAt(tabIndex, icon);
             }
         });
+        jtp.setTabPlacement(JTabbedPane.BOTTOM);
+
+        JPanel topicListJP = new TopicListPane();
+//        topicListJP.setBackground(Color.white);
+        ImageIcon topicListIcon = new ImageIcon(IMAGE_RES_PATH + TOPIC_LIST_SELECTED_IMG);
+        jtp.addTab("", topicListIcon, topicListJP);
+
+        JPanel sendMsgJP = new SendMessagePane();
+//        sendMsgJP.setBackground(Color.white);
+        JLabel sendMsgLbl = new JLabel();
+        sendMsgLbl.setText("You are in area of sendMsgLbl");
+        sendMsgJP.add(sendMsgLbl);
+        ImageIcon sendMsgIcon = new ImageIcon(IMAGE_RES_PATH + SEND_MSG_IMG);
+        jtp.addTab("", sendMsgIcon, sendMsgJP);
+
+        ImageIcon msgListIcon = new ImageIcon(IMAGE_RES_PATH + MSG_LIST_IMG);
+        ImageIcon logoutIcon = new ImageIcon(IMAGE_RES_PATH + LOGOUT_IMG);
+        jtp.addTab("", msgListIcon, msgListJP);
+        jtp.addTab("", logoutIcon, logoutJP);
 
 //        FontIcon topicListIcon = new FontIcon();
 //        topicListIcon.setIkon(Dashicons.LIST_VIEW);
@@ -156,18 +174,6 @@ public class MainPane extends JFrame {
 //        msgListIcon.setIkon(Openiconic.CHAT);
 //        FontIcon logoutIcon = new FontIcon();
 //        logoutIcon.setIkon(Openiconic.ACCOUNT_LOGOUT);
-
-        ImageIcon topicListIcon = new ImageIcon(IMAGE_RES_PATH + TOPIC_LIST_SELECTED_IMG);
-        ImageIcon sendMsgIcon = new ImageIcon(IMAGE_RES_PATH + SEND_MSG_IMG);
-        ImageIcon msgListIcon = new ImageIcon(IMAGE_RES_PATH + MSG_LIST_IMG);
-        ImageIcon logoutIcon = new ImageIcon(IMAGE_RES_PATH + LOGOUT_IMG);
-
-        jtp.setTabPlacement(JTabbedPane.BOTTOM);
-
-        jtp.addTab("", topicListIcon, topicListJP);
-        jtp.addTab("", sendMsgIcon, sendMsgJP);
-        jtp.addTab("", msgListIcon, msgListJP);
-        jtp.addTab("", logoutIcon, logoutJP);
 //        jtp.addTab("Topics List", topicListIcon, topicListJP);
 //        jtp.addTab("Send Message", sendMsgIcon, sendMsgJP);
 //        jtp.addTab("Messages List", msgListIcon, msgListJP);
@@ -195,13 +201,11 @@ public class MainPane extends JFrame {
 
     class MyPanel extends JPanel {
 
-        Image bgImage = Toolkit.getDefaultToolkit().createImage(IMAGE_RES_PATH + BG_IMG);
-
         @Override
         protected void paintComponent(Graphics g) {
 
             super.paintComponent(g);
-            g.drawImage(bgImage, 0, 0, null);
+            g.drawImage(BG_IMAGE, 0, 0, null);
         }
     }
 }

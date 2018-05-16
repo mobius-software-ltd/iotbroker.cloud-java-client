@@ -33,6 +33,7 @@ public class HintTextField extends JTextField implements FocusListener {
         if(this.getText().isEmpty()) {
             super.setText(hint);
             super.setForeground(Color.gray);
+            super.setBorder(BorderFactory.createLineBorder(Color.gray));
             showingHint = true;
         }
     }
