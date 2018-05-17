@@ -13,6 +13,9 @@ public class MainPane extends JFrame {
 
     static final Color APP_COLOR = new Color(25, 163, 219);
     static final Color SELECTION_COLOR = new Color(25, 163, 219, 50);
+    static final Color CONTRAST_LIST_COLOR = new Color(245, 245, 245);
+    static final Color BLUE_COLOR = new Color(0, 161, 217);
+    static final Color YELLOW_COLOR = new Color(252, 227, 79);
 
     static final String IMAGE_RES_PATH = "src/main/resources/images/";
 
@@ -33,6 +36,7 @@ public class MainPane extends JFrame {
 
     static final Font TEXT_LABEL_FONT = new Font("SansSerif", Font.BOLD, 10);
     static final Font REGULAR_FONT = new Font("SansSerif", Font.PLAIN, 12);
+    static final Font REGULAR_BOLD_FONT = new Font("SansSerif", Font.BOLD, 12);
 
     static final Image BG_IMAGE = new ImageIcon(MainPane.IMAGE_RES_PATH + MainPane.BG_IMG).getImage();
     static final ImageIcon IC_TRASH = new ImageIcon(MainPane.IMAGE_RES_PATH + MainPane.IC_TRASH_FILE_PATH);
@@ -45,7 +49,6 @@ public class MainPane extends JFrame {
     private MainPane() {
 
         UIDefaults def = UIManager.getLookAndFeelDefaults();
-////        UIDefaults def = new BasicTabbedPaneUI();
 
         Insets tabInsets = new Insets(20,0,20,0);
         Insets zeroInsets = new Insets(0,0,0,0);
@@ -67,18 +70,14 @@ public class MainPane extends JFrame {
 //        def.put("TabbedPane.unselectedBackground", new Color(0, 0,0,0));
 //        def.put("TabbedPane.contentAreaColor", new Color( 122,122,0));
 
-        for(Object key : UIManager.getLookAndFeelDefaults().keySet()){
-            boolean tbp = key.toString().startsWith("ComboBox");
-            if (tbp)
-                System.out.println(key + " = " + UIManager.get(key));
-        }
+//        for(Object key : UIManager.getLookAndFeelDefaults().keySet()){
+//            boolean tbp = key.toString().startsWith("CheckBox");
+//            if (tbp)
+//                System.out.println(key + " = " + UIManager.get(key));
+//        }
 
         final JTabbedPane jtp = new JTabbedPane();
-//        jtp.setPreferredSize(new Dimension(392, 533));
         jtp.setBackground(Color.white);
-        setContentPane(jtp);
-        setBackground(Color.white);
-
         jtp.setUI(new BasicTabbedPaneUI() {
             private final Insets borderInsets = new Insets(0, 0, 0, 0);
 
@@ -92,22 +91,6 @@ public class MainPane extends JFrame {
             }
 
         });
-
-        JPanel msgListJP = new MyPanel();
-//        msgListJP.setBackground(Color.white);
-        JPanel logoutJP = new MyPanel();
-//        logoutJP.setBackground(Color.white);
-
-
-        JLabel msgListLbl = new JLabel();
-        msgListLbl.setText("You are in area of msgListLbl");
-        JLabel logoutLbl = new JLabel();
-        logoutLbl.setText("You are in area of logoutLbl");
-
-
-        msgListJP.add(msgListLbl);
-        logoutJP.add(logoutLbl);
-
         jtp.addChangeListener(new ChangeListener() {
             int tabIndex = 0;
             public void stateChanged(ChangeEvent e) {
@@ -149,21 +132,19 @@ public class MainPane extends JFrame {
         jtp.setTabPlacement(JTabbedPane.BOTTOM);
 
         JPanel topicListJP = new TopicListPane();
-//        topicListJP.setBackground(Color.white);
         ImageIcon topicListIcon = new ImageIcon(IMAGE_RES_PATH + TOPIC_LIST_SELECTED_IMG);
         jtp.addTab("", topicListIcon, topicListJP);
 
         JPanel sendMsgJP = new SendMessagePane();
-//        sendMsgJP.setBackground(Color.white);
-        JLabel sendMsgLbl = new JLabel();
-        sendMsgLbl.setText("You are in area of sendMsgLbl");
-        sendMsgJP.add(sendMsgLbl);
         ImageIcon sendMsgIcon = new ImageIcon(IMAGE_RES_PATH + SEND_MSG_IMG);
         jtp.addTab("", sendMsgIcon, sendMsgJP);
 
+        JPanel msgListJP = new MessagesListPane();
         ImageIcon msgListIcon = new ImageIcon(IMAGE_RES_PATH + MSG_LIST_IMG);
-        ImageIcon logoutIcon = new ImageIcon(IMAGE_RES_PATH + LOGOUT_IMG);
         jtp.addTab("", msgListIcon, msgListJP);
+
+        JPanel logoutJP = new JPanel();
+        ImageIcon logoutIcon = new ImageIcon(IMAGE_RES_PATH + LOGOUT_IMG);
         jtp.addTab("", logoutIcon, logoutJP);
 
 //        FontIcon topicListIcon = new FontIcon();
@@ -178,6 +159,9 @@ public class MainPane extends JFrame {
 //        jtp.addTab("Send Message", sendMsgIcon, sendMsgJP);
 //        jtp.addTab("Messages List", msgListIcon, msgListJP);
 //        jtp.addTab("Logout", logoutIcon, logoutJP);
+
+        setContentPane(jtp);
+        setBackground(Color.white);
 
     }
 
@@ -197,15 +181,5 @@ public class MainPane extends JFrame {
                 createAndShowGUI();
             }
         });
-    }
-
-    class MyPanel extends JPanel {
-
-        @Override
-        protected void paintComponent(Graphics g) {
-
-            super.paintComponent(g);
-            g.drawImage(BG_IMAGE, 0, 0, null);
-        }
     }
 }

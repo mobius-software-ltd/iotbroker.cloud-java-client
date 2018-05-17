@@ -102,7 +102,7 @@ public class TopicListPane extends JPanel {
         addAddTopicElements(addTopic);
     }
 
-    private ArrayList<Component[]> componentList = new ArrayList<Component[]>();
+    private ArrayList<Component[]> componentList = new ArrayList<>();
 
     //adding subelements to topicList panel
     private void addTopicListElements(final JPanel parent) {
@@ -114,7 +114,7 @@ public class TopicListPane extends JPanel {
 
         Random r = new Random();
 
-        int lblCount = 2;
+        int lblCount = 5;
 
         for (int i = 0; i < lblCount; i++) {
             JLabel topic = new JLabel("topic " + i, SwingConstants.LEFT);
@@ -294,7 +294,7 @@ public class TopicListPane extends JPanel {
     }
 
     private HintTextField topicInput;
-    private JComboBox dropDown;
+    private JComboBox<Integer> dropDown;
 
     //adding subelements to addtopic panel
     private void addAddTopicElements(JPanel parent) {
@@ -325,23 +325,22 @@ public class TopicListPane extends JPanel {
         el2.add(topicInput);
 
         JPanel el3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        el3.setBackground(Color.white);
+        el3.setBackground(MainPane.CONTRAST_LIST_COLOR);
 
         text = new JLabel("QoS:");
         text.setFont(MainPane.REGULAR_FONT);
         JLabel icon2 = new JLabel(new ImageIcon(tmp2));
         icon2.setBorder(new EmptyBorder(0, 10, 0, 10));
-        dropDown = new JComboBox(new Integer[] {0, 1, 2});
+        dropDown = new JComboBox<>(new Integer[] {0, 1, 2});
 
         JPanel el4 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        el4.setBackground(Color.white);
+        el4.setBackground(MainPane.CONTRAST_LIST_COLOR);
 
         JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT,0,0));
         wrapper.setBackground(Color.yellow);
         wrapper.setMinimumSize(new Dimension(72, 24));
         wrapper.setPreferredSize(wrapper.getMinimumSize());
         wrapper.setBorder(BorderFactory.createLineBorder(Color.lightGray));
-
 
         dropDown.setFont(MainPane.REGULAR_FONT);
         dropDown.setMinimumSize(new Dimension(70, 22));
