@@ -26,7 +26,7 @@ public class SendMessagePane extends JPanel {
         JPanel txtLbl1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         txtLbl1.setBackground(new Color(0,0,0,0));
         JLabel topicListLbl = new JLabel("send message:", SwingConstants.LEFT);
-        topicListLbl.setFont(MainPane.TEXT_LABEL_FONT);
+        topicListLbl.setFont(AppConstants.TEXT_LABEL_FONT);
         txtLbl1.add(topicListLbl);
 
         this.add(txtLbl1);
@@ -52,7 +52,7 @@ public class SendMessagePane extends JPanel {
 
         JPanel sendLbl = new JPanel();
         JLabel sendBtn = new JLabel("Send");
-        sendBtn.setBackground(MainPane.APP_COLOR);
+        sendBtn.setBackground(AppConstants.APP_COLOR);
         sendBtn.setOpaque(true);
         sendBtn.setForeground(Color.white);
         sendBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
@@ -75,10 +75,10 @@ public class SendMessagePane extends JPanel {
 
     private void addMainPanelElements() {
         UIManager.put("ComboBox.background", new ColorUIResource(Color.white));
-        UIManager.put("ComboBox.selectionBackground", MainPane.SELECTION_COLOR);
+        UIManager.put("ComboBox.selectionBackground", AppConstants.SELECTION_COLOR);
         UIManager.put("ComboBox.selectionForeground", new ColorUIResource(Color.gray));
 
-        Image tmp = MainPane.IC_SETTINGS.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
+        Image tmp = AppConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
         ImageIcon gearIcn = new ImageIcon(tmp);
 
         settingsPane.setLayout(new GridLayout(11, 2));
@@ -88,7 +88,7 @@ public class SendMessagePane extends JPanel {
 
         JLabel label = new JLabel("Content", gearIcn, SwingConstants.LEFT);
         label.setBorder(new EmptyBorder(0, 10, 0, 0));
-        label.setFont(MainPane.REGULAR_FONT);
+        label.setFont(AppConstants.REGULAR_FONT);
         label.setIconTextGap(10);
 
         lbl1.add(label);
@@ -99,7 +99,7 @@ public class SendMessagePane extends JPanel {
 
         contentTF = new HintTextField("content", BorderFactory.createLineBorder(Color.lightGray));
         contentTF.setHorizontalAlignment(JTextField.RIGHT);
-        contentTF.setFont(MainPane.REGULAR_FONT);
+        contentTF.setFont(AppConstants.REGULAR_FONT);
         contentTF.setMinimumSize(new Dimension(150, 28));
         contentTF.setPreferredSize(contentTF.getMinimumSize());
 
@@ -107,22 +107,22 @@ public class SendMessagePane extends JPanel {
         settingsPane.add(val1);
 
         JPanel lbl2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        lbl2.setBackground(MainPane.CONTRAST_LIST_COLOR);
+        lbl2.setBackground(AppConstants.CONTRAST_LIST_COLOR);
 
         label = new JLabel("Topic", gearIcn, SwingConstants.LEFT);
         label.setBorder(new EmptyBorder(0, 10, 0, 0));
-        label.setFont(MainPane.REGULAR_FONT);
+        label.setFont(AppConstants.REGULAR_FONT);
         label.setIconTextGap(10);
 
         lbl2.add(label);
         settingsPane.add(lbl2);
 
         JPanel val2 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        val2.setBackground(MainPane.CONTRAST_LIST_COLOR);
+        val2.setBackground(AppConstants.CONTRAST_LIST_COLOR);
 
         topicTF = new HintTextField("topic", BorderFactory.createLineBorder(Color.lightGray));
         topicTF.setHorizontalAlignment(JTextField.RIGHT);
-        topicTF.setFont(MainPane.REGULAR_FONT);
+        topicTF.setFont(AppConstants.REGULAR_FONT);
         topicTF.setMinimumSize(new Dimension(150, 28));
         topicTF.setPreferredSize(topicTF.getMinimumSize());
 
@@ -135,7 +135,7 @@ public class SendMessagePane extends JPanel {
         label = new JLabel("QoS", gearIcn, SwingConstants.LEFT);
         label.setBorder(new EmptyBorder(0, 10, 0, 0));
         label.setIconTextGap(10);
-        label.setFont(MainPane.REGULAR_FONT);
+        label.setFont(AppConstants.REGULAR_FONT);
 
         lbl3.add(label);
         settingsPane.add(lbl3);
@@ -151,7 +151,7 @@ public class SendMessagePane extends JPanel {
         wrapper.setPreferredSize(wrapper.getMinimumSize());
         wrapper.setBorder(BorderFactory.createLineBorder(Color.lightGray));
 
-        qosCB.setFont(MainPane.REGULAR_FONT);
+        qosCB.setFont(AppConstants.REGULAR_FONT);
         qosCB.setMinimumSize(new Dimension(70, 22));
         qosCB.setPreferredSize(qosCB.getMinimumSize());
         qosCB.setUI(CustomComboBoxUI.createUI(qosCB));
@@ -165,20 +165,20 @@ public class SendMessagePane extends JPanel {
         settingsPane.add(val3);
 
         JPanel lbl4 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        lbl4.setBackground(MainPane.CONTRAST_LIST_COLOR);
+        lbl4.setBackground(AppConstants.CONTRAST_LIST_COLOR);
 
         label = new JLabel("Retain", gearIcn, SwingConstants.LEFT);
         label.setBorder(new EmptyBorder(0, 10, 0, 0));
-        label.setFont(MainPane.REGULAR_FONT);
+        label.setFont(AppConstants.REGULAR_FONT);
         label.setIconTextGap(10);
 
         lbl4.add(label);
         settingsPane.add(lbl4);
 
         JPanel val4 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        val4.setBackground(MainPane.CONTRAST_LIST_COLOR);
+        val4.setBackground(AppConstants.CONTRAST_LIST_COLOR);
         retainCB = new JCheckBox();
-        retainCB.setBackground(MainPane.CONTRAST_LIST_COLOR);
+        retainCB.setBackground(AppConstants.CONTRAST_LIST_COLOR);
         retainCB.setUI(new BasicCheckBoxUI() {
         });
         val4.add(retainCB);
@@ -190,7 +190,7 @@ public class SendMessagePane extends JPanel {
 
         label = new JLabel("Duplicate", gearIcn, SwingConstants.LEFT);
         label.setBorder(new EmptyBorder(0, 10, 0, 0));
-        label.setFont(MainPane.REGULAR_FONT);
+        label.setFont(AppConstants.REGULAR_FONT);
         label.setIconTextGap(10);
 
         lbl5.add(label);
@@ -213,7 +213,7 @@ public class SendMessagePane extends JPanel {
 
     @Override
     protected void paintComponent(Graphics g) {
-        Image bgImage = MainPane.BG_IMAGE;
+        Image bgImage = AppConstants.BG_IMAGE;
         g.drawImage(bgImage, 0, 0, null);
 
         BufferedImage bimage = new BufferedImage(bgImage.getWidth(null), bgImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);

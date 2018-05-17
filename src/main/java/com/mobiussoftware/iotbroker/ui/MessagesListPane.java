@@ -16,7 +16,7 @@ public class MessagesListPane extends JPanel {
         JPanel txtLbl1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         txtLbl1.setBackground(new Color(0,0,0,0));
         JLabel topicListLbl = new JLabel("messages list:", SwingConstants.LEFT);
-        topicListLbl.setFont(MainPane.TEXT_LABEL_FONT);
+        topicListLbl.setFont(AppConstants.TEXT_LABEL_FONT);
         txtLbl1.add(topicListLbl);
 
         this.add(txtLbl1);
@@ -49,7 +49,7 @@ public class MessagesListPane extends JPanel {
         Random r = new Random();
 
         for (int i = 0; i < msgCount; i++) {
-            Color bgColor = i%2 == 0 ? Color.white : MainPane.CONTRAST_LIST_COLOR;
+            Color bgColor = i%2 == 0 ? Color.white : AppConstants.CONTRAST_LIST_COLOR;
 
             JPanel messageData = new JPanel();
             messageData.setLayout(new BoxLayout(messageData, BoxLayout.Y_AXIS));
@@ -57,11 +57,11 @@ public class MessagesListPane extends JPanel {
 //            messageData.setBorder(BorderFactory.createLineBorder(Color.blue));
 
             JLabel topic = new JLabel("topic " + i, SwingConstants.LEFT);
-            topic.setFont(MainPane.REGULAR_BOLD_FONT);
+            topic.setFont(AppConstants.REGULAR_BOLD_FONT);
             topic.setBorder(BorderFactory.createEmptyBorder(5,5,2,5));
 
             JLabel text = new JLabel("<html>message payload " + randomAlphaNumeric(r.nextInt(128) + 64) + i + "</html>", SwingConstants.LEFT);
-            text.setFont(MainPane.REGULAR_FONT);
+            text.setFont(AppConstants.REGULAR_FONT);
             text.setBorder(BorderFactory.createEmptyBorder(1,5,3,5));
 
             messageData.add(topic);
@@ -74,13 +74,13 @@ public class MessagesListPane extends JPanel {
 
             parent.add(messageData, c);
 
-            JPanel extraData = new TwoColorRoundedRect(MainPane.BLUE_COLOR, MainPane.YELLOW_COLOR, 20, 0, 4);
+            JPanel extraData = new TwoColorRoundedRect(AppConstants.BLUE_COLOR, AppConstants.YELLOW_COLOR, 20, 0, 4);
             extraData.setBackground(bgColor);
             extraData.setLayout(new BoxLayout(extraData, BoxLayout.Y_AXIS));
 
 
             JLabel direction = new JLabel(r.nextInt(2) == 0 ? "in" : "out", SwingConstants.CENTER);
-            direction.setFont(MainPane.REGULAR_FONT);
+            direction.setFont(AppConstants.REGULAR_FONT);
             direction.setForeground(Color.white);
             direction.setAlignmentX(Component.CENTER_ALIGNMENT);
 //            direction.setMaximumSize(new Dimension((int)extraData.getMinimumSize().getWidth(), (int)extraData.getMinimumSize().getHeight()/2));
@@ -89,7 +89,7 @@ public class MessagesListPane extends JPanel {
 
             JLabel qos = new JLabel("QoS:"+ r.nextInt(3), SwingConstants.CENTER);
             qos.setBorder(BorderFactory.createEmptyBorder(3, 0,0,0));
-            qos.setFont(MainPane.REGULAR_FONT);
+            qos.setFont(AppConstants.REGULAR_FONT);
             qos.setAlignmentX(Component.CENTER_ALIGNMENT);
 
             extraData.add(direction);
@@ -126,7 +126,7 @@ public class MessagesListPane extends JPanel {
 
     @Override
     protected void paintComponent(Graphics g) {
-        Image bgImage = MainPane.BG_IMAGE;
+        Image bgImage = AppConstants.BG_IMAGE;
         g.drawImage(bgImage, 0, 0, null);
 
         BufferedImage bimage = new BufferedImage(bgImage.getWidth(null), bgImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
@@ -187,7 +187,7 @@ class TwoColorRoundedRect extends JPanel {
         g2d.fillRoundRect(horizontalOffset, height/2, width-horizontalOffset, 10, 0, 0);//paint background
         g2d.fillRoundRect(horizontalOffset, height/2 + 1, width-horizontalOffset, (height-verticalOffset-3)/2, cornerRadius, cornerRadius);//paint background
 
-        ((JLabel)this.getComponents()[0]).setBorder(BorderFactory.createEmptyBorder(height/4 - MainPane.REGULAR_FONT.getSize()/2, 0,height/4 - MainPane.REGULAR_FONT.getSize()/2,0));
-        ((JLabel)this.getComponents()[1]).setBorder(BorderFactory.createEmptyBorder(height/4 - MainPane.REGULAR_FONT.getSize(), 0,0,0));
+        ((JLabel)this.getComponents()[0]).setBorder(BorderFactory.createEmptyBorder(height/4 - AppConstants.REGULAR_FONT.getSize()/2, 0,height/4 - AppConstants.REGULAR_FONT.getSize()/2,0));
+        ((JLabel)this.getComponents()[1]).setBorder(BorderFactory.createEmptyBorder(height/4 - AppConstants.REGULAR_FONT.getSize(), 0,0,0));
     }
 }

@@ -32,7 +32,7 @@ public class TopicListPane extends JPanel {
         txtLbl1.setBackground(new Color(0,0,0,0));
 
         JLabel topicListLbl = new JLabel("topics list:", SwingConstants.LEFT);
-        topicListLbl.setFont(MainPane.TEXT_LABEL_FONT);
+        topicListLbl.setFont(AppConstants.TEXT_LABEL_FONT);
 
         txtLbl1.add(topicListLbl);
 
@@ -57,7 +57,7 @@ public class TopicListPane extends JPanel {
         txtLbl2.setBackground(new Color(0,0,0,0));
 
         JLabel addTopicLbl = new JLabel("add new topic:");
-        addTopicLbl.setFont(MainPane.TEXT_LABEL_FONT);
+        addTopicLbl.setFont(AppConstants.TEXT_LABEL_FONT);
 
         txtLbl2.add(addTopicLbl);
 
@@ -75,7 +75,7 @@ public class TopicListPane extends JPanel {
         JPanel addLbl = new JPanel();
 
         JLabel addBtn = new JLabel("Add");
-        addBtn.setBackground(MainPane.APP_COLOR);
+        addBtn.setBackground(AppConstants.APP_COLOR);
 
         addBtn.setOpaque(true);
         addBtn.setForeground(Color.white);
@@ -118,7 +118,7 @@ public class TopicListPane extends JPanel {
 
         for (int i = 0; i < lblCount; i++) {
             JLabel topic = new JLabel("topic " + i, SwingConstants.LEFT);
-            topic.setFont(MainPane.REGULAR_FONT);
+            topic.setFont(AppConstants.REGULAR_FONT);
             topic.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 
             c.gridx = 0;
@@ -131,7 +131,7 @@ public class TopicListPane extends JPanel {
             JLabel qos = new RoundedFilledLabel(new Color(252, 227, 79), 20, 0, 4);
             qos.setText("QoS:"+ r.nextInt(3));
             qos.setHorizontalAlignment(SwingConstants.LEFT);
-            qos.setFont(MainPane.REGULAR_FONT);
+            qos.setFont(AppConstants.REGULAR_FONT);
             qos.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 
             c.gridx = 1;
@@ -140,7 +140,7 @@ public class TopicListPane extends JPanel {
 
             parent.add(qos, c);
 
-            JLabel deleteBtn = new JLabel(MainPane.IC_TRASH, SwingConstants.CENTER);
+            JLabel deleteBtn = new JLabel(AppConstants.IC_TRASH, SwingConstants.CENTER);
             deleteBtn.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
             deleteBtn.addMouseListener(new MouseAdapter() {
                 @Override
@@ -194,7 +194,7 @@ public class TopicListPane extends JPanel {
         c.fill = GridBagConstraints.VERTICAL;
 
         JLabel topic = new JLabel(topicText, SwingConstants.LEFT);
-        topic.setFont(MainPane.REGULAR_FONT);
+        topic.setFont(AppConstants.REGULAR_FONT);
         topic.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 
         c.gridx = 0;
@@ -208,7 +208,7 @@ public class TopicListPane extends JPanel {
         JLabel qos = new RoundedFilledLabel(new Color(252, 227, 79), 20, 0, 4);
         qos.setText("QoS:" + qosValue);
         qos.setHorizontalAlignment(SwingConstants.LEFT);
-        qos.setFont(MainPane.REGULAR_FONT);
+        qos.setFont(AppConstants.REGULAR_FONT);
         qos.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 
         c.gridx = 1;
@@ -218,7 +218,7 @@ public class TopicListPane extends JPanel {
 
         topics.add(qos, c);
 //
-        JLabel deleteBtn = new JLabel(MainPane.IC_TRASH, SwingConstants.CENTER);
+        JLabel deleteBtn = new JLabel(AppConstants.IC_TRASH, SwingConstants.CENTER);
         deleteBtn.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
         deleteBtn.addMouseListener(new MouseAdapter() {
             @Override
@@ -299,16 +299,16 @@ public class TopicListPane extends JPanel {
     //adding subelements to addtopic panel
     private void addAddTopicElements(JPanel parent) {
         UIManager.put("ComboBox.background", new ColorUIResource(Color.white));
-        UIManager.put("ComboBox.selectionBackground", MainPane.SELECTION_COLOR);
+        UIManager.put("ComboBox.selectionBackground", AppConstants.SELECTION_COLOR);
         UIManager.put("ComboBox.selectionForeground", new ColorUIResource(Color.gray));
 
         JPanel el1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         el1.setBackground(Color.white);
-        Image tmp2 = MainPane.IC_SETTINGS.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
+        Image tmp2 = AppConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
         JLabel icon = new JLabel(new ImageIcon(tmp2));
         icon.setBorder(new EmptyBorder(0, 10, 0, 10));
         JLabel text = new JLabel("Topic:");
-        text.setFont(MainPane.REGULAR_FONT);
+        text.setFont(AppConstants.REGULAR_FONT);
 
         el1.add(icon);
         el1.add(text);
@@ -318,23 +318,23 @@ public class TopicListPane extends JPanel {
 
         topicInput = new HintTextField("topic", BorderFactory.createLineBorder(Color.lightGray));
         topicInput.setHorizontalAlignment(JTextField.RIGHT);
-        topicInput.setFont(MainPane.REGULAR_FONT);
+        topicInput.setFont(AppConstants.REGULAR_FONT);
         topicInput.setMinimumSize(new Dimension(150, 28));
         topicInput.setPreferredSize(topicInput.getMinimumSize());
 
         el2.add(topicInput);
 
         JPanel el3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        el3.setBackground(MainPane.CONTRAST_LIST_COLOR);
+        el3.setBackground(AppConstants.CONTRAST_LIST_COLOR);
 
         text = new JLabel("QoS:");
-        text.setFont(MainPane.REGULAR_FONT);
+        text.setFont(AppConstants.REGULAR_FONT);
         JLabel icon2 = new JLabel(new ImageIcon(tmp2));
         icon2.setBorder(new EmptyBorder(0, 10, 0, 10));
         dropDown = new JComboBox<>(new Integer[] {0, 1, 2});
 
         JPanel el4 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        el4.setBackground(MainPane.CONTRAST_LIST_COLOR);
+        el4.setBackground(AppConstants.CONTRAST_LIST_COLOR);
 
         JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT,0,0));
         wrapper.setBackground(Color.yellow);
@@ -342,7 +342,7 @@ public class TopicListPane extends JPanel {
         wrapper.setPreferredSize(wrapper.getMinimumSize());
         wrapper.setBorder(BorderFactory.createLineBorder(Color.lightGray));
 
-        dropDown.setFont(MainPane.REGULAR_FONT);
+        dropDown.setFont(AppConstants.REGULAR_FONT);
         dropDown.setMinimumSize(new Dimension(70, 22));
         dropDown.setPreferredSize(dropDown.getMinimumSize());
         dropDown.setUI(CustomComboBoxUI.createUI(dropDown));
@@ -365,7 +365,7 @@ public class TopicListPane extends JPanel {
 
     @Override
     protected void paintComponent(Graphics g) {
-        Image bgImage = MainPane.BG_IMAGE;
+        Image bgImage = AppConstants.BG_IMAGE;
         g.drawImage(bgImage, 0, 0, null);
 
         BufferedImage bimage = new BufferedImage(bgImage.getWidth(null), bgImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);

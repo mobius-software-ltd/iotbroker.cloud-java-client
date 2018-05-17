@@ -8,40 +8,6 @@ import java.awt.*;
 
 public class MainPane extends JFrame {
 
-    static final int WIDTH = 428;
-    static final int HEIGHT = 533;
-
-    static final Color APP_COLOR = new Color(25, 163, 219);
-    static final Color SELECTION_COLOR = new Color(25, 163, 219, 50);
-    static final Color CONTRAST_LIST_COLOR = new Color(245, 245, 245);
-    static final Color BLUE_COLOR = new Color(0, 161, 217);
-    static final Color YELLOW_COLOR = new Color(252, 227, 79);
-
-    static final String IMAGE_RES_PATH = "src/main/resources/images/";
-
-    private static final String TOPIC_LIST_SELECTED_IMG = "ic_topic_list_blue.png";
-    private static final String SEND_MSG_SELECTED_IMG = "ic_send_msg_blue.png";
-    private static final String MSG_LIST_SELECTED_IMG = "ic_msg_list_blue.png";
-    private static final String LOGOUT_SELECTED_IMG = "ic_logout_blue.png";
-
-    private static final String TOPIC_LIST_IMG = "ic_topic_list_gray.png";
-    private static final String SEND_MSG_IMG = "ic_send_msg_gray.png";
-    private static final String MSG_LIST_IMG = "ic_msg_list_gray.png";
-    private static final String LOGOUT_IMG = "ic_logout_gray.png";
-
-    static final String BG_IMG = "img_background.jpg";
-
-    static final String IC_SETTINGS_FILE_PATH = "ic_settings.png";
-    static final String IC_TRASH_FILE_PATH = "ic_trash.png";
-
-    static final Font TEXT_LABEL_FONT = new Font("SansSerif", Font.BOLD, 10);
-    static final Font REGULAR_FONT = new Font("SansSerif", Font.PLAIN, 12);
-    static final Font REGULAR_BOLD_FONT = new Font("SansSerif", Font.BOLD, 12);
-
-    static final Image BG_IMAGE = new ImageIcon(MainPane.IMAGE_RES_PATH + MainPane.BG_IMG).getImage();
-    static final ImageIcon IC_TRASH = new ImageIcon(MainPane.IMAGE_RES_PATH + MainPane.IC_TRASH_FILE_PATH);
-    static final ImageIcon IC_SETTINGS = new ImageIcon(MainPane.IMAGE_RES_PATH + MainPane.IC_SETTINGS_FILE_PATH);
-
     private JPanel imagesPanel;
     private JFrame mainFrame;
 
@@ -97,16 +63,16 @@ public class MainPane extends JFrame {
                 ImageIcon icon = null;
                 switch (tabIndex) {
                     case 0:
-                        icon = new ImageIcon(IMAGE_RES_PATH + TOPIC_LIST_IMG);
+                        icon = new ImageIcon(AppConstants.IMAGE_RES_PATH + AppConstants.TOPIC_LIST_IMG);
                         break;
                     case 1:
-                        icon = new ImageIcon(IMAGE_RES_PATH + SEND_MSG_IMG);
+                        icon = new ImageIcon(AppConstants.IMAGE_RES_PATH + AppConstants.SEND_MSG_IMG);
                         break;
                     case 2:
-                        icon = new ImageIcon(IMAGE_RES_PATH + MSG_LIST_IMG);
+                        icon = new ImageIcon(AppConstants.IMAGE_RES_PATH + AppConstants.MSG_LIST_IMG);
                         break;
                     case 3:
-                        icon = new ImageIcon(IMAGE_RES_PATH + LOGOUT_IMG);
+                        icon = new ImageIcon(AppConstants.IMAGE_RES_PATH + AppConstants.LOGOUT_IMG);
                         break;
                 }
                 jtp.setIconAt(tabIndex, icon);
@@ -114,16 +80,16 @@ public class MainPane extends JFrame {
                 tabIndex = jtp.getSelectedIndex();
                 switch (tabIndex) {
                     case 0:
-                        icon = new ImageIcon(IMAGE_RES_PATH + TOPIC_LIST_SELECTED_IMG);
+                        icon = new ImageIcon(AppConstants.IMAGE_RES_PATH + AppConstants.TOPIC_LIST_SELECTED_IMG);
                         break;
                     case 1:
-                        icon = new ImageIcon(IMAGE_RES_PATH + SEND_MSG_SELECTED_IMG);
+                        icon = new ImageIcon(AppConstants.IMAGE_RES_PATH + AppConstants.SEND_MSG_SELECTED_IMG);
                         break;
                     case 2:
-                        icon = new ImageIcon(IMAGE_RES_PATH + MSG_LIST_SELECTED_IMG);
+                        icon = new ImageIcon(AppConstants.IMAGE_RES_PATH + AppConstants.MSG_LIST_SELECTED_IMG);
                         break;
                     case 3:
-                        icon = new ImageIcon(IMAGE_RES_PATH + LOGOUT_SELECTED_IMG);
+                        icon = new ImageIcon(AppConstants.IMAGE_RES_PATH + AppConstants.LOGOUT_SELECTED_IMG);
                         break;
                 }
                 jtp.setIconAt(tabIndex, icon);
@@ -132,19 +98,19 @@ public class MainPane extends JFrame {
         jtp.setTabPlacement(JTabbedPane.BOTTOM);
 
         JPanel topicListJP = new TopicListPane();
-        ImageIcon topicListIcon = new ImageIcon(IMAGE_RES_PATH + TOPIC_LIST_SELECTED_IMG);
+        ImageIcon topicListIcon = new ImageIcon(AppConstants.IMAGE_RES_PATH + AppConstants.TOPIC_LIST_SELECTED_IMG);
         jtp.addTab("", topicListIcon, topicListJP);
 
         JPanel sendMsgJP = new SendMessagePane();
-        ImageIcon sendMsgIcon = new ImageIcon(IMAGE_RES_PATH + SEND_MSG_IMG);
+        ImageIcon sendMsgIcon = new ImageIcon(AppConstants.IMAGE_RES_PATH + AppConstants.SEND_MSG_IMG);
         jtp.addTab("", sendMsgIcon, sendMsgJP);
 
         JPanel msgListJP = new MessagesListPane();
-        ImageIcon msgListIcon = new ImageIcon(IMAGE_RES_PATH + MSG_LIST_IMG);
+        ImageIcon msgListIcon = new ImageIcon(AppConstants.IMAGE_RES_PATH + AppConstants.MSG_LIST_IMG);
         jtp.addTab("", msgListIcon, msgListJP);
 
         JPanel logoutJP = new JPanel();
-        ImageIcon logoutIcon = new ImageIcon(IMAGE_RES_PATH + LOGOUT_IMG);
+        ImageIcon logoutIcon = new ImageIcon(AppConstants.IMAGE_RES_PATH + AppConstants.LOGOUT_IMG);
         jtp.addTab("", logoutIcon, logoutJP);
 
 //        FontIcon topicListIcon = new FontIcon();
@@ -171,7 +137,7 @@ public class MainPane extends JFrame {
         tp.pack();
         tp.setVisible(true);;
         tp.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        tp.setSize(new Dimension(WIDTH, HEIGHT));
+        tp.setSize(new Dimension(AppConstants.WIDTH, AppConstants.HEIGHT));
     }
 
     public static void main(String[] args) {
