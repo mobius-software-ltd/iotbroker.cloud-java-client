@@ -133,7 +133,7 @@ public class SendMessagePane extends JPanel {
         lbl3.add(label);
         settingsPane.add(lbl3);
 
-        qosCB = new JComboBox<>(new Integer[] {0, 1, 2});
+        qosCB = new JComboBox<>(AppConstants.QOS_VALUES);
 
         JPanel val3 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         val3.setBackground(Color.white);

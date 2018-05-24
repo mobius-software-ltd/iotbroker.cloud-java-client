@@ -332,7 +332,7 @@ public class TopicListPane extends JPanel {
         text.setFont(UIConstants.REGULAR_FONT);
         JLabel icon2 = new JLabel(new ImageIcon(tmp2));
         icon2.setBorder(new EmptyBorder(0, 10, 0, 10));
-        dropDown = new JComboBox<>(new Integer[] {0, 1, 2});
+        dropDown = new JComboBox<>(AppConstants.QOS_VALUES);
 
         JPanel el4 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         el4.setBackground(UIConstants.CONTRAST_LIST_COLOR);
