@@ -3,7 +3,7 @@ package com.mobiussoftware.iotbroker.ui;
 import javax.swing.*;
 import java.awt.*;
 
-public class AppConstants {
+class UIConstants {
     static final int WIDTH = 428;
     static final int HEIGHT = 533;
 
@@ -25,10 +25,10 @@ public class AppConstants {
     static final String MSG_LIST_IMG = "ic_msg_list_gray.png";
     static final String LOGOUT_IMG = "ic_logout_gray.png";
 
-    static final String BG_IMG = "img_background.jpg";
+    private static final String BG_IMG = "img_background.jpg";
 
-    static final String IC_SETTINGS_FILE_PATH = "ic_settings.png";
-    static final String IC_TRASH_FILE_PATH = "ic_trash.png";
+    private static final String IC_SETTINGS_FILE_PATH = "ic_settings.png";
+    private static final String IC_TRASH_FILE_PATH = "ic_trash.png";
 
     static final Font TEXT_LABEL_FONT = new Font("SansSerif", Font.BOLD, 10);
     static final Font REGULAR_FONT = new Font("SansSerif", Font.PLAIN, 12);
