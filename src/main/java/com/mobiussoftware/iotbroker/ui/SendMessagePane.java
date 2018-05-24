@@ -100,7 +100,7 @@ public class SendMessagePane extends JPanel {
         settingsPane.add(val1);
 
         JPanel lbl2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        lbl2.setBackground(UIConstants.CONTRAST_LIST_COLOR);
+        lbl2.setBackground(UIConstants.ROW_EVEN_COLOR);
 
         label = new JLabel("Topic", gearIcn, SwingConstants.LEFT);
         label.setBorder(new EmptyBorder(0, 10, 0, 0));
@@ -111,7 +111,7 @@ public class SendMessagePane extends JPanel {
         settingsPane.add(lbl2);
 
         JPanel val2 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        val2.setBackground(UIConstants.CONTRAST_LIST_COLOR);
+        val2.setBackground(UIConstants.ROW_EVEN_COLOR);
 
         topicTF = new HintTextField("topic", BorderFactory.createLineBorder(Color.lightGray));
         topicTF.setHorizontalAlignment(JTextField.RIGHT);
@@ -158,7 +158,7 @@ public class SendMessagePane extends JPanel {
         settingsPane.add(val3);
 
         JPanel lbl4 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        lbl4.setBackground(UIConstants.CONTRAST_LIST_COLOR);
+        lbl4.setBackground(UIConstants.ROW_EVEN_COLOR);
 
         label = new JLabel("Retain", gearIcn, SwingConstants.LEFT);
         label.setBorder(new EmptyBorder(0, 10, 0, 0));
@@ -169,9 +169,9 @@ public class SendMessagePane extends JPanel {
         settingsPane.add(lbl4);
 
         JPanel val4 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        val4.setBackground(UIConstants.CONTRAST_LIST_COLOR);
+        val4.setBackground(UIConstants.ROW_EVEN_COLOR);
         retainCB = new JCheckBox();
-        retainCB.setBackground(UIConstants.CONTRAST_LIST_COLOR);
+        retainCB.setBackground(UIConstants.ROW_EVEN_COLOR);
         retainCB.setUI(new BasicCheckBoxUI() {
         });
         val4.add(retainCB);

@@ -326,7 +326,7 @@ public class TopicListPane extends JPanel {
         el2.add(topicInput);
 
         JPanel el3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        el3.setBackground(UIConstants.CONTRAST_LIST_COLOR);
+        el3.setBackground(UIConstants.ROW_EVEN_COLOR);
 
         text = new JLabel("QoS:");
         text.setFont(UIConstants.REGULAR_FONT);
@@ -335,7 +335,7 @@ public class TopicListPane extends JPanel {
         dropDown = new JComboBox<>(AppConstants.QOS_VALUES);
 
         JPanel el4 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        el4.setBackground(UIConstants.CONTRAST_LIST_COLOR);
+        el4.setBackground(UIConstants.ROW_EVEN_COLOR);
 
         JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT,0,0));
         wrapper.setBackground(Color.yellow);
