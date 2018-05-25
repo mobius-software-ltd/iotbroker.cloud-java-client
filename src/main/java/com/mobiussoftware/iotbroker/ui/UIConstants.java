@@ -4,10 +4,15 @@ import javax.swing.*;
 import java.awt.*;
 
 class UIConstants {
-    static final int WIDTH = 428;
-    static final int HEIGHT = 533;
+    static final int ACCNT_MGMT_FRAME_WIDTH = 347;
+    static final int ACCNT_MGMT_FRAME_HEIGHT = 458;
+    static final int MAIN_FRAME_WIDTH = 428;
+    static final int MAIN_FRAME_HEIGHT = 533;
+    static final int LOGIN_FRAME_WIDTH = 418;
+    static final int LOGIN_FRAME_HEIGHT = 548;
 
-    static final Color APP_COLOR = new Color(25, 163, 219);
+    static final Color APP_BG_COLOR = Color.white;
+    static final Color APP_CONTRAST_COLOR = new Color(25, 163, 219);
     static final Color SELECTION_COLOR = new Color(25, 163, 219, 50);
     static final Color ROW_ODD_COLOR = Color.white;
     static final Color ROW_EVEN_COLOR = new Color(245, 245, 245);
@@ -41,6 +46,7 @@ class UIConstants {
     static final Font TEXT_LABEL_FONT = new Font("SansSerif", Font.BOLD, 10);
     static final Font REGULAR_FONT = new Font("SansSerif", Font.PLAIN, 12);
     static final Font REGULAR_BOLD_FONT = new Font("SansSerif", Font.BOLD, 12);
+    static final Font BUTTON_FONT = new Font("SansSerif", Font.BOLD, 14);
 
     static final Image BG_IMAGE = new ImageIcon(IMAGE_RES_PATH + BG_IMG).getImage();
 

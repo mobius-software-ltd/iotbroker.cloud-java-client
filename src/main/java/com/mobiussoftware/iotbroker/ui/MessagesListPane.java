@@ -49,7 +49,7 @@ public class MessagesListPane extends JPanel {
         Random r = new Random();
 
         for (int i = 0; i < msgCount; i++) {
-            Color bgColor = i%2 == 0 ? Color.white : UIConstants.CONTRAST_LIST_COLOR;
+            Color bgColor = i%2 == 0 ? Color.white : UIConstants.ROW_EVEN_COLOR;
 
             JPanel messageData = new JPanel();
             messageData.setLayout(new BoxLayout(messageData, BoxLayout.Y_AXIS));

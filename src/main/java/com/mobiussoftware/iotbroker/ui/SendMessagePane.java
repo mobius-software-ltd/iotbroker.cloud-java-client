@@ -8,6 +8,7 @@ import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 
 public class SendMessagePane extends JPanel {
@@ -40,25 +41,33 @@ public class SendMessagePane extends JPanel {
         wrapper.add(settingsPane, BorderLayout.PAGE_START);
         this.add(wrapper);
 
-        JPanel sendLbl = new JPanel();
-        JLabel sendBtn = new JLabel("Send");
-        sendBtn.setBackground(UIConstants.APP_COLOR);
-        sendBtn.setOpaque(true);
-        sendBtn.setForeground(Color.white);
-        sendBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
-        sendBtn.setHorizontalAlignment(SwingConstants.CENTER);
-        sendBtn.setPreferredSize(new Dimension(1000, 35));
-        sendBtn.setMinimumSize(new Dimension(450, 35));
-        sendBtn.setBorder(BorderFactory.createLineBorder(Color.lightGray));
-        sendBtn.addMouseListener(new MouseAdapter() {
+//        JPanel sendLbl = new JPanel();
+//        JLabel sendBtn = new JLabel("Send");
+//        sendBtn.setBackground(UIConstants.APP_CONTRAST_COLOR);
+//        sendBtn.setOpaque(true);
+//        sendBtn.setForeground(Color.white);
+//        sendBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
+//        sendBtn.setHorizontalAlignment(SwingConstants.CENTER);
+//        sendBtn.setPreferredSize(new Dimension(1000, 35));
+//        sendBtn.setMinimumSize(new Dimension(450, 35));
+//        sendBtn.setBorder(BorderFactory.createLineBorder(Color.lightGray));
+//        sendBtn.addMouseListener(new MouseAdapter() {
+//            @Override
+//            public void mouseClicked(MouseEvent arg0) {
+//                System.out.println("Send button clicked!");
+//            }
+//        });
+//        sendLbl.add(sendBtn);
+//
+//        this.add(sendLbl);
+
+        MouseListener listener = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent arg0) {
                 System.out.println("Send button clicked!");
             }
-        });
-        sendLbl.add(sendBtn);
-
-        this.add(sendLbl);
+        };
+        this.add(UIHelper.createButton("Send", listener));
 
         addSettingsPaneElements();
     }
@@ -196,12 +205,6 @@ public class SendMessagePane extends JPanel {
         val5.add(duplicateCB);
 
         settingsPane.add(val5);
-
-        for (int i = 0; i < (rows - 5)*columns; i++) {
-            JPanel emptyCell = new JPanel();
-            emptyCell.setBackground(Color.green);
-            settingsPane.add(emptyCell);
-        }
     }
 
     @Override

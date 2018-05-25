@@ -20,7 +20,7 @@ public class CustomComboBoxUI extends BasicComboBoxUI {
     @Override protected JButton createArrowButton() {
         return new BasicArrowButton(
                 BasicArrowButton.SOUTH,
-                UIConstants.APP_COLOR, UIConstants.APP_COLOR,
-                Color.white, UIConstants.APP_COLOR);
+                UIConstants.APP_CONTRAST_COLOR, UIConstants.APP_CONTRAST_COLOR,
+                Color.white, UIConstants.APP_CONTRAST_COLOR);
     }
 }

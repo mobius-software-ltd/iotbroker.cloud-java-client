@@ -12,7 +12,7 @@ public class MainPane extends JFrame {
     private JFrame mainFrame;
 
 
-    private MainPane() {
+    MainPane() {
 
         UIDefaults def = UIManager.getLookAndFeelDefaults();
 
@@ -43,7 +43,7 @@ public class MainPane extends JFrame {
 //        }
 
         final JTabbedPane jtp = new JTabbedPane();
-        jtp.setBackground(Color.white);
+        jtp.setBackground(UIConstants.APP_BG_COLOR);
         jtp.setUI(new BasicTabbedPaneUI() {
             private final Insets borderInsets = new Insets(0, 0, 0, 0);
 
@@ -90,6 +90,8 @@ public class MainPane extends JFrame {
                         break;
                     case 3:
                         icon = new ImageIcon(UIConstants.IMAGE_RES_PATH + UIConstants.LOGOUT_SELECTED_IMG);
+                        Main.showAccountMgmtPane();
+                        Main.disposeMainPane();
                         break;
                 }
                 jtp.setIconAt(tabIndex, icon);
@@ -131,21 +133,14 @@ public class MainPane extends JFrame {
 
     }
 
-    private static void createAndShowGUI() {
-        MainPane tp = new MainPane();
-        tp.setTitle("MQTT");
-        tp.pack();
-        tp.setVisible(true);;
-        tp.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        tp.setSize(new Dimension(UIConstants.WIDTH, UIConstants.HEIGHT));
-    }
+//    private static void createAndShowGUI() {
+//        MainPane tp = new MainPane();
+//        tp.setTitle("MQTT");
+//        tp.pack();
+//        tp.setVisible(true);;
+//        tp.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+//        tp.setSize(new Dimension(UIConstants.MAIN_FRAME_WIDTH, UIConstants.MAIN_FRAME_HEIGHT));
+//    }
 
-    public static void main(String[] args) {
 
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                createAndShowGUI();
-            }
-        });
-    }
 }

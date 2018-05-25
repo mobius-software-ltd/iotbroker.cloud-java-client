@@ -5,10 +5,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,18 +38,20 @@ public class TopicListPane extends JPanel {
 
         topics = new JPanel();
         topics.setBackground(Color.white);
-        topics.setMinimumSize(new Dimension(410, 280));
-        topics.setBorder(BorderFactory.createLineBorder(Color.lightGray));
+//        topics.setMinimumSize(new Dimension(410, 280));
+//        topics.setBorder(BorderFactory.createLineBorder(Color.lightGray));
 
-        JScrollPane scrollPane = new JScrollPane(topics);
-        scrollPane.setPreferredSize(new Dimension(450, 1000));
-        scrollPane.setMinimumSize(new Dimension(450, 280));
-        scrollPane.setMaximumSize(new Dimension(450, 1000));
+//        JScrollPane scrollPane = new JScrollPane(topics);
+//        scrollPane.setPreferredSize(new Dimension(450, 1000));
+//        scrollPane.setMinimumSize(new Dimension(450, 280));
+//        scrollPane.setMaximumSize(new Dimension(450, 1000));
+//
+//        JPanel wrapper = new JPanel(new BorderLayout());
+//        wrapper.add(scrollPane, BorderLayout.CENTER);
+//
+//        this.add(wrapper);
 
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.add(scrollPane, BorderLayout.CENTER);
-
-        this.add(wrapper);
+        this.add(UIHelper.wrapInScrollAndBorderLayout(topics, BorderLayout.CENTER));
 
         JPanel txtLbl2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         txtLbl2.setBackground(new Color(0,0,0,0));
@@ -73,20 +72,7 @@ public class TopicListPane extends JPanel {
 
         this.add(addTopic);
 
-        JPanel addLbl = new JPanel();
-
-        JLabel addBtn = new JLabel("Add");
-        addBtn.setBackground(UIConstants.APP_COLOR);
-
-        addBtn.setOpaque(true);
-        addBtn.setForeground(Color.white);
-        addBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
-        addBtn.setHorizontalAlignment(SwingConstants.CENTER);
-        addBtn.setPreferredSize(new Dimension(1000, 35));
-        addBtn.setMinimumSize(new Dimension(450, 35));
-        addBtn.setBorder(BorderFactory.createLineBorder(Color.lightGray));
-
-        addBtn.addMouseListener(new MouseAdapter() {
+        MouseListener listener = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent arg0) {
 //                System.out.println("Add button clicked!");
@@ -94,10 +80,8 @@ public class TopicListPane extends JPanel {
                 topicInput.setText("");
                 dropDown.setSelectedIndex(0);
             }
-        });
-
-        addLbl.add(addBtn);
-        this.add(addLbl);
+        };
+        this.add(UIHelper.createButton("Add", listener));
 
         addTopicListElements(topics);
         addAddTopicElements(addTopic);
@@ -115,7 +99,7 @@ public class TopicListPane extends JPanel {
 
         Random r = new Random();
 
-        int lblCount = 5;
+        int lblCount = 15;
 
         for (int i = 0; i < lblCount; i++) {
             JLabel topic = new JLabel("topic " + i, SwingConstants.LEFT);
