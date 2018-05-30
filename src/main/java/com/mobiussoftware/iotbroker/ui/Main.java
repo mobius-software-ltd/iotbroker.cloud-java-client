@@ -1,6 +1,7 @@
 package com.mobiussoftware.iotbroker.ui;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
 
 public class Main {
@@ -9,16 +10,28 @@ public class Main {
 
     static JFrame logInPane;
     static JFrame mainPane;
-    static JFrame accountMgmt;
+    static JFrame accountMgmtPane;
+    static JFrame logoPane;
 
     public static void main(String[] args) {
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
+
+        UIDefaults def = UIManager.getLookAndFeelDefaults();
+        def.put("ProgressBar.repaintInterval", 10);
+
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
+                for(Object key : UIManager.getLookAndFeelDefaults().keySet()){
+                    boolean tbp = key.toString().startsWith("ProgressBar");
+                    if (tbp)
+                        System.out.println(key + " = " + UIManager.get(key));
+                }
                 createAndShowAccountMgmtPane();
             }
         });
+
+
     }
 
     static void setLocation(JFrame frame) {
@@ -71,6 +84,8 @@ public class Main {
 
     static void createAndShowAccountMgmtPane() {
 
+//        UIDefaults def = UIManager.getLookAndFeelDefaults();
+
         JFrame frame = new JFrame("Accounts");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -82,24 +97,47 @@ public class Main {
 
         setLocation(frame);
 
-        accountMgmt = frame;
+        accountMgmtPane = frame;
     }
 
     static void hideAccountMgmtPane() {
-        if (accountMgmt != null) {
-            accountMgmt.setVisible(false);
+        if (accountMgmtPane != null) {
+            accountMgmtPane.setVisible(false);
         }
     }
 
     static void showAccountMgmtPane() {
-        if (accountMgmt != null) {
-            accountMgmt.setVisible(true);
+        if (accountMgmtPane != null) {
+            accountMgmtPane.setVisible(true);
         }
     }
 
     static void disposeAccountMgmtPane() {
-        if (accountMgmt != null) {
-            accountMgmt.dispose();
+        if (accountMgmtPane != null) {
+            accountMgmtPane.dispose();
+        }
+    }
+
+    static void createAndShowLogoPane() {
+
+        JFrame frame = new JFrame("IotBroker");
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+
+        frame.getContentPane().add(new LogoPane());
+
+        frame.pack();
+        frame.setVisible(true);
+        frame.setSize(new Dimension(UIConstants.LOGO_FRAME_WIDTH, UIConstants.LOGO_FRAME_HEIGHT));
+        frame.setResizable(false);
+
+        setLocation(frame);
+
+        logoPane = frame;
+    }
+
+    static void disposeLogoPane() {
+        if (logoPane != null) {
+            logoPane.dispose();
         }
     }
 }

@@ -90,7 +90,7 @@ public class LogInPane extends JPanel {
             Row row = rows[i];
             String text = row.getLabel();
             Icon icon = row.getIcon();
-            Color color = i%2 == 0 ? UIConstants.ROW_ODD_COLOR : UIConstants.ROW_EVEN_COLOR;
+            Color color = i%2 == 0 ? UIConstants.ROW_EVEN_COLOR : UIConstants.ROW_ODD_COLOR;
             int alignment = SwingConstants.LEFT;
 
             regInfoPane.add(UIHelper.createParameterLabel(text, icon, alignment, color));
@@ -137,7 +137,7 @@ public class LogInPane extends JPanel {
             Row row = rows[i];
             String text = row.getLabel();
             Icon icon = row.getIcon();
-            Color color = i % 2 != 0 ? UIConstants.ROW_ODD_COLOR : UIConstants.ROW_EVEN_COLOR;
+            Color color = i % 2 != 0 ? UIConstants.ROW_EVEN_COLOR : UIConstants.ROW_ODD_COLOR;
             int alignment = SwingConstants.LEFT;
 
             settingsPane.add(UIHelper.createParameterLabel(text, icon, alignment, color));

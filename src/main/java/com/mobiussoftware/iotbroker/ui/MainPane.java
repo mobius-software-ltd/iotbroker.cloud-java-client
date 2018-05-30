@@ -36,12 +36,6 @@ public class MainPane extends JFrame {
 //        def.put("TabbedPane.unselectedBackground", new Color(0, 0,0,0));
 //        def.put("TabbedPane.contentAreaColor", new Color( 122,122,0));
 
-//        for(Object key : UIManager.getLookAndFeelDefaults().keySet()){
-//            boolean tbp = key.toString().startsWith("CheckBox");
-//            if (tbp)
-//                System.out.println(key + " = " + UIManager.get(key));
-//        }
-
         final JTabbedPane jtp = new JTabbedPane();
         jtp.setBackground(UIConstants.APP_BG_COLOR);
         jtp.setUI(new BasicTabbedPaneUI() {

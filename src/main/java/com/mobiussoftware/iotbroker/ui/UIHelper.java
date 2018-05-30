@@ -5,10 +5,37 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.basic.BasicCheckBoxUI;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
+import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
 import java.awt.event.MouseListener;
 
 public class UIHelper {
+
+    static JPanel createProgressBarSpace(int height) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+//        panel.setBackground(new Color(255,255,0,100));
+        panel.setBackground(new Color(0,0,0,0));
+        panel.setMinimumSize(new Dimension(400,height));
+        panel.setPreferredSize(panel.getMinimumSize());
+
+        return  panel;
+    }
+
+    static JProgressBar createProgressBar() {
+        JProgressBar progressBar = new JProgressBar();
+        progressBar.setUI(new BasicProgressBarUI());
+        progressBar.setString("");
+        progressBar.setBackground(new Color(190, 200, 200, 50));
+        progressBar.setForeground(UIConstants.APP_CONTRAST_COLOR);
+        progressBar.setBorder(BorderFactory.createLineBorder(new Color(170, 180, 180, 200)));
+        progressBar.setStringPainted(true);
+        progressBar.setMinimumSize(new Dimension(450,7));
+        progressBar.setPreferredSize(progressBar.getMinimumSize());
+        progressBar.setOpaque(true);
+
+
+        return progressBar;
+    }
 
     static JPanel createSmallBoldLabel(String text) {
         JPanel lbl = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -107,26 +134,27 @@ public class UIHelper {
         return jp;
     }
 
-    static JPanel createButton(String text, int height, Font font, MouseListener listener) {
-        JPanel loginLbl = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        loginLbl.setBackground(Color.cyan);
-        loginLbl.setBackground(UIConstants.APP_CONTRAST_COLOR);
-        JLabel loginBtn = new JLabel(text);
-        loginBtn.setBackground(UIConstants.APP_CONTRAST_COLOR);
-        loginBtn.setOpaque(true);
-        loginBtn.setForeground(Color.white);
-        loginBtn.setFont(font);
-        loginBtn.setHorizontalAlignment(SwingConstants.CENTER);
-        loginBtn.setMinimumSize(new Dimension(450, height));
-//        loginBtn.setPreferredSize(new Dimension(1000, height));
-        loginBtn.setPreferredSize(loginBtn.getMinimumSize());
-//        loginBtn.setBorder(BorderFactory.createLineBorder(UIConstants.APP_CONTRAST_COLOR));
+    private static JPanel createButton(String text, int height, Font font, MouseListener listener) {
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        btnPanel.setBackground(Color.cyan);
+        btnPanel.setBackground(UIConstants.APP_CONTRAST_COLOR);
+
+        JLabel btnLabel = new JLabel(text);
+        btnLabel.setBackground(UIConstants.APP_CONTRAST_COLOR);
+        btnLabel.setOpaque(true);
+        btnLabel.setForeground(Color.white);
+        btnLabel.setFont(font);
+        btnLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        btnLabel.setMinimumSize(new Dimension(450, height));
+//        btnLabel.setPreferredSize(new Dimension(1000, height));
+        btnLabel.setPreferredSize(btnLabel.getMinimumSize());
+//        btnLabel.setBorder(BorderFactory.createLineBorder(UIConstants.APP_CONTRAST_COLOR));
 
         if (listener != null)
-            loginBtn.addMouseListener(listener);
-        loginLbl.add(loginBtn);
+            btnLabel.addMouseListener(listener);
+        btnPanel.add(btnLabel);
 
-        return loginLbl;
+        return btnPanel;
     }
 
     static JPanel createButton(String text, int height, MouseListener listener) {
@@ -158,6 +186,16 @@ public class UIHelper {
         return jp;
     }
 
+    private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyz123456789       ";
+    static String randomAlphaNumeric(int count) {
+        StringBuilder builder = new StringBuilder();
+        while (count-- != 0) {
+            int character = (int)(Math.random()*ALPHA_NUMERIC_STRING.length());
+            builder.append(ALPHA_NUMERIC_STRING.charAt(character));
+        }
+        return builder.toString();
+    }
+
     static <T> Row createRow(String label, Icon icon, InputType inputType, T data) {
         return new Row(label, icon, inputType, data);
     }
@@ -173,7 +211,7 @@ class Row<T> {
     private UIHelper.InputType inputType;
     private T data;
 
-    public Row(String label, Icon icon, UIHelper.InputType inputType, T data) {
+    Row(String label, Icon icon, UIHelper.InputType inputType, T data) {
         this.label = label;
         this.icon = icon;
         this.inputType = inputType;

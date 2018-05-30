@@ -1,72 +1,43 @@
 package com.mobiussoftware.iotbroker.ui;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
-import javax.swing.plaf.basic.BasicCheckBoxUI;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 public class SendMessagePane extends JPanel {
 
     private JPanel settingsPane;
-    private HintTextField contentTF;
-    private HintTextField topicTF;
+    private JTextField contentTF;
+    private JTextField topicTF;
     private JComboBox<Integer> qosCB;
     private JCheckBox retainCB;
     private JCheckBox duplicateCB;
+
+    private JPanel progressBarSpace;
+    private JProgressBar progressBar;
 
     SendMessagePane() {
         super();
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        JPanel txtLbl1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        txtLbl1.setBackground(new Color(0,0,0,0));
-        JLabel sendMsgLbl = new JLabel("send message:", SwingConstants.LEFT);
-        sendMsgLbl.setFont(UIConstants.TEXT_LABEL_FONT);
-        txtLbl1.add(sendMsgLbl);
-
-        this.add(txtLbl1);
+        progressBarSpace = UIHelper.createProgressBarSpace(5);
+        this.add(progressBarSpace);
 
         settingsPane = new JPanel();
-        settingsPane.setBackground(Color.white);
-
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.setBackground(Color.white);
-        wrapper.setBorder(BorderFactory.createLineBorder(Color.lightGray));
-        wrapper.add(settingsPane, BorderLayout.PAGE_START);
-        this.add(wrapper);
-
-//        JPanel sendLbl = new JPanel();
-//        JLabel sendBtn = new JLabel("Send");
-//        sendBtn.setBackground(UIConstants.APP_CONTRAST_COLOR);
-//        sendBtn.setOpaque(true);
-//        sendBtn.setForeground(Color.white);
-//        sendBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
-//        sendBtn.setHorizontalAlignment(SwingConstants.CENTER);
-//        sendBtn.setPreferredSize(new Dimension(1000, 35));
-//        sendBtn.setMinimumSize(new Dimension(450, 35));
-//        sendBtn.setBorder(BorderFactory.createLineBorder(Color.lightGray));
-//        sendBtn.addMouseListener(new MouseAdapter() {
-//            @Override
-//            public void mouseClicked(MouseEvent arg0) {
-//                System.out.println("Send button clicked!");
-//            }
-//        });
-//        sendLbl.add(sendBtn);
-//
-//        this.add(sendLbl);
-
+        settingsPane.setBackground(UIConstants.APP_BG_COLOR);
         MouseListener listener = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent arg0) {
-                System.out.println("Send button clicked!");
+                sendMessageAction();
             }
         };
+
+        this.add(UIHelper.createSmallBoldLabel("send message:"));
+        this.add(UIHelper.wrapInBorderLayout(settingsPane, BorderLayout.PAGE_START));
         this.add(UIHelper.createButton("Send", listener));
 
         addSettingsPaneElements();
@@ -78,133 +49,161 @@ public class SendMessagePane extends JPanel {
         UIManager.put("ComboBox.selectionForeground", new ColorUIResource(Color.gray));
 
         Image tmp = UIConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
-        ImageIcon gearIcn = new ImageIcon(tmp);
+        ImageIcon settingsIcon = new ImageIcon(tmp);
 
         final int rows = 5;
         final int columns = 2;
+        final int parameterAlignment = SwingConstants.LEFT;
+        final Color evenColor = UIConstants.ROW_EVEN_COLOR;
+        final Color oddColor = UIConstants.ROW_ODD_COLOR;
 
         settingsPane.setLayout(new GridLayout(rows, columns));
 
-        JPanel lbl1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        lbl1.setBackground(Color.white);
+        JPanel panel;
+        settingsPane.add( UIHelper.createParameterLabel("Content", settingsIcon, parameterAlignment, evenColor));
+        panel = UIHelper.createHintTextField("content", new Dimension(150, 28), evenColor );
+        contentTF = (JTextField)panel.getComponent(0);
+        settingsPane.add(panel);
+        settingsPane.add(UIHelper.createParameterLabel("Topic", settingsIcon, parameterAlignment, oddColor));
+        panel = UIHelper.createHintTextField("topic", new Dimension(150, 28), oddColor );
+        topicTF = (JTextField)panel.getComponent(0);
+        settingsPane.add(panel);
+        settingsPane.add(UIHelper.createParameterLabel("QoS", settingsIcon, parameterAlignment, evenColor));
+        panel = UIHelper.createJComboBox(AppConstants.QOS_VALUES, new Dimension(70, 22), evenColor);
+        qosCB = (JComboBox)((JPanel)panel.getComponent(0)).getComponent(0);
+        settingsPane.add(panel);
+        settingsPane.add(UIHelper.createParameterLabel("Retain", settingsIcon, parameterAlignment, oddColor));
+        panel = UIHelper.createJCheckBox(oddColor);
+        retainCB = (JCheckBox) panel.getComponent(0);
+        settingsPane.add(panel);
+        settingsPane.add(UIHelper.createParameterLabel("Duplicate", settingsIcon, parameterAlignment, evenColor));
+        panel = UIHelper.createJCheckBox(evenColor);
+        duplicateCB = (JCheckBox) panel.getComponent(0);
+        settingsPane.add(panel);
+    }
 
-        JLabel label = new JLabel("Content", gearIcn, SwingConstants.LEFT);
-        label.setBorder(new EmptyBorder(0, 10, 0, 0));
-        label.setFont(UIConstants.REGULAR_FONT);
-        label.setIconTextGap(10);
+    private void sendMessageAction() {
+        if (validateTextFieldsFilled()) {
 
-        lbl1.add(label);
-        settingsPane.add(lbl1);
+            addProgressBar();
 
-        JPanel val1 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        val1.setBackground(Color.white);
+            SendTask task = new SendTask(contentTF.getText(), topicTF.getText(), qosCB.getSelectedIndex(), retainCB.isSelected(), duplicateCB.isSelected());
+            task.addPropertyChangeListener(propertyChangeListener());
+            task.execute();
+        }
+    }
 
-        contentTF = new HintTextField("content", BorderFactory.createLineBorder(Color.lightGray));
-        contentTF.setHorizontalAlignment(JTextField.RIGHT);
-        contentTF.setFont(UIConstants.REGULAR_FONT);
-        contentTF.setMinimumSize(new Dimension(150, 28));
-        contentTF.setPreferredSize(contentTF.getMinimumSize());
+    private boolean validateTextFieldsFilled() {
 
-        val1.add(contentTF);
-        settingsPane.add(val1);
+        String content = contentTF.getText();
+        if (content == null || content.equals("")) {
+            contentTF.setBorder(BorderFactory.createLineBorder(Color.red));
+            contentTF.requestFocusInWindow();
+            contentTF.addKeyListener(new KeyListener() {
+                @Override
+                public void keyTyped(KeyEvent keyEvent) {
+                    contentTF.setBorder(BorderFactory.createLineBorder(Color.lightGray));
+                    contentTF.removeKeyListener(this);
+                }
 
-        JPanel lbl2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        lbl2.setBackground(UIConstants.ROW_EVEN_COLOR);
+                @Override
+                public void keyPressed(KeyEvent keyEvent) {
+                }
 
-        label = new JLabel("Topic", gearIcn, SwingConstants.LEFT);
-        label.setBorder(new EmptyBorder(0, 10, 0, 0));
-        label.setFont(UIConstants.REGULAR_FONT);
-        label.setIconTextGap(10);
+                @Override
+                public void keyReleased(KeyEvent keyEvent) {
+                }
+            });
+            return false;
+        }
 
-        lbl2.add(label);
-        settingsPane.add(lbl2);
+        String topic = topicTF.getText();
+        if (topic == null || topic.equals("")) {
+            topicTF.setBorder(BorderFactory.createLineBorder(Color.red));
+            topicTF.requestFocusInWindow();
+            topicTF.addKeyListener(new KeyListener() {
+                @Override
+                public void keyTyped(KeyEvent keyEvent) {
+                    topicTF.setBorder(BorderFactory.createLineBorder(Color.lightGray));
+                    topicTF.removeKeyListener(this);
+                }
 
-        JPanel val2 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        val2.setBackground(UIConstants.ROW_EVEN_COLOR);
+                @Override
+                public void keyPressed(KeyEvent keyEvent) {
+                }
 
-        topicTF = new HintTextField("topic", BorderFactory.createLineBorder(Color.lightGray));
-        topicTF.setHorizontalAlignment(JTextField.RIGHT);
-        topicTF.setFont(UIConstants.REGULAR_FONT);
-        topicTF.setMinimumSize(new Dimension(150, 28));
-        topicTF.setPreferredSize(topicTF.getMinimumSize());
+                @Override
+                public void keyReleased(KeyEvent keyEvent) {
+                }
+            });
+            return false;
+        }
+        return true;
+    }
 
-        val2.add(topicTF);
-        settingsPane.add(val2);
+    private PropertyChangeListener propertyChangeListener() {
+        return new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (evt.getPropertyName() == "progress") {
+                    int progress = (Integer) evt.getNewValue();
+                    progressBar.setValue(progress);
+                }
+            }
+        };
+    }
 
-        JPanel lbl3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        lbl3.setBackground(Color.white);
+    private void addProgressBar() {
+        progressBar = UIHelper.createProgressBar();
+        if (progressBarSpace.getComponents().length > 0) {
+            for (Component c:progressBarSpace.getComponents()) {
+                progressBarSpace.remove(c);
+            }
+        }
+        progressBarSpace.add(progressBar);
+        progressBar.revalidate();
+    }
 
-        label = new JLabel("QoS", gearIcn, SwingConstants.LEFT);
-        label.setBorder(new EmptyBorder(0, 10, 0, 0));
-        label.setIconTextGap(10);
-        label.setFont(UIConstants.REGULAR_FONT);
+    private void removeProgressBar() {
+        progressBarSpace.remove(progressBar);
+        SendMessagePane.this.revalidate();
+        SendMessagePane.this.repaint();
+    }
 
-        lbl3.add(label);
-        settingsPane.add(lbl3);
+    class SendTask extends NetworkTask<Void, Void> {
+        private String content;
+        private String topic;
+        private int qos;
+        private boolean retain;
+        private boolean duplicate;
 
-        qosCB = new JComboBox<>(AppConstants.QOS_VALUES);
+        public SendTask(String content, String topic, int qos, boolean retain, boolean duplicate) {
+            this.content = content;
+            this.topic = topic;
+            this.qos = qos;
+            this.retain = retain;
+            this.duplicate = duplicate;
+        }
 
-        JPanel val3 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        val3.setBackground(Color.white);
+        @Override
+        public Void doInBackground() {
+            super.doInBackground();
+            //sent to server logic!!
 
-        JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT,0,0));
-        wrapper.setBackground(Color.yellow);
-        wrapper.setMinimumSize(new Dimension(72, 24));
-        wrapper.setPreferredSize(wrapper.getMinimumSize());
-        wrapper.setBorder(BorderFactory.createLineBorder(Color.lightGray));
+            return null;
+        }
 
-        qosCB.setFont(UIConstants.REGULAR_FONT);
-        qosCB.setMinimumSize(new Dimension(70, 22));
-        qosCB.setPreferredSize(qosCB.getMinimumSize());
-        qosCB.setUI(CustomComboBoxUI.createUI(qosCB));
+        @Override
+        protected void done() {
+            System.out.println("Sent!");
+            removeProgressBar();
 
-        BasicComboBoxRenderer renderer = (BasicComboBoxRenderer)qosCB.getRenderer();
-        renderer.setBorder(new EmptyBorder(0,7,0,0));
-
-        val3.add(wrapper);
-        wrapper.add(qosCB);
-
-        settingsPane.add(val3);
-
-        JPanel lbl4 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        lbl4.setBackground(UIConstants.ROW_EVEN_COLOR);
-
-        label = new JLabel("Retain", gearIcn, SwingConstants.LEFT);
-        label.setBorder(new EmptyBorder(0, 10, 0, 0));
-        label.setFont(UIConstants.REGULAR_FONT);
-        label.setIconTextGap(10);
-
-        lbl4.add(label);
-        settingsPane.add(lbl4);
-
-        JPanel val4 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        val4.setBackground(UIConstants.ROW_EVEN_COLOR);
-        retainCB = new JCheckBox();
-        retainCB.setBackground(UIConstants.ROW_EVEN_COLOR);
-        retainCB.setUI(new BasicCheckBoxUI() {
-        });
-        val4.add(retainCB);
-
-        settingsPane.add(val4);
-
-        JPanel lbl5 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        lbl5.setBackground(Color.white);
-
-        label = new JLabel("Duplicate", gearIcn, SwingConstants.LEFT);
-        label.setBorder(new EmptyBorder(0, 10, 0, 0));
-        label.setFont(UIConstants.REGULAR_FONT);
-        label.setIconTextGap(10);
-
-        lbl5.add(label);
-        settingsPane.add(lbl5);
-
-        JPanel val5 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        val5.setBackground(Color.white);
-        duplicateCB = new JCheckBox();
-        duplicateCB.setBackground(Color.white);
-        val5.add(duplicateCB);
-
-        settingsPane.add(val5);
+            contentTF.setText("");
+            topicTF.setText("");
+            qosCB.setSelectedIndex(0);
+            retainCB.setSelected(false);
+            duplicateCB.setSelected(false);
+        }
     }
 
     @Override

@@ -4,9 +4,12 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
+import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -15,6 +18,14 @@ public class TopicListPane extends JPanel {
 
     private JPanel emptySpace;
     private JPanel topics;
+
+    private JPanel progressBarSpace;
+    private JProgressBar progressBar;
+
+    private Map<Integer, Component[]> componentList = new HashMap<>();
+
+    private HintTextField topicInput;
+    private JComboBox<Integer> dropDown;
 
     TopicListPane() {
         super();
@@ -25,6 +36,9 @@ public class TopicListPane extends JPanel {
         emptySpace.setBackground(Color.white);
 //        emptySpace.setBorder(BorderFactory.createLineBorder(Color.blue));
         emptySpace.add(Box.createRigidArea(new Dimension(50,5)));
+
+        progressBarSpace = UIHelper.createProgressBarSpace(5);
+        this.add(progressBarSpace);
 
         JPanel txtLbl1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         txtLbl1.setBackground(new Color(0,0,0,0));
@@ -87,8 +101,6 @@ public class TopicListPane extends JPanel {
         addAddTopicElements(addTopic);
     }
 
-    private Map<Integer, Component[]> componentList = new HashMap<>();
-
     //adding subelements to topicList panel
     private void addTopicListElements(final JPanel parent) {
 
@@ -127,25 +139,7 @@ public class TopicListPane extends JPanel {
 
             JLabel deleteBtn = new JLabel(UIConstants.IC_TRASH, SwingConstants.CENTER);
             deleteBtn.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-            deleteBtn.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent arg0) {
-
-                    JLabel btnClicked = (JLabel)arg0.getSource();
-                    String index = btnClicked.getName();
-                    System.out.println("Delete topic clicked! " + index);
-                    int i = Integer.valueOf(index);
-
-                    Component[] row = componentList.get(i);
-                    parent.remove(row[0]);
-                    parent.remove(row[1]);
-                    parent.remove(row[2]);
-
-                    componentList.remove(i);
-                    parent.revalidate();
-                    parent.repaint();
-                }
-            });
+            deleteBtn.addMouseListener(deleteTopicAction());
             deleteBtn.setName(String.valueOf(i));
 
             c.gridx = 2;
@@ -205,25 +199,7 @@ public class TopicListPane extends JPanel {
 //
         JLabel deleteBtn = new JLabel(UIConstants.IC_TRASH, SwingConstants.CENTER);
         deleteBtn.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-        deleteBtn.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent arg0) {
-
-                JLabel btnClicked = (JLabel)arg0.getSource();
-                String index = btnClicked.getName();
-                System.out.println("Delete topic clicked! " + index);
-                int i = Integer.valueOf(index);
-
-                Component[] row = componentList.get(i);
-                topics.remove(row[0]);
-                topics.remove(row[1]);
-                topics.remove(row[2]);
-
-                componentList.remove(i);
-                topics.revalidate();
-                topics.repaint();
-            }
-        });
+        deleteBtn.addMouseListener(deleteTopicAction());
 
         deleteBtn.setName(String.valueOf(rowNumber));
 
@@ -252,34 +228,19 @@ public class TopicListPane extends JPanel {
         topics.add(emptySpace, c);
     }
 
-    private void addTopicAction() {
-        String topic = topicInput.getText();
-        if (topic == null || topic.equals("")) {
-            topicInput.setBorder(BorderFactory.createLineBorder(Color.red));
-            topicInput.requestFocusInWindow();
-            topicInput.addKeyListener(new KeyListener() {
-                @Override
-                public void keyTyped(KeyEvent keyEvent) {
-                    topicInput.setBorder(BorderFactory.createLineBorder(Color.gray));
-                    topicInput.removeKeyListener(this);
-                }
+    private void deleteListRow(String index) {
+        System.out.println("Delete topic clicked! " + index);
+        int i = Integer.valueOf(index);
 
-                @Override
-                public void keyPressed(KeyEvent keyEvent) {
-                }
+        Component[] row = componentList.get(i);
+        topics.remove(row[0]);
+        topics.remove(row[1]);
+        topics.remove(row[2]);
 
-                @Override
-                public void keyReleased(KeyEvent keyEvent) {
-                }
-            });
-            return;
-        }
-        int qos = dropDown.getSelectedIndex();
-        addTopicListRow(topic, qos);
+        componentList.remove(i);
+        topics.revalidate();
+        topics.repaint();
     }
-
-    private HintTextField topicInput;
-    private JComboBox<Integer> dropDown;
 
     //adding subelements to addtopic panel
     private void addAddTopicElements(JPanel parent) {
@@ -310,7 +271,7 @@ public class TopicListPane extends JPanel {
         el2.add(topicInput);
 
         JPanel el3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        el3.setBackground(UIConstants.ROW_EVEN_COLOR);
+        el3.setBackground(UIConstants.ROW_ODD_COLOR);
 
         text = new JLabel("QoS:");
         text.setFont(UIConstants.REGULAR_FONT);
@@ -319,7 +280,7 @@ public class TopicListPane extends JPanel {
         dropDown = new JComboBox<>(AppConstants.QOS_VALUES);
 
         JPanel el4 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        el4.setBackground(UIConstants.ROW_EVEN_COLOR);
+        el4.setBackground(UIConstants.ROW_ODD_COLOR);
 
         JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT,0,0));
         wrapper.setBackground(Color.yellow);
@@ -346,6 +307,113 @@ public class TopicListPane extends JPanel {
         parent.add(el2);
         parent.add(el3);
         parent.add(el4);
+    }
+
+    private void addTopicAction() {
+        //validation
+        String topic = topicInput.getText();
+        if (topic == null || topic.equals("")) {
+            topicInput.setBorder(BorderFactory.createLineBorder(Color.red));
+            topicInput.requestFocusInWindow();
+            topicInput.addKeyListener(new KeyListener() {
+                @Override
+                public void keyTyped(KeyEvent keyEvent) {
+                    topicInput.setBorder(BorderFactory.createLineBorder(Color.gray));
+                    topicInput.removeKeyListener(this);
+                }
+
+                @Override
+                public void keyPressed(KeyEvent keyEvent) {
+                }
+
+                @Override
+                public void keyReleased(KeyEvent keyEvent) {
+                }
+            });
+            return;
+        }
+        int qos = dropDown.getSelectedIndex();
+
+        addProgressBar();
+
+        AddTopicTask task = new AddTopicTask(topic, qos);
+        task.addPropertyChangeListener(propertyChangeListener());
+        task.execute();
+    }
+
+    private MouseListener deleteTopicAction() {
+        return new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent arg0) {
+                JLabel btnClicked = (JLabel)arg0.getSource();
+                btnClicked.removeMouseListener(this);
+
+                addProgressBar();
+
+                DeleteTopicTask task = new DeleteTopicTask(btnClicked.getName());
+                task.addPropertyChangeListener(propertyChangeListener());
+                task.execute();
+            }
+        };
+    }
+
+    class AddTopicTask extends NetworkTask<Void, Void> {
+        private String topic;
+        private int qos;
+
+        public AddTopicTask(String topic, int qos) {
+            this.topic = topic;
+            this.qos = qos;
+        }
+
+        @Override
+        protected void done() {
+            addTopicListRow(topic, qos);
+            removeProgressBar();
+        }
+    }
+
+    class DeleteTopicTask extends NetworkTask<Void, Void> {
+        private String index;
+
+        public DeleteTopicTask(String index) {
+            this.index = index;
+        }
+
+        @Override
+        public void done() {
+            deleteListRow(index);
+            removeProgressBar();
+        }
+    }
+
+    private PropertyChangeListener propertyChangeListener() {
+        return new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (evt.getPropertyName() == "progress") {
+                    int progress = (Integer) evt.getNewValue();
+                    progressBar.setValue(progress);
+                }
+            }
+        };
+    }
+
+    private void addProgressBar() {
+        progressBar = UIHelper.createProgressBar();
+        if (progressBarSpace.getComponents().length > 0) {
+            for (Component c:progressBarSpace.getComponents()) {
+                progressBarSpace.remove(c);
+            }
+        }
+        progressBarSpace.add(progressBar);
+        progressBar.revalidate();
+    }
+
+    private void removeProgressBar() {
+        progressBarSpace.remove(progressBar);
+        TopicListPane.this.revalidate();
+        TopicListPane.this.repaint();
     }
 
     @Override
@@ -389,7 +457,6 @@ class RoundedFilledLabel extends JLabel {
         int height = getHeight();
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
 
         //Draws the rounded panel with borders.
         g2d.setColor(color);

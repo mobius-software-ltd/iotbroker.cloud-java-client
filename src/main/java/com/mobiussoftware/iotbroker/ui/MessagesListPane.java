@@ -25,7 +25,7 @@ public class MessagesListPane extends JPanel {
         messagesPane.setBackground(Color.white);
         messagesPane.setMinimumSize(new Dimension(410, 280));
         messagesPane.setPreferredSize(new Dimension(410, msgCount * 85));
-        messagesPane.setBorder(BorderFactory.createLineBorder(Color.lightGray));
+//        messagesPane.setBorder(BorderFactory.createLineBorder(Color.lightGray));
 
         JScrollPane scrollPane = new JScrollPane(messagesPane);
         scrollPane.setPreferredSize(new Dimension(450, 1000));
@@ -49,7 +49,7 @@ public class MessagesListPane extends JPanel {
         Random r = new Random();
 
         for (int i = 0; i < msgCount; i++) {
-            Color bgColor = i%2 == 0 ? Color.white : UIConstants.ROW_EVEN_COLOR;
+            Color bgColor = i%2 == 0 ? Color.white : UIConstants.ROW_ODD_COLOR;
 
             JPanel messageData = new JPanel();
             messageData.setLayout(new BoxLayout(messageData, BoxLayout.Y_AXIS));
@@ -60,7 +60,7 @@ public class MessagesListPane extends JPanel {
             topic.setFont(UIConstants.REGULAR_BOLD_FONT);
             topic.setBorder(BorderFactory.createEmptyBorder(5,5,2,5));
 
-            JLabel text = new JLabel("<html>message payload " + randomAlphaNumeric(r.nextInt(128) + 64) + i + "</html>", SwingConstants.LEFT);
+            JLabel text = new JLabel("<html>message payload " + UIHelper.randomAlphaNumeric(r.nextInt(128) + 64) + i + "</html>", SwingConstants.LEFT);
             text.setFont(UIConstants.REGULAR_FONT);
             text.setBorder(BorderFactory.createEmptyBorder(1,5,3,5));
 
@@ -142,17 +142,6 @@ public class MessagesListPane extends JPanel {
         TexturePaint paint = new TexturePaint(bimage, new Rectangle(0, 0, bgImage.getWidth(null), bgImage.getHeight(null)));
         g2d.setPaint(paint);
         g2d.fillRect(0, 0, getWidth(), getHeight());
-    }
-
-    private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyz123456789       ";
-
-    private static String randomAlphaNumeric(int count) {
-        StringBuilder builder = new StringBuilder();
-        while (count-- != 0) {
-            int character = (int)(Math.random()*ALPHA_NUMERIC_STRING.length());
-            builder.append(ALPHA_NUMERIC_STRING.charAt(character));
-        }
-        return builder.toString();
     }
 }
 

@@ -10,12 +10,14 @@ class UIConstants {
     static final int MAIN_FRAME_HEIGHT = 533;
     static final int LOGIN_FRAME_WIDTH = 418;
     static final int LOGIN_FRAME_HEIGHT = 548;
+    static final int LOGO_FRAME_WIDTH = 299;
+    static final int LOGO_FRAME_HEIGHT = 287;
 
     static final Color APP_BG_COLOR = Color.white;
     static final Color APP_CONTRAST_COLOR = new Color(25, 163, 219);
     static final Color SELECTION_COLOR = new Color(25, 163, 219, 50);
-    static final Color ROW_ODD_COLOR = Color.white;
-    static final Color ROW_EVEN_COLOR = new Color(245, 245, 245);
+    static final Color ROW_EVEN_COLOR = Color.white;
+    static final Color ROW_ODD_COLOR = new Color(245, 245, 245);
     static final Color BLUE_COLOR = new Color(0, 161, 217);
     static final Color YELLOW_COLOR = new Color(252, 227, 79);
 
@@ -40,8 +42,10 @@ class UIConstants {
     private static final String IC_HOST_PORT_FILE_PATH = "ic_host_port.png";
     private static final String IC_CLEAN_SESSION_FILE_PATH = "ic_clean_session.png";
     private static final String IC_KEEP_ALIVE_FILE_PATH = "ic_keep_alive.png";
-
     private static final String IC_TRASH_FILE_PATH = "ic_trash.png";
+
+    static final String LOGO_FILE_PATH = "logo.png";
+    static final String IC_LOADING_FILE_PATH = "ic_loading_text.png";
 
     static final Font TEXT_LABEL_FONT = new Font("SansSerif", Font.BOLD, 10);
     static final Font REGULAR_FONT = new Font("SansSerif", Font.PLAIN, 12);
