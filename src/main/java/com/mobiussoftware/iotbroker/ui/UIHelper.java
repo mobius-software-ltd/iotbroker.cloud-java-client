@@ -1,5 +1,7 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import com.sun.rowset.internal.Row;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
@@ -90,13 +92,10 @@ public class UIHelper {
         return lbl;
     }
 
-    static <T extends Object> JPanel createJComboBox(T[] values, Dimension dimension, Color color) {
+    static <T extends Object> JPanel createJComboBox(T[] values, Dimension dimension) {
         UIManager.put("ComboBox.background", new ColorUIResource(Color.white));
         UIManager.put("ComboBox.selectionBackground", UIConstants.SELECTION_COLOR);
         UIManager.put("ComboBox.selectionForeground", new ColorUIResource(Color.gray));
-
-        JPanel val = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        val.setBackground(color);
 
         JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT,0,0));
         Dimension wrapperDimension = new Dimension(dimension.width + 2, dimension.height + 2);
@@ -113,15 +112,12 @@ public class UIHelper {
         BasicComboBoxRenderer renderer = (BasicComboBoxRenderer)cb.getRenderer();
         renderer.setBorder(new EmptyBorder(0,7,0,0));
 
-        val.add(wrapper);
         wrapper.add(cb);
 
-        return val;
+        return wrapper;
     }
 
-    static JPanel createHintTextField(String hint, Dimension dimension, Color color) {
-        JPanel jp = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        jp.setBackground(color);
+    static HintTextField createHintTextField(String hint, Dimension dimension) {
 
         HintTextField tf = new HintTextField(hint, BorderFactory.createLineBorder(Color.lightGray));
         tf.setHorizontalAlignment(JTextField.RIGHT);
@@ -129,7 +125,23 @@ public class UIHelper {
         tf.setMinimumSize(dimension);
         tf.setPreferredSize(tf.getMinimumSize());
 
-        jp.add(tf);
+        return tf;
+    }
+
+    static JCheckBox createJCheckBox(Color color) {
+
+        JCheckBox cb = new JCheckBox();
+        cb.setBackground(color);
+        cb.setUI(new BasicCheckBoxUI() {
+        });
+
+        return cb;
+    }
+
+    static JPanel wrapInJPanel(Component component, Color color) {
+        JPanel jp = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        jp.setBackground(color);
+        jp.add(component);
 
         return jp;
     }
@@ -172,20 +184,6 @@ public class UIHelper {
         return createButton(text, height, font, null);
     }
 
-    static JPanel createJCheckBox(Color color) {
-
-        JPanel jp = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        jp.setBackground(color);
-
-        JCheckBox cb = new JCheckBox();
-        cb.setBackground(color);
-        cb.setUI(new BasicCheckBoxUI() {
-        });
-        jp.add(cb);
-
-        return jp;
-    }
-
     private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyz123456789       ";
     static String randomAlphaNumeric(int count) {
         StringBuilder builder = new StringBuilder();
@@ -196,64 +194,65 @@ public class UIHelper {
         return builder.toString();
     }
 
-    static <T> Row createRow(String label, Icon icon, InputType inputType, T data) {
-        return new Row(label, icon, inputType, data);
-    }
-
-    enum InputType{
-        textfield, combobox, checkbox
-    }
+//    static <T> Row createRow(String label, Icon icon, InputType inputType, T data) {
+//        return new Row(label, icon, inputType, data);
+//    }
+//
+//    enum InputType{
+//        textarea, textfield, combobox, checkbox
+//    }
 }
 
-class Row<T> {
-    private String label;
-    private Icon icon;
-    private UIHelper.InputType inputType;
-    private T data;
-
-    Row(String label, Icon icon, UIHelper.InputType inputType, T data) {
-        this.label = label;
-        this.icon = icon;
-        this.inputType = inputType;
-        this.data = data;
-
-        try {
-            init();
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void init() throws Exception {
-        switch (inputType) {
-            case textfield:
-                if (!(data instanceof String))
-                    throw new Exception("For textfield input type String parameter should be passed as 4th argument of a row");
-                break;
-            case checkbox:
-                if (!(data instanceof Boolean))
-                    throw new Exception("For checkbox input type Boolean parameter should be passed as 4th argument of a row");
-                break;
-            case combobox:
-                if (!(data instanceof Object[]))
-                    throw new Exception("For textfield input type Object[] parameter should be passed as 4th argument of a row");
-                break;
-        }
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public Icon getIcon() {
-        return icon;
-    }
-
-    public UIHelper.InputType getInputType() {
-        return inputType;
-    }
-
-    public T getData() {
-        return data;
-    }
-}
+//class Row<T> {
+//    private String label;
+//    private Icon icon;
+//    private UIHelper.InputType inputType;
+//    private T data;
+//
+//    Row(String label, Icon icon, UIHelper.InputType inputType, T data) {
+//        this.label = label;
+//        this.icon = icon;
+//        this.inputType = inputType;
+//        this.data = data;
+//
+//        try {
+//            init();
+//        } catch(Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    private void init() throws Exception {
+//        switch (inputType) {
+//            case textarea:
+//            case textfield:
+//                if (!(data instanceof String))
+//                    throw new Exception("For " + inputType + " input type String parameter should be passed as 4th argument of a row");
+//                break;
+//            case checkbox:
+//                if (!(data instanceof Boolean))
+//                    throw new Exception("For checkbox input type Boolean parameter should be passed as 4th argument of a row");
+//                break;
+//            case combobox:
+//                if (!(data instanceof Object[]))
+//                    throw new Exception("For textfield input type Object[] parameter should be passed as 4th argument of a row");
+//                break;
+//        }
+//    }
+//
+//    public String getLabel() {
+//        return label;
+//    }
+//
+//    public Icon getIcon() {
+//        return icon;
+//    }
+//
+//    public UIHelper.InputType getInputType() {
+//        return inputType;
+//    }
+//
+//    public T getData() {
+//        return data;
+//    }
+//}

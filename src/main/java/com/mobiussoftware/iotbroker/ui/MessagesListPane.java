@@ -1,13 +1,16 @@
 package com.mobiussoftware.iotbroker.ui;
 
 import javax.swing.*;
+import javax.swing.border.CompoundBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Random;
 
 public class MessagesListPane extends JPanel {
 
-    private final int msgCount = 3;
+    static final int COLORED_LABEL_WIDTH = 80;
+    static final int COLORED_LABEL_HEIGHT = 40;
+    private final int msgCount = 50;
 
     MessagesListPane() {
         super();
@@ -24,7 +27,7 @@ public class MessagesListPane extends JPanel {
         JPanel messagesPane = new JPanel();
         messagesPane.setBackground(Color.white);
         messagesPane.setMinimumSize(new Dimension(410, 280));
-        messagesPane.setPreferredSize(new Dimension(410, msgCount * 85));
+        messagesPane.setPreferredSize(new Dimension(410, msgCount * 200));
 //        messagesPane.setBorder(BorderFactory.createLineBorder(Color.lightGray));
 
         JScrollPane scrollPane = new JScrollPane(messagesPane);
@@ -44,7 +47,7 @@ public class MessagesListPane extends JPanel {
         parent.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
-        c.fill = GridBagConstraints.BOTH;
+
 
         Random r = new Random();
 
@@ -60,24 +63,26 @@ public class MessagesListPane extends JPanel {
             topic.setFont(UIConstants.REGULAR_BOLD_FONT);
             topic.setBorder(BorderFactory.createEmptyBorder(5,5,2,5));
 
-            JLabel text = new JLabel("<html>message payload " + UIHelper.randomAlphaNumeric(r.nextInt(128) + 64) + i + "</html>", SwingConstants.LEFT);
+            JLabel text = new JLabel("<html>message payload " + UIHelper.randomAlphaNumeric(r.nextInt(512) + 64) + i + "</html>", SwingConstants.LEFT);
             text.setFont(UIConstants.REGULAR_FONT);
             text.setBorder(BorderFactory.createEmptyBorder(1,5,3,5));
 
             messageData.add(topic);
             messageData.add(text);
 
+            c.fill = GridBagConstraints.BOTH;
             c.gridx = 0;
             c.gridy = i;
-            c.weightx = 5;
+            c.weightx = 10;
             c.anchor = GridBagConstraints.NORTHWEST;
 
             parent.add(messageData, c);
 
-            JPanel extraData = new TwoColorRoundedRect(UIConstants.BLUE_COLOR, UIConstants.YELLOW_COLOR, 20, 0, 4);
+            JPanel extraData = new TwoColorRoundedRect();
             extraData.setBackground(bgColor);
+            extraData.setMinimumSize(new Dimension(COLORED_LABEL_WIDTH, 1));
+            extraData.setPreferredSize(extraData.getMinimumSize());
             extraData.setLayout(new BoxLayout(extraData, BoxLayout.Y_AXIS));
-
 
             JLabel direction = new JLabel(r.nextInt(2) == 0 ? "in" : "out", SwingConstants.CENTER);
             direction.setFont(UIConstants.REGULAR_FONT);
@@ -96,17 +101,18 @@ public class MessagesListPane extends JPanel {
 //            extraData.add(Box.createRigidArea(new Dimension(1,6)));
             extraData.add(qos);
 
+            c.fill = GridBagConstraints.VERTICAL;
             c.gridx = 1;
-            c.weightx = 1;
+            c.weightx = 0;
             c.anchor = GridBagConstraints.NORTHEAST;
 
             parent.add(extraData, c);
 
             c.gridx = 2;
-            c.weightx = 0.1;
+            c.weightx = 0;
             c.anchor = GridBagConstraints.NORTHEAST;
 
-            parent.add(Box.createRigidArea(new Dimension(1,5)), c);
+            parent.add(Box.createRigidArea(new Dimension(5,5)), c);
 
         }
 
@@ -146,37 +152,39 @@ public class MessagesListPane extends JPanel {
 }
 
 class TwoColorRoundedRect extends JPanel {
-    private Color color1;
-    private Color color2;
-    private int cornerRadius;
-    private int verticalOffset;
-    private int horizontalOffset;
+    private final Color color1 = UIConstants.BLUE_COLOR;
+    private final Color color2 = UIConstants.YELLOW_COLOR;
+    private final int cornerRadius = 25;
+    private final int width = MessagesListPane.COLORED_LABEL_WIDTH;
+    private final int height = MessagesListPane.COLORED_LABEL_HEIGHT;
 
-    TwoColorRoundedRect(Color color1, Color color2, int cornerRadius, int horizontalOffset, int verticalOffset) {
-        this.color1 = color1;
-        this.color2 = color2;
-        this.cornerRadius = cornerRadius;
-        this.verticalOffset = verticalOffset;
-        this.horizontalOffset = horizontalOffset;
+    public TwoColorRoundedRect() {
+        super.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
     }
 
     @Override
     protected void paintComponent(Graphics g) {
+        int areaWidth = getWidth();
+//        System.out.println("area width is " + areaWidth);
+        int areaHeight = getHeight();
+        int horizontalOffset = (areaWidth - width)/2;
+//        System.out.println("horizontal offset is " + horizontalOffset);
+        int verticalOffset = (areaHeight - height)/2;
 
-        int width = getWidth();
-        int height = getHeight();
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         super.paintComponent(g);
         //Draws the rounded panel with borders.
         g2d.setColor(color1);
-        g2d.fillRoundRect(horizontalOffset, verticalOffset, width-horizontalOffset, height-verticalOffset-3-1, cornerRadius, cornerRadius);//paint background
-        g2d.setColor(color2);
-        g2d.fillRoundRect(horizontalOffset, height/2, width-horizontalOffset, 10, 0, 0);//paint background
-        g2d.fillRoundRect(horizontalOffset, height/2 + 1, width-horizontalOffset, (height-verticalOffset-3)/2, cornerRadius, cornerRadius);//paint background
+        g2d.fillRoundRect(horizontalOffset, verticalOffset, width, height-1, cornerRadius, cornerRadius);
 
-        ((JLabel)this.getComponents()[0]).setBorder(BorderFactory.createEmptyBorder(height/4 - UIConstants.REGULAR_FONT.getSize()/2, 0,height/4 - UIConstants.REGULAR_FONT.getSize()/2,0));
-        ((JLabel)this.getComponents()[1]).setBorder(BorderFactory.createEmptyBorder(height/4 - UIConstants.REGULAR_FONT.getSize(), 0,0,0));
+        g2d.setColor(color2);
+        int rectangularZoneHeight = height/4;
+        g2d.fillRoundRect(horizontalOffset, areaHeight/2, width, rectangularZoneHeight, 0, 0);
+        g2d.fillRoundRect(horizontalOffset, areaHeight/2, width, height/2, cornerRadius, cornerRadius);
+
+        ((JLabel)this.getComponents()[0]).setBorder(BorderFactory.createEmptyBorder(areaHeight/2 - height/2, 0, 0,0));
+        ((JLabel)this.getComponents()[1]).setBorder(BorderFactory.createEmptyBorder(height/4 - UIConstants.REGULAR_FONT.getSize()/2, 0,0,0));
     }
 }

@@ -42,6 +42,9 @@ public class SendMessagePane extends JPanel {
 
         addSettingsPaneElements();
     }
+    private Color rowColor(int rowNumber) {
+        return rowNumber % 2 == 0 ? UIConstants.ROW_EVEN_COLOR : UIConstants.ROW_ODD_COLOR;
+    }
 
     private void addSettingsPaneElements() {
         UIManager.put("ComboBox.background", new ColorUIResource(Color.white));
@@ -53,33 +56,31 @@ public class SendMessagePane extends JPanel {
 
         final int rows = 5;
         final int columns = 2;
-        final int parameterAlignment = SwingConstants.LEFT;
-        final Color evenColor = UIConstants.ROW_EVEN_COLOR;
-        final Color oddColor = UIConstants.ROW_ODD_COLOR;
-
         settingsPane.setLayout(new GridLayout(rows, columns));
 
-        JPanel panel;
-        settingsPane.add( UIHelper.createParameterLabel("Content", settingsIcon, parameterAlignment, evenColor));
-        panel = UIHelper.createHintTextField("content", new Dimension(150, 28), evenColor );
-        contentTF = (JTextField)panel.getComponent(0);
-        settingsPane.add(panel);
-        settingsPane.add(UIHelper.createParameterLabel("Topic", settingsIcon, parameterAlignment, oddColor));
-        panel = UIHelper.createHintTextField("topic", new Dimension(150, 28), oddColor );
-        topicTF = (JTextField)panel.getComponent(0);
-        settingsPane.add(panel);
-        settingsPane.add(UIHelper.createParameterLabel("QoS", settingsIcon, parameterAlignment, evenColor));
-        panel = UIHelper.createJComboBox(AppConstants.QOS_VALUES, new Dimension(70, 22), evenColor);
-        qosCB = (JComboBox)((JPanel)panel.getComponent(0)).getComponent(0);
-        settingsPane.add(panel);
-        settingsPane.add(UIHelper.createParameterLabel("Retain", settingsIcon, parameterAlignment, oddColor));
-        panel = UIHelper.createJCheckBox(oddColor);
-        retainCB = (JCheckBox) panel.getComponent(0);
-        settingsPane.add(panel);
-        settingsPane.add(UIHelper.createParameterLabel("Duplicate", settingsIcon, parameterAlignment, evenColor));
-        panel = UIHelper.createJCheckBox(evenColor);
-        duplicateCB = (JCheckBox) panel.getComponent(0);
-        settingsPane.add(panel);
+        final int parameterAlignment = SwingConstants.LEFT;
+        int i = 0;
+
+        settingsPane.add( UIHelper.createParameterLabel("Content", settingsIcon, parameterAlignment, rowColor(i)));
+        contentTF = UIHelper.createHintTextField("content", new Dimension(150, 28));
+        settingsPane.add(UIHelper.wrapInJPanel(contentTF, rowColor(i++)));
+
+        settingsPane.add(UIHelper.createParameterLabel("Topic", settingsIcon, parameterAlignment, rowColor(i)));
+        topicTF = UIHelper.createHintTextField("topic", new Dimension(150, 28));
+        settingsPane.add(UIHelper.wrapInJPanel(topicTF, rowColor(i++)));
+
+        settingsPane.add(UIHelper.createParameterLabel("QoS", settingsIcon, parameterAlignment, rowColor(i)));
+        JPanel panel = UIHelper.createJComboBox(AppConstants.QOS_VALUES, new Dimension(70, 22));
+        qosCB = (JComboBox)(panel.getComponent(0));
+        settingsPane.add(UIHelper.wrapInJPanel(panel, rowColor(i++)));
+
+        settingsPane.add(UIHelper.createParameterLabel("Retain", settingsIcon, parameterAlignment, rowColor(i)));
+        retainCB = UIHelper.createJCheckBox(rowColor(i));
+        settingsPane.add(UIHelper.wrapInJPanel(retainCB, rowColor(i++)));
+
+        settingsPane.add(UIHelper.createParameterLabel("Duplicate", settingsIcon, parameterAlignment, rowColor(i)));
+        duplicateCB = UIHelper.createJCheckBox(rowColor(i));
+        settingsPane.add(UIHelper.wrapInJPanel(duplicateCB, rowColor(i++)));
     }
 
     private void sendMessageAction() {
