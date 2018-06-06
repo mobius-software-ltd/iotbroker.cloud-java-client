@@ -1,5 +1,7 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
+
 import javax.swing.*;
 import javax.swing.plaf.ColorUIResource;
 import java.awt.*;
@@ -11,7 +13,7 @@ import java.beans.PropertyChangeListener;
 public class SendMessagePane extends JPanel {
 
     private JPanel settingsPane;
-    private JTextField contentTF;
+    private HintDialogTextField contentTF;
     private JTextField topicTF;
     private JComboBox<Integer> qosCB;
     private JCheckBox retainCB;
@@ -62,7 +64,7 @@ public class SendMessagePane extends JPanel {
         int i = 0;
 
         settingsPane.add( UIHelper.createParameterLabel("Content", settingsIcon, parameterAlignment, rowColor(i)));
-        contentTF = UIHelper.createHintTextField("content", new Dimension(150, 28));
+        contentTF = UIHelper.createTextArea("content", new Dimension(150, 28));
         settingsPane.add(UIHelper.wrapInJPanel(contentTF, rowColor(i++)));
 
         settingsPane.add(UIHelper.createParameterLabel("Topic", settingsIcon, parameterAlignment, rowColor(i)));
@@ -80,6 +82,7 @@ public class SendMessagePane extends JPanel {
 
         settingsPane.add(UIHelper.createParameterLabel("Duplicate", settingsIcon, parameterAlignment, rowColor(i)));
         duplicateCB = UIHelper.createJCheckBox(rowColor(i));
+        duplicateCB.requestFocusInWindow();
         settingsPane.add(UIHelper.wrapInJPanel(duplicateCB, rowColor(i++)));
     }
 
@@ -199,7 +202,7 @@ public class SendMessagePane extends JPanel {
             System.out.println("Sent!");
             removeProgressBar();
 
-            contentTF.setText("");
+            contentTF.clearText();
             topicTF.setText("");
             qosCB.setSelectedIndex(0);
             retainCB.setSelected(false);

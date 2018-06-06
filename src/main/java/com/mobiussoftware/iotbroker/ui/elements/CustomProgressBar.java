@@ -1,4 +1,4 @@
-package com.mobiussoftware.iotbroker.ui;
+package com.mobiussoftware.iotbroker.ui.elements;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;

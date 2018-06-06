@@ -1,6 +1,7 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import com.sun.rowset.internal.Row;
+import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
+import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,7 +25,7 @@ public class LogInPane extends JPanel {
     private HintTextField portTF;
     private JCheckBox cleanSessionCB;
     private HintTextField keepAliveTF;
-    private HintTextField willTF;
+    private HintDialogTextField willTF;
     private HintTextField willTopicTF;
     private JCheckBox retainCB;
     private JComboBox<Integer> qosCB;
@@ -185,7 +186,7 @@ public class LogInPane extends JPanel {
         settingsPane.add(UIHelper.wrapInJPanel(keepAliveTF, rowColor(i++)));
 
         settingsPane.add(UIHelper.createParameterLabel("Will:", settingsIcn, parameterAlignment, rowColor(i)));
-        willTF = UIHelper.createHintTextField("will", tfDimension);
+        willTF = UIHelper.createTextArea("will", tfDimension);
         settingsPane.add(UIHelper.wrapInJPanel(willTF, rowColor(i++)));
 
         settingsPane.add(UIHelper.createParameterLabel("Will topic:", settingsIcn, parameterAlignment, rowColor(i)));

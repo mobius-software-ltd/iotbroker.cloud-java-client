@@ -3,7 +3,7 @@ package com.mobiussoftware.iotbroker.ui;
 import javax.swing.*;
 import java.awt.*;
 
-class UIConstants {
+public class UIConstants {
     static final int ACCNT_MGMT_FRAME_WIDTH = 347;
     static final int ACCNT_MGMT_FRAME_HEIGHT = 458;
     static final int MAIN_FRAME_WIDTH = 428;
@@ -14,7 +14,7 @@ class UIConstants {
     static final int LOGO_FRAME_HEIGHT = 287;
 
     static final Color APP_BG_COLOR = Color.white;
-    static final Color APP_CONTRAST_COLOR = new Color(25, 163, 219);
+    public static final Color APP_CONTRAST_COLOR = new Color(25, 163, 219);
     static final Color SELECTION_COLOR = new Color(25, 163, 219, 50);
     static final Color ROW_EVEN_COLOR = Color.white;
     static final Color ROW_ODD_COLOR = new Color(245, 245, 245);

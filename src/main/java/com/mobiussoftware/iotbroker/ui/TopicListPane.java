@@ -1,10 +1,12 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
+import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
-import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -91,7 +93,6 @@ public class TopicListPane extends JPanel {
             public void mouseClicked(MouseEvent arg0) {
 //                System.out.println("Add button clicked!");
                 addTopicAction();
-                topicInput.setText("");
                 dropDown.setSelectedIndex(0);
             }
         };
@@ -367,8 +368,16 @@ public class TopicListPane extends JPanel {
         }
 
         @Override
+        public Void doInBackground() {
+            return super.doInBackground();
+        }
+
+        @Override
         protected void done() {
             addTopicListRow(topic, qos);
+//            if (topicInput.hasFocus())
+//                topicInput.transferFocus();
+            topicInput.setText("");
             removeProgressBar();
         }
     }

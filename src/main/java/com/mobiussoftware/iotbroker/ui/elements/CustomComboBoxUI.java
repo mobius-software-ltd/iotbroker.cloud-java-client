@@ -1,4 +1,6 @@
-package com.mobiussoftware.iotbroker.ui;
+package com.mobiussoftware.iotbroker.ui.elements;
+
+import com.mobiussoftware.iotbroker.ui.UIConstants;
 
 import javax.swing.*;
 import javax.swing.plaf.ComboBoxUI;

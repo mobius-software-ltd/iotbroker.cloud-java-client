@@ -1,6 +1,8 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import com.sun.rowset.internal.Row;
+import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
+import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
+import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -120,6 +122,17 @@ public class UIHelper {
     static HintTextField createHintTextField(String hint, Dimension dimension) {
 
         HintTextField tf = new HintTextField(hint, BorderFactory.createLineBorder(Color.lightGray));
+        tf.setHorizontalAlignment(JTextField.RIGHT);
+        tf.setFont(UIConstants.REGULAR_FONT);
+        tf.setMinimumSize(dimension);
+        tf.setPreferredSize(tf.getMinimumSize());
+
+        return tf;
+    }
+
+    static HintDialogTextField createTextArea(String hint, Dimension dimension) {
+
+        HintDialogTextField tf = new HintDialogTextField(hint, BorderFactory.createLineBorder(Color.lightGray));
         tf.setHorizontalAlignment(JTextField.RIGHT);
         tf.setFont(UIConstants.REGULAR_FONT);
         tf.setMinimumSize(dimension);

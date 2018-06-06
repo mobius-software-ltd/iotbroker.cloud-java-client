@@ -1,4 +1,4 @@
-package com.mobiussoftware.iotbroker.ui;
+package com.mobiussoftware.iotbroker.ui.elements;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -28,6 +28,7 @@ public class HintTextField extends JTextField implements FocusListener {
             showingHint = false;
         }
     }
+
     @Override
     public void focusLost(FocusEvent e) {
         if(this.getText().isEmpty()) {
@@ -41,5 +42,11 @@ public class HintTextField extends JTextField implements FocusListener {
     @Override
     public String getText() {
         return showingHint ? "" : super.getText();
+    }
+
+    public void clearText() {
+        super.setText(hint);
+        super.setForeground(Color.gray);
+        showingHint = true;
     }
 }
