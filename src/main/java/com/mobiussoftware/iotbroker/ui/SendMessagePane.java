@@ -22,6 +22,9 @@ public class SendMessagePane extends JPanel {
     private JPanel progressBarSpace;
     private JProgressBar progressBar;
 
+	private MouseListener sendMsgBtnListener;
+	private final JPanel sendMsgBtn;
+
     SendMessagePane() {
         super();
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -31,16 +34,20 @@ public class SendMessagePane extends JPanel {
 
         settingsPane = new JPanel();
         settingsPane.setBackground(UIConstants.APP_BG_COLOR);
-        MouseListener listener = new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent arg0) {
-                sendMessageAction();
-            }
-        };
+
+		sendMsgBtnListener = new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				arg0.getComponent().removeMouseListener(this);
+				System.out.println("mouse listener removed");
+				sendMessageAction();
+			}
+		};
+		sendMsgBtn = UIHelper.createButton("Send", sendMsgBtnListener);
 
         this.add(UIHelper.createSmallBoldLabel("send message:"));
         this.add(UIHelper.wrapInBorderLayout(settingsPane, BorderLayout.PAGE_START));
-        this.add(UIHelper.createButton("Send", listener));
+        this.add(sendMsgBtn);
 
         addSettingsPaneElements();
     }
@@ -63,13 +70,13 @@ public class SendMessagePane extends JPanel {
         final int parameterAlignment = SwingConstants.LEFT;
         int i = 0;
 
-        settingsPane.add( UIHelper.createParameterLabel("Content", settingsIcon, parameterAlignment, rowColor(i)));
-        contentTF = UIHelper.createTextArea("content", new Dimension(150, 28));
-        settingsPane.add(UIHelper.wrapInJPanel(contentTF, rowColor(i++)));
-
         settingsPane.add(UIHelper.createParameterLabel("Topic", settingsIcon, parameterAlignment, rowColor(i)));
         topicTF = UIHelper.createHintTextField("topic", new Dimension(150, 28));
         settingsPane.add(UIHelper.wrapInJPanel(topicTF, rowColor(i++)));
+
+        settingsPane.add( UIHelper.createParameterLabel("Content", settingsIcon, parameterAlignment, rowColor(i)));
+        contentTF = UIHelper.createTextArea("content", new Dimension(150, 28));
+        settingsPane.add(UIHelper.wrapInJPanel(contentTF, rowColor(i++)));
 
         settingsPane.add(UIHelper.createParameterLabel("QoS", settingsIcon, parameterAlignment, rowColor(i)));
         JPanel panel = UIHelper.createJComboBox(AppConstants.QOS_VALUES, new Dimension(70, 22));
@@ -82,7 +89,7 @@ public class SendMessagePane extends JPanel {
 
         settingsPane.add(UIHelper.createParameterLabel("Duplicate", settingsIcon, parameterAlignment, rowColor(i)));
         duplicateCB = UIHelper.createJCheckBox(rowColor(i));
-        duplicateCB.requestFocusInWindow();
+//        duplicateCB.requestFocusInWindow();
         settingsPane.add(UIHelper.wrapInJPanel(duplicateCB, rowColor(i++)));
     }
 
@@ -94,32 +101,12 @@ public class SendMessagePane extends JPanel {
             SendTask task = new SendTask(contentTF.getText(), topicTF.getText(), qosCB.getSelectedIndex(), retainCB.isSelected(), duplicateCB.isSelected());
             task.addPropertyChangeListener(propertyChangeListener());
             task.execute();
-        }
+        } else {
+        	sendMsgBtn.addMouseListener(sendMsgBtnListener);
+		}
     }
 
     private boolean validateTextFieldsFilled() {
-
-        String content = contentTF.getText();
-        if (content == null || content.equals("")) {
-            contentTF.setBorder(BorderFactory.createLineBorder(Color.red));
-            contentTF.requestFocusInWindow();
-            contentTF.addKeyListener(new KeyListener() {
-                @Override
-                public void keyTyped(KeyEvent keyEvent) {
-                    contentTF.setBorder(BorderFactory.createLineBorder(Color.lightGray));
-                    contentTF.removeKeyListener(this);
-                }
-
-                @Override
-                public void keyPressed(KeyEvent keyEvent) {
-                }
-
-                @Override
-                public void keyReleased(KeyEvent keyEvent) {
-                }
-            });
-            return false;
-        }
 
         String topic = topicTF.getText();
         if (topic == null || topic.equals("")) {
@@ -142,6 +129,15 @@ public class SendMessagePane extends JPanel {
             });
             return false;
         }
+
+		String content = contentTF.getText();
+		if (content == null || content.equals("")) {
+			contentTF.setBorder(BorderFactory.createLineBorder(Color.red));
+			contentTF.requestFocusInWindow();
+
+			return false;
+		}
+
         return true;
     }
 
@@ -201,6 +197,8 @@ public class SendMessagePane extends JPanel {
         protected void done() {
             System.out.println("Sent!");
             removeProgressBar();
+
+            sendMsgBtn.addMouseListener(sendMsgBtnListener);
 
             contentTF.clearText();
             topicTF.setText("");

@@ -5,10 +5,10 @@ import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
+
+//import static com.mobiussoftware.iotbroker.ui.AppConstants.PROTOCOL_VALUES;
 
 public class LogInPane extends JPanel {
 
@@ -16,6 +16,8 @@ public class LogInPane extends JPanel {
 
     private JPanel settingsPane;
     private JPanel regInfoPane;
+	private JPanel settingsPaneWrapper;
+	private JPanel regInfoPaneWrapper;
 
     private JComboBox<String> protocolCB;
     private HintTextField usernameTF;
@@ -30,6 +32,14 @@ public class LogInPane extends JPanel {
     private JCheckBox retainCB;
     private JComboBox<Integer> qosCB;
 
+    private JPanel settingsBlockLabel;
+
+    private JPanel usernameLabel;
+    private JPanel passwordLabel;
+    private JPanel clientIdLabel;
+
+    private Protocol previousProtocolChoice;
+
     LogInPane() {
         super();
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -39,15 +49,18 @@ public class LogInPane extends JPanel {
         regInfoPane = new JPanel();
         regInfoPane.setBackground(UIConstants.APP_BG_COLOR);
         this.add(UIHelper.wrapInBorderLayout(regInfoPane, BorderLayout.PAGE_START));
-        addRegInfoPaneElements();
+        addRegInfoBlock();
 
         //settings:
-        this.add(UIHelper.createSmallBoldLabel("settings:"));
+		settingsPane = new JPanel();
+		settingsPane.setBackground(UIConstants.APP_BG_COLOR);
 
-        settingsPane = new JPanel();
-        settingsPane.setBackground(UIConstants.APP_BG_COLOR);
-        this.add(UIHelper.wrapInBorderLayout(settingsPane, BorderLayout.PAGE_START));
-        addSettingsPaneElements();
+		settingsBlockLabel = UIHelper.createSmallBoldLabel("settings:");
+		this.add(settingsBlockLabel);
+
+		settingsPaneWrapper = UIHelper.wrapInBorderLayout(settingsPane, BorderLayout.PAGE_START);
+		this.add(settingsPaneWrapper);
+		addSettingsPaneElements();
 
         MouseListener listener = new MouseAdapter() {
             @Override
@@ -69,17 +82,13 @@ public class LogInPane extends JPanel {
         return rowNumber % 2 == 0 ? UIConstants.ROW_EVEN_COLOR : UIConstants.ROW_ODD_COLOR;
     }
 
-    private void addRegInfoPaneElements() {
+	final Dimension tfDimension = new Dimension(150, 28);
+	final int parameterLabelAlignment = SwingConstants.LEFT;
+	int regInfoColorCount = 0;
+
+    private void addRegInfoBlock() {
         Image tmp = UIConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
         final ImageIcon settingsIcn = new ImageIcon(tmp);
-        tmp = UIConstants.IC_USERNAME.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
-        final ImageIcon usernameIcn = new ImageIcon(tmp);
-        tmp = UIConstants.IC_PASSWORD.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
-        final ImageIcon passwordIcn = new ImageIcon(tmp);
-        tmp = UIConstants.IC_CLIENT_ID.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
-        final ImageIcon clientIdIcn = new ImageIcon(tmp);
-        tmp = UIConstants.IC_HOST_PORT.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
-        final ImageIcon hostPortIcn = new ImageIcon(tmp);
 
 //        final Row[] rows = new Row[] {
 //                UIHelper.createRow("Protocol:", settingsIcn, UIHelper.InputType.combobox, AppConstants.PROTOCOL_VALUES),
@@ -95,62 +104,151 @@ public class LogInPane extends JPanel {
         final int rows = 6;
         regInfoPane.setLayout(new GridLayout(rows, columns));
 
-        final Dimension tfDimension = new Dimension(150, 28);
-        final int parameterLabelAlignment = SwingConstants.LEFT;
-        int i = 0;
-
-        regInfoPane.add(UIHelper.createParameterLabel("Protocol:", settingsIcn, parameterLabelAlignment, rowColor(i)));
-        JPanel panel = UIHelper.createJComboBox(AppConstants.PROTOCOL_VALUES, new Dimension(72, 24));
+        regInfoPane.add(UIHelper.createParameterLabel("Protocol:", settingsIcn, parameterLabelAlignment, rowColor(0)));
+        JPanel panel = UIHelper.createJComboBox(Protocol.values(), new Dimension(90, 24));
         protocolCB = (JComboBox<String>)(panel.getComponent(0));
-        regInfoPane.add(UIHelper.wrapInJPanel(panel, rowColor(i++)));
+        protocolCB.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent itemEvent) {
 
-        regInfoPane.add(UIHelper.createParameterLabel("Username:", usernameIcn, parameterLabelAlignment, rowColor(i)));
-        usernameTF = UIHelper.createHintTextField("username", tfDimension);
-        regInfoPane.add(UIHelper.wrapInJPanel(usernameTF, rowColor(i++)));
+				if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
+					System.out.println("item " + itemEvent.getItem() + " changed from " + previousProtocolChoice + ", class " + itemEvent.getItem().getClass());
 
-        regInfoPane.add(UIHelper.createParameterLabel("Password:", passwordIcn, parameterLabelAlignment, rowColor(i)));
-        passwordTF = UIHelper.createHintTextField("password", tfDimension);
-        regInfoPane.add(UIHelper.wrapInJPanel(passwordTF, rowColor(i++)));
+					Protocol currentProtocol = (Protocol) itemEvent.getItem();
+					int  i = 1;
+					switch (currentProtocol) {
+						case MQTT:
+//							switch (previousProtocolChoice) {
+//								case CoAP:
+//									regInfoPane.add(clientIdLabel, 2);
+//									regInfoPane.add(UIHelper.wrapInJPanel(clientIdTF, rowColor(i++)), 3);
+//								case MQTTSN:
+//								case AMQP:
+//									regInfoPane.add(usernameLabel, 2);
+//									regInfoPane.add(UIHelper.wrapInJPanel(usernameTF, rowColor(i++)), 3);
+//									regInfoPane.add(passwordLabel, 4);
+//									regInfoPane.add(UIHelper.wrapInJPanel(passwordTF, rowColor(i++)), 5);
+//									break;
+//							}
+							removeRegInfoPaneElements();
+							addMqRegInfo();
+							regInfoPane.revalidate();
+							addSettingsBlock();
+							break;
+						case MQTTSN:
+							removeRegInfoPaneElements();
+							addSnRegInfo();
+							regInfoPane.revalidate();
+							addSettingsBlock();
+							break;
+						case CoAP:
+							removeRegInfoPaneElements();
+							addCoapRegInfo();
+							regInfoPane.revalidate();
+							removeSettingsBlock();
+							break;
+						case AMQP:
+							removeRegInfoPaneElements();
+							addAmqpRegInfo();
+							regInfoPane.revalidate();
+							removeSettingsBlock();
+							break;
+					}
+				} else if (itemEvent.getStateChange() == ItemEvent.DESELECTED)
+					previousProtocolChoice = (Protocol) itemEvent.getItem();
+			}
+		});
+        regInfoPane.add(UIHelper.wrapInJPanel(panel, rowColor(regInfoColorCount++)));
 
-        regInfoPane.add(UIHelper.createParameterLabel("Client ID:", clientIdIcn, parameterLabelAlignment, rowColor(i)));
-        clientIdTF = UIHelper.createHintTextField("client id", tfDimension);
-        regInfoPane.add(UIHelper.wrapInJPanel(clientIdTF, rowColor(i++)));
-
-        regInfoPane.add(UIHelper.createParameterLabel("Server Host:", hostPortIcn, parameterLabelAlignment, rowColor(i)));
-        hostNameTF = UIHelper.createHintTextField("server host", tfDimension);
-        regInfoPane.add(UIHelper.wrapInJPanel(hostNameTF, rowColor(i++)));
-
-        regInfoPane.add(UIHelper.createParameterLabel("Port:", hostPortIcn, parameterLabelAlignment, rowColor(i)));
-        portTF = UIHelper.createHintTextField("port", tfDimension);
-        regInfoPane.add(UIHelper.wrapInJPanel(portTF, rowColor(i++)));
-
-
-//        for (int i = 0; i < rows.length; i++) {
-//            Row row = rows[i];
-//            String text = row.getLabel();
-//            Icon icon = row.getIcon();
-//            Color color = i%2 == 0 ? UIConstants.ROW_EVEN_COLOR : UIConstants.ROW_ODD_COLOR;
-//            int alignment = SwingConstants.LEFT;
-//
-//            regInfoPane.add(UIHelper.createParameterLabel(text, icon, alignment, color));
-//
-//            UIHelper.InputType inputType = row.getInputType();
-//            JPanel jp = null;
-//            switch (inputType) {
-//                case textfield:
-//                    jp = UIHelper.createHintTextField((String)row.getData(), tfDimension, color);
-//                    break;
-//                case checkbox:
-//                    jp = UIHelper.createJCheckBox(color);
-//                    break;
-//                case combobox:
-//                    jp = UIHelper.createJComboBox((Object[])row.getData(), new Dimension(95, 24), color);
-//                    break;
-//            }
-//
-//            regInfoPane.add(jp);
-//        }
+        addMqRegInfo();
     }
+
+    private void addMqRegInfo() {
+		regInfoPane.setLayout(new GridLayout(6, columns));
+		addUserPasswordFields();
+		addClientIdField();
+		addServerPortFileds();
+	}
+
+    private void addSnRegInfo() {
+		regInfoPane.setLayout(new GridLayout(4, columns));
+		addClientIdField();
+		addServerPortFileds();
+	}
+
+    private void addCoapRegInfo() {
+		regInfoPane.setLayout(new GridLayout(3, columns));
+		addServerPortFileds();
+	}
+
+    private void addAmqpRegInfo() {
+		addSnRegInfo();
+	}
+
+	private void removeRegInfoPaneElements() {
+//		System.out.println("regInfo componentCount is " + regInfoPane.getComponentCount());
+		for (int j = regInfoPane.getComponentCount() - 1; j >= 2; j--) {
+//			System.out.println("removed " + regInfoPane.getComponent(j));
+			regInfoPane.remove(2);
+		}
+		regInfoColorCount = 1;
+	}
+
+	private void addSettingsBlock() {
+		if (this.getComponent(2) != settingsBlockLabel) {
+			this.add(settingsBlockLabel, 2);
+			this.add(settingsPaneWrapper, 3);
+			this.revalidate();
+		}
+	}
+
+	private void removeSettingsBlock() {
+		if (this.getComponentCount() > 3 && this.getComponent(3) == settingsPaneWrapper) {
+			this.remove(settingsPaneWrapper);
+			this.remove(settingsBlockLabel);
+			this.revalidate();
+		}
+	}
+
+    private void addUserPasswordFields() {
+		Image tmp = UIConstants.IC_USERNAME.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
+		final ImageIcon usernameIcn = new ImageIcon(tmp);
+		tmp = UIConstants.IC_PASSWORD.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
+		final ImageIcon passwordIcn = new ImageIcon(tmp);
+
+		usernameLabel = UIHelper.createParameterLabel("Username:", usernameIcn, parameterLabelAlignment, rowColor(regInfoColorCount));
+		regInfoPane.add(usernameLabel);
+		usernameTF = UIHelper.createHintTextField("username", tfDimension);
+		regInfoPane.add(UIHelper.wrapInJPanel(usernameTF, rowColor(regInfoColorCount++)));
+
+		passwordLabel = UIHelper.createParameterLabel("Password:", passwordIcn, parameterLabelAlignment, rowColor(regInfoColorCount));
+		regInfoPane.add(passwordLabel);
+		passwordTF = UIHelper.createHintTextField("password", tfDimension);
+		regInfoPane.add(UIHelper.wrapInJPanel(passwordTF, rowColor(regInfoColorCount++)));
+	}
+
+	private void addClientIdField() {
+		Image tmp = UIConstants.IC_CLIENT_ID.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
+		final ImageIcon clientIdIcn = new ImageIcon(tmp);
+
+		clientIdLabel = UIHelper.createParameterLabel("Client ID:", clientIdIcn, parameterLabelAlignment, rowColor(regInfoColorCount));
+		regInfoPane.add(clientIdLabel);
+		clientIdTF = UIHelper.createHintTextField("client id", tfDimension);
+		regInfoPane.add(UIHelper.wrapInJPanel(clientIdTF, rowColor(regInfoColorCount++)));
+	}
+
+	private void addServerPortFileds() {
+		Image tmp = UIConstants.IC_HOST_PORT.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
+		final ImageIcon hostPortIcn = new ImageIcon(tmp);
+
+		regInfoPane.add(UIHelper.createParameterLabel("Server Host:", hostPortIcn, parameterLabelAlignment, rowColor(regInfoColorCount)));
+		hostNameTF = UIHelper.createHintTextField("server host", tfDimension);
+		regInfoPane.add(UIHelper.wrapInJPanel(hostNameTF, rowColor(regInfoColorCount++)));
+
+		regInfoPane.add(UIHelper.createParameterLabel("Port:", hostPortIcn, parameterLabelAlignment, rowColor(regInfoColorCount)));
+		portTF = UIHelper.createHintTextField("port", tfDimension);
+		regInfoPane.add(UIHelper.wrapInJPanel(portTF, rowColor(regInfoColorCount++)));
+	}
 
     private void addSettingsPaneElements() {
         Image tmp = UIConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);

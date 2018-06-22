@@ -29,7 +29,10 @@ public class TopicListPane extends JPanel {
     private HintTextField topicInput;
     private JComboBox<Integer> dropDown;
 
-    TopicListPane() {
+    private MouseListener addTopicBtnListener;
+    private final JPanel addTopicBtn;
+
+	TopicListPane() {
         super();
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -54,18 +57,6 @@ public class TopicListPane extends JPanel {
 
         topics = new JPanel();
         topics.setBackground(Color.white);
-//        topics.setMinimumSize(new Dimension(410, 280));
-//        topics.setBorder(BorderFactory.createLineBorder(Color.lightGray));
-
-//        JScrollPane scrollPane = new JScrollPane(topics);
-//        scrollPane.setPreferredSize(new Dimension(450, 1000));
-//        scrollPane.setMinimumSize(new Dimension(450, 280));
-//        scrollPane.setMaximumSize(new Dimension(450, 1000));
-//
-//        JPanel wrapper = new JPanel(new BorderLayout());
-//        wrapper.add(scrollPane, BorderLayout.CENTER);
-//
-//        this.add(wrapper);
 
         this.add(UIHelper.wrapInScrollAndBorderLayout(topics, BorderLayout.CENTER));
 
@@ -88,15 +79,18 @@ public class TopicListPane extends JPanel {
 
         this.add(addTopic);
 
-        MouseListener listener = new MouseAdapter() {
+
+        addTopicBtnListener = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent arg0) {
 //                System.out.println("Add button clicked!");
+                arg0.getComponent().removeMouseListener(this);
                 addTopicAction();
                 dropDown.setSelectedIndex(0);
             }
         };
-        this.add(UIHelper.createButton("Add", listener));
+		addTopicBtn = UIHelper.createButton("Add", addTopicBtnListener);
+		this.add(addTopicBtn);
 
         addTopicListElements(topics);
         addAddTopicElements(addTopic);
@@ -331,6 +325,9 @@ public class TopicListPane extends JPanel {
                 public void keyReleased(KeyEvent keyEvent) {
                 }
             });
+
+			addTopicBtn.addMouseListener(addTopicBtnListener);
+
             return;
         }
         int qos = dropDown.getSelectedIndex();
@@ -374,9 +371,8 @@ public class TopicListPane extends JPanel {
 
         @Override
         protected void done() {
+			addTopicBtn.addMouseListener(addTopicBtnListener);
             addTopicListRow(topic, qos);
-//            if (topicInput.hasFocus())
-//                topicInput.transferFocus();
             topicInput.setText("");
             removeProgressBar();
         }
