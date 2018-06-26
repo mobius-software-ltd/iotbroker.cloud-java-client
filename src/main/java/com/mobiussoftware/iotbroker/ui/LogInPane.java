@@ -1,5 +1,7 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import com.mobiussoftware.iotbroker.dal.DBHelper;
+import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 
@@ -74,6 +76,18 @@ public class LogInPane extends JPanel {
 
     private void loginBtnClicked(MouseEvent event) {
         System.out.println("LogIn button clicked!");
+
+        if (!UIHelper.validateTF(usernameTF, passwordTF, clientIdTF, hostNameTF, willTopicTF) || !UIHelper.validateNumTF(portTF, keepAliveTF) || !UIHelper.validateDialogTF(willTF))
+        	return;
+
+		Account account = getAccountObject();
+		try {
+			DBHelper dbHelper = new DBHelper();
+			dbHelper.storeAccount(account);
+		} catch (Exception e) {
+			//should not happen
+			e.printStackTrace();
+		}
         Main.createAndShowMainPane();
         Main.disposeLogInPane();
     }
@@ -90,17 +104,6 @@ public class LogInPane extends JPanel {
         Image tmp = UIConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
         final ImageIcon settingsIcn = new ImageIcon(tmp);
 
-//        final Row[] rows = new Row[] {
-//                UIHelper.createRow("Protocol:", settingsIcn, UIHelper.InputType.combobox, AppConstants.PROTOCOL_VALUES),
-//                UIHelper.createRow("Username:", usernameIcn, UIHelper.InputType.textfield, "username"),
-//                UIHelper.createRow("Password:", passwordIcn, UIHelper.InputType.textfield, "password"),
-//                UIHelper.createRow("Client ID:", clientIdIcn, UIHelper.InputType.textfield, "client id"),
-//                UIHelper.createRow("Server Host:", hostPortIcn, UIHelper.InputType.textfield, "server host"),
-//                UIHelper.createRow("Port:", hostPortIcn, UIHelper.InputType.textfield, "port")};
-//
-//        regInfoPane.setLayout(new GridLayout(rows.length, columns));
-//        final Dimension tfDimension = new Dimension(150, 28);
-
         final int rows = 6;
         regInfoPane.setLayout(new GridLayout(rows, columns));
 
@@ -112,24 +115,12 @@ public class LogInPane extends JPanel {
 			public void itemStateChanged(ItemEvent itemEvent) {
 
 				if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
-					System.out.println("item " + itemEvent.getItem() + " changed from " + previousProtocolChoice + ", class " + itemEvent.getItem().getClass());
+//					System.out.println("item " + itemEvent.getItem() + " changed from " + previousProtocolChoice + ", class " + itemEvent.getItem().getClass());
 
 					Protocol currentProtocol = (Protocol) itemEvent.getItem();
 					int  i = 1;
 					switch (currentProtocol) {
 						case MQTT:
-//							switch (previousProtocolChoice) {
-//								case CoAP:
-//									regInfoPane.add(clientIdLabel, 2);
-//									regInfoPane.add(UIHelper.wrapInJPanel(clientIdTF, rowColor(i++)), 3);
-//								case MQTTSN:
-//								case AMQP:
-//									regInfoPane.add(usernameLabel, 2);
-//									regInfoPane.add(UIHelper.wrapInJPanel(usernameTF, rowColor(i++)), 3);
-//									regInfoPane.add(passwordLabel, 4);
-//									regInfoPane.add(UIHelper.wrapInJPanel(passwordTF, rowColor(i++)), 5);
-//									break;
-//							}
 							removeRegInfoPaneElements();
 							addMqRegInfo();
 							regInfoPane.revalidate();
@@ -167,18 +158,18 @@ public class LogInPane extends JPanel {
 		regInfoPane.setLayout(new GridLayout(6, columns));
 		addUserPasswordFields();
 		addClientIdField();
-		addServerPortFileds();
+		addServerPortFields();
 	}
 
     private void addSnRegInfo() {
 		regInfoPane.setLayout(new GridLayout(4, columns));
 		addClientIdField();
-		addServerPortFileds();
+		addServerPortFields();
 	}
 
     private void addCoapRegInfo() {
 		regInfoPane.setLayout(new GridLayout(3, columns));
-		addServerPortFileds();
+		addServerPortFields();
 	}
 
     private void addAmqpRegInfo() {
@@ -237,7 +228,7 @@ public class LogInPane extends JPanel {
 		regInfoPane.add(UIHelper.wrapInJPanel(clientIdTF, rowColor(regInfoColorCount++)));
 	}
 
-	private void addServerPortFileds() {
+	private void addServerPortFields() {
 		Image tmp = UIConstants.IC_HOST_PORT.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
 		final ImageIcon hostPortIcn = new ImageIcon(tmp);
 
@@ -283,13 +274,13 @@ public class LogInPane extends JPanel {
         keepAliveTF = UIHelper.createHintTextField("keepalive", tfDimension);
         settingsPane.add(UIHelper.wrapInJPanel(keepAliveTF, rowColor(i++)));
 
-        settingsPane.add(UIHelper.createParameterLabel("Will:", settingsIcn, parameterAlignment, rowColor(i)));
-        willTF = UIHelper.createTextArea("will", tfDimension);
-        settingsPane.add(UIHelper.wrapInJPanel(willTF, rowColor(i++)));
+		settingsPane.add(UIHelper.createParameterLabel("Will topic:", settingsIcn, parameterAlignment, rowColor(i)));
+		willTopicTF = UIHelper.createHintTextField("will topic", tfDimension);
+		settingsPane.add(UIHelper.wrapInJPanel(willTopicTF, rowColor(i++)));
 
-        settingsPane.add(UIHelper.createParameterLabel("Will topic:", settingsIcn, parameterAlignment, rowColor(i)));
-        willTopicTF = UIHelper.createHintTextField("will topic", tfDimension);
-        settingsPane.add(UIHelper.wrapInJPanel(willTopicTF, rowColor(i++)));
+		settingsPane.add(UIHelper.createParameterLabel("Will:", settingsIcn, parameterAlignment, rowColor(i)));
+		willTF = UIHelper.createTextArea("will", tfDimension);
+		settingsPane.add(UIHelper.wrapInJPanel(willTF, rowColor(i++)));
 
         settingsPane.add(UIHelper.createParameterLabel("Retain:", settingsIcn, parameterAlignment, rowColor(i)));
         retainCB = UIHelper.createJCheckBox(rowColor(i));
@@ -326,6 +317,25 @@ public class LogInPane extends JPanel {
 //            settingsPane.add(jp);
 //        }
     }
+
+    private Account getAccountObject() throws NumberFormatException {
+    	Protocol protocol = (Protocol)protocolCB.getSelectedItem();
+		String username = usernameTF.getText();
+		String password = passwordTF.getText();
+		String clientId = clientIdTF.getText();
+		String hostName = hostNameTF.getText();
+		int port = Integer.valueOf(portTF.getText());
+		boolean cleanSesssion = cleanSessionCB.isSelected();
+		int keepAlive = keepAliveTF.getText().equals("") ? 0 : Integer.valueOf(keepAliveTF.getText());
+		String will = willTF.getText();
+		String willTopic = willTopicTF.getText();
+		boolean retain = retainCB.isSelected();
+		int qos = qosCB.getSelectedIndex();
+
+		Account account = new Account(protocol, username, password, clientId, hostName, port, cleanSesssion, keepAlive, will, willTopic, retain, qos);
+
+		return account;
+	}
 
     @Override
     protected void paintComponent(Graphics g) {

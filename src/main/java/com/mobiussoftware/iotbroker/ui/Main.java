@@ -107,15 +107,21 @@ public class Main {
     }
 
     static void showAccountMgmtPane() {
-        if (accountMgmtPane != null) {
-            accountMgmtPane.setVisible(true);
-        }
+        if (accountMgmtPane.isDisplayable()) {
+			accountMgmtPane.setVisible(true);
+			System.out.println("showing hidden mgmt pane");
+		} else {
+			System.out.println("creating account mgmt pane again");
+        	createAndShowAccountMgmtPane();
+		}
     }
 
     static void disposeAccountMgmtPane() {
+		System.out.print("disposing accnt mgmt pane: ");
         if (accountMgmtPane != null) {
             accountMgmtPane.dispose();
         }
+		System.out.println(accountMgmtPane);
     }
 
     static void createAndShowLogoPane() {

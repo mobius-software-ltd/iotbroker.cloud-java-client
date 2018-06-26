@@ -305,38 +305,19 @@ public class TopicListPane extends JPanel {
     }
 
     private void addTopicAction() {
-        //validation
-        String topic = topicInput.getText();
-        if (topic == null || topic.equals("")) {
-            topicInput.setBorder(BorderFactory.createLineBorder(Color.red));
-            topicInput.requestFocusInWindow();
-            topicInput.addKeyListener(new KeyListener() {
-                @Override
-                public void keyTyped(KeyEvent keyEvent) {
-                    topicInput.setBorder(BorderFactory.createLineBorder(Color.gray));
-                    topicInput.removeKeyListener(this);
-                }
 
-                @Override
-                public void keyPressed(KeyEvent keyEvent) {
-                }
+        if (UIHelper.validateTF(topicInput)) {
 
-                @Override
-                public void keyReleased(KeyEvent keyEvent) {
-                }
-            });
+            int qos = dropDown.getSelectedIndex();
 
-			addTopicBtn.addMouseListener(addTopicBtnListener);
+            addProgressBar();
 
-            return;
+            AddTopicTask task = new AddTopicTask(topicInput.getText(), qos);
+            task.addPropertyChangeListener(propertyChangeListener());
+            task.execute();
+        } else {
+            addTopicBtn.addMouseListener(addTopicBtnListener);
         }
-        int qos = dropDown.getSelectedIndex();
-
-        addProgressBar();
-
-        AddTopicTask task = new AddTopicTask(topic, qos);
-        task.addPropertyChangeListener(propertyChangeListener());
-        task.execute();
     }
 
     private MouseListener deleteTopicAction() {

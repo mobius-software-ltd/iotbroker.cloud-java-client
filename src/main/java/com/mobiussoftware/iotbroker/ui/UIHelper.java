@@ -11,6 +11,8 @@ import javax.swing.plaf.basic.BasicCheckBoxUI;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 
 public class UIHelper {
@@ -205,6 +207,68 @@ public class UIHelper {
             builder.append(ALPHA_NUMERIC_STRING.charAt(character));
         }
         return builder.toString();
+    }
+
+    private static void createRedBorder(final JTextField tf) {
+		tf.setBorder(BorderFactory.createLineBorder(Color.red));
+		tf.requestFocusInWindow();
+		tf.addKeyListener(new KeyListener() {
+			@Override
+			public void keyTyped(KeyEvent keyEvent) {
+				tf.setBorder(BorderFactory.createLineBorder(Color.lightGray));
+				tf.removeKeyListener(this);
+			}
+
+			@Override
+			public void keyPressed(KeyEvent keyEvent) {
+			}
+
+			@Override
+			public void keyReleased(KeyEvent keyEvent) {
+			}
+		});
+	}
+
+    static boolean validateTF(HintTextField... textFields) {
+        for (final HintTextField tf: textFields) {
+        	if (!tf.isValid())
+        		continue;
+            String content = tf.getText();
+            if (content == null || content.equals("")) {
+                createRedBorder(tf);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static boolean validateNumTF(HintTextField... textFields) {
+		for (final HintTextField tf: textFields) {
+			if (validateTF(tf)) {
+				String content = tf.getText();
+				for (int i = 0; i < content.length(); i++){
+					if (!Character.isDigit(content.charAt(i))) {
+						createRedBorder(tf);
+						return false;
+					}
+				}
+			} else
+				return false;
+		}
+        return true;
+    }
+
+    static boolean validateDialogTF(HintDialogTextField dialogTF) {
+		if (!dialogTF.isValid())
+			return true;
+        String content = dialogTF.getText();
+        if (content == null || content.equals("")) {
+            dialogTF.setBorder(BorderFactory.createLineBorder(Color.red));
+            dialogTF.requestFocusInWindow();
+
+            return false;
+        }
+        return true;
     }
 
 //    static <T> Row createRow(String label, Icon icon, InputType inputType, T data) {

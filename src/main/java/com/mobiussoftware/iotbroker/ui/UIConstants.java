@@ -15,7 +15,8 @@ public class UIConstants {
 
     static final Color APP_BG_COLOR = Color.white;
     public static final Color APP_CONTRAST_COLOR = new Color(25, 163, 219);
-    static final Color SELECTION_COLOR = new Color(25, 163, 219, 50);
+    static final Color SELECTION_COLOR = new Color(25, 186, 248, 21);
+    static final Color HOVER_COLOR = new Color(252, 227, 79, 50);
     static final Color ROW_EVEN_COLOR = Color.white;
     static final Color ROW_ODD_COLOR = new Color(245, 245, 245);
     static final Color BLUE_COLOR = new Color(0, 161, 217);

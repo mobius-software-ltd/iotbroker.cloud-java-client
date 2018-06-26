@@ -1,6 +1,7 @@
 package com.mobiussoftware.iotbroker.ui;
 
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
+import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 
 import javax.swing.*;
 import javax.swing.plaf.ColorUIResource;
@@ -14,7 +15,7 @@ public class SendMessagePane extends JPanel {
 
     private JPanel settingsPane;
     private HintDialogTextField contentTF;
-    private JTextField topicTF;
+    private HintTextField topicTF;
     private JComboBox<Integer> qosCB;
     private JCheckBox retainCB;
     private JCheckBox duplicateCB;
@@ -94,7 +95,7 @@ public class SendMessagePane extends JPanel {
     }
 
     private void sendMessageAction() {
-        if (validateTextFieldsFilled()) {
+        if (UIHelper.validateTF(topicTF) && UIHelper.validateDialogTF(contentTF)) {
 
             addProgressBar();
 
@@ -104,41 +105,6 @@ public class SendMessagePane extends JPanel {
         } else {
         	sendMsgBtn.addMouseListener(sendMsgBtnListener);
 		}
-    }
-
-    private boolean validateTextFieldsFilled() {
-
-        String topic = topicTF.getText();
-        if (topic == null || topic.equals("")) {
-            topicTF.setBorder(BorderFactory.createLineBorder(Color.red));
-            topicTF.requestFocusInWindow();
-            topicTF.addKeyListener(new KeyListener() {
-                @Override
-                public void keyTyped(KeyEvent keyEvent) {
-                    topicTF.setBorder(BorderFactory.createLineBorder(Color.lightGray));
-                    topicTF.removeKeyListener(this);
-                }
-
-                @Override
-                public void keyPressed(KeyEvent keyEvent) {
-                }
-
-                @Override
-                public void keyReleased(KeyEvent keyEvent) {
-                }
-            });
-            return false;
-        }
-
-		String content = contentTF.getText();
-		if (content == null || content.equals("")) {
-			contentTF.setBorder(BorderFactory.createLineBorder(Color.red));
-			contentTF.requestFocusInWindow();
-
-			return false;
-		}
-
-        return true;
     }
 
     private PropertyChangeListener propertyChangeListener() {

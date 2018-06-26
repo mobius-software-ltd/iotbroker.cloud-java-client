@@ -1,8 +1,13 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import com.mobiussoftware.iotbroker.dal.DBHelper;
+import com.mobiussoftware.iotbroker.db.Account;
+
 import javax.swing.*;
+import javax.swing.border.CompoundBorder;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -42,7 +47,7 @@ public class AccountMgmtPane extends JPanel {
 
     private Map<Integer, Component[]> componentList = new HashMap<>();
     private void addAccounts() {
-        final int accountCount = 3;
+//        final int accountCount = 3;
         final int parameterAlignment = SwingConstants.LEFT;
 
         accountsPane.setLayout(new GridBagLayout());
@@ -50,103 +55,147 @@ public class AccountMgmtPane extends JPanel {
 
         c.fill = GridBagConstraints.BOTH;
 
-        Random r = new Random();
+        int count = 0;
+        try {
+            final DBHelper dbHelper = new DBHelper();
 
-        for (int i = 0; i < accountCount; i++) {
-            JPanel accountData = new JPanel();
-            accountData.setLayout(new BoxLayout(accountData, BoxLayout.Y_AXIS));
-            accountData.setBackground(UIConstants.APP_BG_COLOR);
+            for (Account account : dbHelper.accountIterator()) {
+//            for (int i = 0; i < accountCount; i++) {
+                int id = account.getId();
+                String protocolStr = account.getProtocol().toString();
+                String clientIdStr = account.getClientId();
+                String hostPortStr = account.getServerHost() + ":" + account.getServerPort();
 
-            JLabel username = new JLabel("username " + i, parameterAlignment);
-            username.setFont(UIConstants.REGULAR_BOLD_FONT);
-            username.setBorder(BorderFactory.createEmptyBorder(5,5,2,5));
+                final JPanel accountData = new JPanel();
+                accountData.setLayout(new BoxLayout(accountData, BoxLayout.Y_AXIS));
+                accountData.setBackground(UIConstants.APP_BG_COLOR);
 
-            JLabel clientId = new JLabel("<html>" + UIHelper.randomAlphaNumeric(r.nextInt(5) + 5) + i + "</html>", parameterAlignment);
-            clientId.setFont(UIConstants.REGULAR_FONT);
-            clientId.setBorder(BorderFactory.createEmptyBorder(1,5,3,5));
+                JLabel protocol = new JLabel(protocolStr, parameterAlignment);
+                protocol.setFont(UIConstants.REGULAR_BOLD_FONT);
+                protocol.setBorder(BorderFactory.createEmptyBorder(5,5,2,5));
+//                protocol.setBorder(new CompoundBorder(BorderFactory.createLineBorder(Color.blue),(BorderFactory.createEmptyBorder(5,5,2,5))));
+                accountData.add(protocol);
 
-            JLabel hostPort = new JLabel("<html>" + UIHelper.randomAlphaNumeric(r.nextInt(10) + 12) + i + "</html>", parameterAlignment);
-            hostPort.setFont(UIConstants.REGULAR_FONT);
-            hostPort.setBorder(BorderFactory.createEmptyBorder(1,5,3,5));
-
-            accountData.add(username);
-            accountData.add(clientId);
-            accountData.add(hostPort);
-
-            accountData.setName(String.valueOf(i));
-
-            accountData.addMouseListener(new MouseAdapter() {
-
-                @Override
-                public void mouseClicked(MouseEvent mouseEvent) {
-                    if (accountChosen)
-                        return;
-                    accountChosen = true;
-                    String tag = ((Component)mouseEvent.getSource()).getName();
-                    int t = Integer.valueOf(tag);
-                    final Component[] row = componentList.get(Integer.valueOf(tag));
-                    row[0].setBackground(UIConstants.SELECTION_COLOR);
-                    row[1].setBackground(UIConstants.SELECTION_COLOR);
-
-                    int delay = 200;
-                    Timer timer = new Timer( delay, new ActionListener(){
-                        @Override
-                        public void actionPerformed( ActionEvent e ){
-                            Main.createAndShowLogoPane();
-                            row[0].setBackground(UIConstants.APP_BG_COLOR);
-                            row[1].setBackground(UIConstants.APP_BG_COLOR);
-                            accountChosen = false;
-                            Main.hideAccountMgmtPane();
-                        }
-                    } );
-                    timer.setRepeats( false );
-                    timer.start();
+                if (account.getProtocol() != Protocol.CoAP) {
+                    JLabel clientId = new JLabel("<html>" + clientIdStr + "</html>", parameterAlignment);
+                    clientId.setFont(UIConstants.REGULAR_FONT);
+                    clientId.setBorder(BorderFactory.createEmptyBorder(1, 5, 3, 5));
+//                    clientId.setBorder(new CompoundBorder(BorderFactory.createLineBorder(Color.blue),BorderFactory.createEmptyBorder(1, 5, 3, 5)));
+                    accountData.add(clientId);
                 }
-            });
 
-            c.gridx = 0;
-            c.gridy = i;
-            c.weightx = 5;
-            c.anchor = GridBagConstraints.NORTHWEST;
+                JLabel hostPort = new JLabel("<html>" + hostPortStr + "</html>", parameterAlignment);
+                hostPort.setFont(UIConstants.REGULAR_FONT);
+                hostPort.setBorder(BorderFactory.createEmptyBorder(1,5,3,5));
+//                hostPort.setBorder(new CompoundBorder(BorderFactory.createLineBorder(Color.blue),BorderFactory.createEmptyBorder(1,5,3,5)));
+                accountData.add(hostPort);
 
-            accountsPane.add(accountData, c);
-
-            JLabel deleteBtn = new JLabel(UIConstants.IC_TRASH, SwingConstants.CENTER);
-            deleteBtn.setBackground(UIConstants.APP_BG_COLOR);
-            deleteBtn.setOpaque(true);
-            deleteBtn.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-//            deleteBtn.setBorder(new CompoundBorder(BorderFactory.createLineBorder(Color.cyan),BorderFactory.createEmptyBorder(5,5,5,5)));
-            deleteBtn.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent arg0) {
-
-                    JLabel btnClicked = (JLabel)arg0.getSource();
-                    String index = btnClicked.getName();
-                    System.out.println("Delete account clicked! " + index);
-                    int i = Integer.valueOf(index);
-
-                    Component[] row = componentList.get(i);
-                    accountsPane.remove(row[0]);
-                    accountsPane.remove(row[1]);
-
-                    componentList.remove(i);
-                    accountsPane.revalidate();
-                    accountsPane.repaint();
+                if (account.getProtocol().equals(Protocol.CoAP)) {
+                    accountData.add(new JLabel(" "));
                 }
-            });
-            deleteBtn.setName(String.valueOf(i));
 
-            c.gridx = 2;
-            c.weightx = 0.1;
-            c.anchor = GridBagConstraints.NORTHEAST;
+                accountData.setName(String.valueOf(id));
 
-            accountsPane.add(deleteBtn, c);
+                accountData.addMouseListener(new MouseAdapter() {
 
-            Component[] row = new Component[2];
-            row[0] = accountData;
-            row[1] = deleteBtn;
+                    @Override
+                    public void mouseClicked(MouseEvent mouseEvent) {
+                        if (accountChosen)
+                            return;
+                        accountChosen = true;
+                        String tag = ((Component)mouseEvent.getSource()).getName();
+                        final Component[] row = componentList.get(Integer.valueOf(tag));
+                        row[0].setBackground(UIConstants.SELECTION_COLOR);
+                        row[1].setBackground(UIConstants.SELECTION_COLOR);
 
-            componentList.put(i, row);
+                        int delay = 200;
+                        Timer timer = new Timer( delay, new ActionListener(){
+                            @Override
+                            public void actionPerformed( ActionEvent e ){
+                                Main.createAndShowLogoPane();
+                                row[0].setBackground(UIConstants.APP_BG_COLOR);
+                                row[1].setBackground(UIConstants.APP_BG_COLOR);
+                                accountChosen = false;
+                                Main.hideAccountMgmtPane();
+                            }
+                        } );
+                        timer.setRepeats( false );
+                        timer.start();
+                    }
+
+
+                    @Override
+                    public void mouseEntered(MouseEvent mouseEvent) {
+                        super.mouseEntered(mouseEvent);
+                        String tag = ((Component)mouseEvent.getSource()).getName();
+                        final Component[] row = componentList.get(Integer.valueOf(tag));
+                        row[0].setBackground(UIConstants.HOVER_COLOR);
+                        row[1].setBackground(UIConstants.HOVER_COLOR);
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent mouseEvent) {
+                        super.mouseExited(mouseEvent);
+                        String tag = ((Component)mouseEvent.getSource()).getName();
+                        final Component[] row = componentList.get(Integer.valueOf(tag));
+                        row[0].setBackground(UIConstants.APP_BG_COLOR);
+                        row[1].setBackground(UIConstants.APP_BG_COLOR);
+                    }
+                });
+
+                c.gridx = 0;
+                c.gridy = count++;
+                c.weightx = 5;
+                c.anchor = GridBagConstraints.NORTHWEST;
+
+                accountsPane.add(accountData, c);
+
+                JLabel deleteBtn = new JLabel(UIConstants.IC_TRASH, SwingConstants.CENTER);
+                deleteBtn.setBackground(UIConstants.APP_BG_COLOR);
+                deleteBtn.setOpaque(true);
+                deleteBtn.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+    //            deleteBtn.setBorder(new CompoundBorder(BorderFactory.createLineBorder(Color.cyan),BorderFactory.createEmptyBorder(5,5,5,5)));
+                deleteBtn.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent arg0) {
+
+                        JLabel btnClicked = (JLabel)arg0.getSource();
+                        String index = btnClicked.getName();
+                        int id = Integer.valueOf(index);
+
+                        Component[] row = componentList.get(id);
+                        accountsPane.remove(row[0]);
+                        accountsPane.remove(row[1]);
+
+                        componentList.remove(id);
+                        accountsPane.revalidate();
+                        accountsPane.repaint();
+
+                        try {
+							dbHelper.deleteAccount(String.valueOf(id));
+						} catch (SQLException ex) {
+                        	ex.printStackTrace();
+						}
+                    }
+                });
+                deleteBtn.setName(String.valueOf(id));
+
+                c.gridx = 1;
+                c.weightx = 0.1;
+                c.anchor = GridBagConstraints.NORTHEAST;
+
+                accountsPane.add(deleteBtn, c);
+
+                Component[] row = new Component[2];
+                row[0] = accountData;
+                row[1] = deleteBtn;
+
+                componentList.put(id, row);
+            }
+
+        } catch (Exception e) {
+            //should not happen
+            e.printStackTrace();
         }
 
         JPanel emptySpace = new JPanel();
@@ -156,7 +205,7 @@ public class AccountMgmtPane extends JPanel {
         emptySpace.add(Box.createRigidArea(new Dimension(50,5)));
 
         c.weighty = 1;
-        c.gridy = accountCount;
+        c.gridy = count;
         c.gridx = 0;
         c.weightx = 1;
         c.anchor = GridBagConstraints.WEST;
@@ -166,6 +215,6 @@ public class AccountMgmtPane extends JPanel {
 
     private void addAccountBtnClicked(MouseEvent event) {
         Main.createAndShowLogInPane();
-        Main.hideAccountMgmtPane();
+        Main.disposeAccountMgmtPane();
     }
 }
