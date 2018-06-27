@@ -82,13 +82,13 @@ public class LogInPane extends JPanel {
 
 		Account account = getAccountObject();
 		try {
-			DBHelper dbHelper = new DBHelper();
+			DBHelper dbHelper = DBHelper.getInstance();
 			dbHelper.storeAccount(account);
 		} catch (Exception e) {
 			//should not happen
 			e.printStackTrace();
 		}
-        Main.createAndShowMainPane();
+        Main.createAndShowMainPane(account);
         Main.disposeLogInPane();
     }
 

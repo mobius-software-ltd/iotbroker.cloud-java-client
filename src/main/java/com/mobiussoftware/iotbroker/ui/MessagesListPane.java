@@ -1,19 +1,32 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import com.mobiussoftware.iotbroker.dal.DBHelper;
+import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.db.Message;
+import com.mobiussoftware.iotbroker.logic.ClientListener;
+
 import javax.swing.*;
-import javax.swing.border.CompoundBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.Random;
 
-public class MessagesListPane extends JPanel {
+public class MessagesListPane extends JPanel implements ClientListener {
+
+    private Account account;
+
+	private JPanel messagesPane;
 
     static final int COLORED_LABEL_WIDTH = 80;
     static final int COLORED_LABEL_HEIGHT = 40;
     private final int msgCount = 50;
 
-    MessagesListPane() {
+    MessagesListPane(Account account) {
         super();
+
+        this.account = account;
+        drawUI();
+    }
+
+    private void drawUI() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         JPanel txtLbl1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -24,7 +37,7 @@ public class MessagesListPane extends JPanel {
 
         this.add(txtLbl1);
 
-        JPanel messagesPane = new JPanel();
+        messagesPane = new JPanel();
         messagesPane.setBackground(Color.white);
         messagesPane.setMinimumSize(new Dimension(410, 280));
         messagesPane.setPreferredSize(new Dimension(410, msgCount * 200));
@@ -40,81 +53,84 @@ public class MessagesListPane extends JPanel {
 
         this.add(wrapper);
 
-        addMessagesPaneElements(messagesPane);
+        addMessagesPaneElements();
     }
 
-    private void addMessagesPaneElements(final JPanel parent) {
-        parent.setLayout(new GridBagLayout());
+    private void addMessagesPaneElements() {
+		messagesPane.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
+        int count = 0;
+		try {
+			final DBHelper dbHelper = DBHelper.getInstance();
 
+			for (Message msg : dbHelper.getMessages(account)) {
+				Color bgColor = count%2 == 0 ? Color.white : UIConstants.ROW_ODD_COLOR;
 
-        Random r = new Random();
+				JPanel messageData = new JPanel();
+				messageData.setLayout(new BoxLayout(messageData, BoxLayout.Y_AXIS));
+				messageData.setBackground(bgColor);
+	//            messageData.setBorder(BorderFactory.createLineBorder(Color.blue));
 
-        for (int i = 0; i < msgCount; i++) {
-            Color bgColor = i%2 == 0 ? Color.white : UIConstants.ROW_ODD_COLOR;
+				JLabel topic = new JLabel(msg.getTopic(), SwingConstants.LEFT);
+				topic.setFont(UIConstants.REGULAR_BOLD_FONT);
+				topic.setBorder(BorderFactory.createEmptyBorder(5,5,2,5));
 
-            JPanel messageData = new JPanel();
-            messageData.setLayout(new BoxLayout(messageData, BoxLayout.Y_AXIS));
-            messageData.setBackground(bgColor);
-//            messageData.setBorder(BorderFactory.createLineBorder(Color.blue));
+				JLabel text = new JLabel("<html>" + msg.getContents() + "</html>", SwingConstants.LEFT);
+				text.setFont(UIConstants.REGULAR_FONT);
+				text.setBorder(BorderFactory.createEmptyBorder(1,5,3,5));
 
-            JLabel topic = new JLabel("topic " + i, SwingConstants.LEFT);
-            topic.setFont(UIConstants.REGULAR_BOLD_FONT);
-            topic.setBorder(BorderFactory.createEmptyBorder(5,5,2,5));
+				messageData.add(topic);
+				messageData.add(text);
 
-            JLabel text = new JLabel("<html>message payload " + UIHelper.randomAlphaNumeric(r.nextInt(512) + 64) + i + "</html>", SwingConstants.LEFT);
-            text.setFont(UIConstants.REGULAR_FONT);
-            text.setBorder(BorderFactory.createEmptyBorder(1,5,3,5));
+				c.fill = GridBagConstraints.BOTH;
+				c.gridx = 0;
+				c.gridy = count++;
+				c.weightx = 10;
+				c.anchor = GridBagConstraints.NORTHWEST;
 
-            messageData.add(topic);
-            messageData.add(text);
+				messagesPane.add(messageData, c);
 
-            c.fill = GridBagConstraints.BOTH;
-            c.gridx = 0;
-            c.gridy = i;
-            c.weightx = 10;
-            c.anchor = GridBagConstraints.NORTHWEST;
+				JPanel extraData = new TwoColorRoundedRect();
+				extraData.setBackground(bgColor);
+				extraData.setMinimumSize(new Dimension(COLORED_LABEL_WIDTH, 1));
+				extraData.setPreferredSize(extraData.getMinimumSize());
+				extraData.setLayout(new BoxLayout(extraData, BoxLayout.Y_AXIS));
 
-            parent.add(messageData, c);
+				JLabel direction = new JLabel(msg.isIncoming() ? "in" : "out", SwingConstants.CENTER);
+				direction.setFont(UIConstants.REGULAR_FONT);
+				direction.setForeground(Color.white);
+				direction.setAlignmentX(Component.CENTER_ALIGNMENT);
+	//            direction.setMaximumSize(new Dimension((int)extraData.getMinimumSize().getWidth(), (int)extraData.getMinimumSize().getHeight()/2));
+	//            direction.setMaximumSize(new Dimension(extraData.getWidth(), extraData.getHeight()/2));
+				direction.setBorder(BorderFactory.createEmptyBorder(extraData.getHeight()/2, 0,0,0));
 
-            JPanel extraData = new TwoColorRoundedRect();
-            extraData.setBackground(bgColor);
-            extraData.setMinimumSize(new Dimension(COLORED_LABEL_WIDTH, 1));
-            extraData.setPreferredSize(extraData.getMinimumSize());
-            extraData.setLayout(new BoxLayout(extraData, BoxLayout.Y_AXIS));
+				JLabel qos = new JLabel("QoS:"+ msg.getQos(), SwingConstants.CENTER);
+				qos.setBorder(BorderFactory.createEmptyBorder(3, 0,0,0));
+				qos.setFont(UIConstants.REGULAR_FONT);
+				qos.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            JLabel direction = new JLabel(r.nextInt(2) == 0 ? "in" : "out", SwingConstants.CENTER);
-            direction.setFont(UIConstants.REGULAR_FONT);
-            direction.setForeground(Color.white);
-            direction.setAlignmentX(Component.CENTER_ALIGNMENT);
-//            direction.setMaximumSize(new Dimension((int)extraData.getMinimumSize().getWidth(), (int)extraData.getMinimumSize().getHeight()/2));
-//            direction.setMaximumSize(new Dimension(extraData.getWidth(), extraData.getHeight()/2));
-            direction.setBorder(BorderFactory.createEmptyBorder(extraData.getHeight()/2, 0,0,0));
+				extraData.add(direction);
+	//            extraData.add(Box.createRigidArea(new Dimension(1,6)));
+				extraData.add(qos);
 
-            JLabel qos = new JLabel("QoS:"+ r.nextInt(3), SwingConstants.CENTER);
-            qos.setBorder(BorderFactory.createEmptyBorder(3, 0,0,0));
-            qos.setFont(UIConstants.REGULAR_FONT);
-            qos.setAlignmentX(Component.CENTER_ALIGNMENT);
+				c.fill = GridBagConstraints.VERTICAL;
+				c.gridx = 1;
+				c.weightx = 0;
+				c.anchor = GridBagConstraints.NORTHEAST;
 
-            extraData.add(direction);
-//            extraData.add(Box.createRigidArea(new Dimension(1,6)));
-            extraData.add(qos);
+				messagesPane.add(extraData, c);
 
-            c.fill = GridBagConstraints.VERTICAL;
-            c.gridx = 1;
-            c.weightx = 0;
-            c.anchor = GridBagConstraints.NORTHEAST;
+				c.gridx = 2;
+				c.weightx = 0;
+				c.anchor = GridBagConstraints.NORTHEAST;
 
-            parent.add(extraData, c);
+				messagesPane.add(Box.createRigidArea(new Dimension(5,5)), c);
 
-            c.gridx = 2;
-            c.weightx = 0;
-            c.anchor = GridBagConstraints.NORTHEAST;
-
-            parent.add(Box.createRigidArea(new Dimension(5,5)), c);
-
-        }
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
         c.weighty = 1;
         c.gridy = msgCount;
@@ -127,8 +143,24 @@ public class MessagesListPane extends JPanel {
         emptySpace.setBackground(Color.white);
 //        emptySpace.setBorder(BorderFactory.createLineBorder(Color.blue));
         emptySpace.add(Box.createRigidArea(new Dimension(50,5)));
-        parent.add(emptySpace, c);
+		messagesPane.add(emptySpace, c);
     }
+
+    @Override
+	public void messageSent() {
+    	messagesPane.removeAll();
+    	addMessagesPaneElements();
+    	messagesPane.revalidate();
+		System.out.println("messagepane refreshed");
+	}
+
+    @Override
+	public void messageReceived() {
+    	messagesPane.removeAll();
+    	addMessagesPaneElements();
+    	messagesPane.revalidate();
+		System.out.println("messagepane refreshed");
+	}
 
     @Override
     protected void paintComponent(Graphics g) {

@@ -1,5 +1,9 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import com.mobiussoftware.iotbroker.dal.DBHelper;
+import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.db.Message;
+import com.mobiussoftware.iotbroker.logic.ClientListener;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 
@@ -13,6 +17,10 @@ import java.beans.PropertyChangeListener;
 
 public class SendMessagePane extends JPanel {
 
+	private Account account;
+
+	private ClientListener listener;
+
     private JPanel settingsPane;
     private HintDialogTextField contentTF;
     private HintTextField topicTF;
@@ -24,34 +32,44 @@ public class SendMessagePane extends JPanel {
     private JProgressBar progressBar;
 
 	private MouseListener sendMsgBtnListener;
-	private final JPanel sendMsgBtn;
+	private JPanel sendMsgBtn;
 
-    SendMessagePane() {
+    SendMessagePane(Account account) {
         super();
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        progressBarSpace = UIHelper.createProgressBarSpace(5);
-        this.add(progressBarSpace);
+		this.account = account;
+		drawUI();
+    }
 
-        settingsPane = new JPanel();
-        settingsPane.setBackground(UIConstants.APP_BG_COLOR);
+	public void setListener(ClientListener listener) {
+		this.listener = listener;
+	}
+
+	private void drawUI() {
+		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
+		progressBarSpace = UIHelper.createProgressBarSpace(5);
+		this.add(progressBarSpace);
+
+		settingsPane = new JPanel();
+		settingsPane.setBackground(UIConstants.APP_BG_COLOR);
 
 		sendMsgBtnListener = new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
 				arg0.getComponent().removeMouseListener(this);
-				System.out.println("mouse listener removed");
 				sendMessageAction();
 			}
 		};
 		sendMsgBtn = UIHelper.createButton("Send", sendMsgBtnListener);
 
-        this.add(UIHelper.createSmallBoldLabel("send message:"));
-        this.add(UIHelper.wrapInBorderLayout(settingsPane, BorderLayout.PAGE_START));
-        this.add(sendMsgBtn);
+		this.add(UIHelper.createSmallBoldLabel("send message:"));
+		this.add(UIHelper.wrapInBorderLayout(settingsPane, BorderLayout.PAGE_START));
+		this.add(sendMsgBtn);
 
-        addSettingsPaneElements();
-    }
+		addSettingsPaneElements();
+	}
+
     private Color rowColor(int rowNumber) {
         return rowNumber % 2 == 0 ? UIConstants.ROW_EVEN_COLOR : UIConstants.ROW_ODD_COLOR;
     }
@@ -137,31 +155,41 @@ public class SendMessagePane extends JPanel {
     }
 
     class SendTask extends NetworkTask<Void, Void> {
-        private String content;
-        private String topic;
-        private int qos;
-        private boolean retain;
-        private boolean duplicate;
+    	private Message messageObj;
+
+//        private String content;
+//        private String topic;
+//        private int qos;
+//        private boolean retain;
+//        private boolean duplicate;
 
         public SendTask(String content, String topic, int qos, boolean retain, boolean duplicate) {
-            this.content = content;
-            this.topic = topic;
-            this.qos = qos;
-            this.retain = retain;
-            this.duplicate = duplicate;
+//            this.content = content;
+//            this.topic = topic;
+//            this.qos = qos;
+//            this.retain = retain;
+//            this.duplicate = duplicate;
+            this.messageObj = new Message(topic, content, false, (byte)qos, retain, duplicate);
+            messageObj.setAccount(account);
         }
 
         @Override
         public Void doInBackground() {
-            super.doInBackground();
+			try {
+				DBHelper dbHelper = DBHelper.getInstance();
+				dbHelper.saveMessage(messageObj);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
             //sent to server logic!!
 
-            return null;
+            return super.doInBackground();
         }
 
         @Override
         protected void done() {
             System.out.println("Sent!");
+            listener.messageSent();
             removeProgressBar();
 
             sendMsgBtn.addMouseListener(sendMsgBtnListener);

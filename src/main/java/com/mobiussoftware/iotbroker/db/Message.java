@@ -9,8 +9,11 @@ public class Message {
 	@DatabaseField(generatedId = true)
 	private int id;
 
+	@DatabaseField(canBeNull = false, foreign = true)
+	private Account account;
+
 	@DatabaseField
-	private String name;
+	private String topic;
 
 	@DatabaseField
 	private String contents;
@@ -21,14 +24,24 @@ public class Message {
 	@DatabaseField
 	private byte qos;
 
+	@DatabaseField
+	private Boolean retain;
+
+	@DatabaseField
+	private Boolean duplicate;
+
+
+
 	public Message() {
 	}
 
-	public Message(String name, String contents, boolean incoming, byte qos) {
-		this.name = name;
+	public Message(String topic, String contents, boolean incoming, byte qos, Boolean retain, Boolean duplicate) {
+		this.topic = topic;
 		this.contents = contents;
 		this.incoming = incoming;
 		this.qos = qos;
+		this.retain = retain;
+		this.duplicate = duplicate;
 	}
 
 	public int getId() {
@@ -39,12 +52,20 @@ public class Message {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public Account getAccount() {
+		return account;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setAccount(Account account) {
+		this.account = account;
+	}
+
+	public String getTopic() {
+		return topic;
+	}
+
+	public void setTopic(String topic) {
+		this.topic = topic;
 	}
 
 	public String getContents() {
@@ -69,5 +90,21 @@ public class Message {
 
 	public void setQos(byte qos) {
 		this.qos = qos;
+	}
+
+	public Boolean getRetain() {
+		return retain;
+	}
+
+	public void setRetain(Boolean retain) {
+		this.retain = retain;
+	}
+
+	public Boolean getDuplicate() {
+		return duplicate;
+	}
+
+	public void setDuplicate(Boolean duplicate) {
+		this.duplicate = duplicate;
 	}
 }

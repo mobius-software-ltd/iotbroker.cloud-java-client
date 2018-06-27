@@ -9,11 +9,15 @@ public class Topic {
 	@DatabaseField(generatedId = true)
 	private int id;
 
+	@DatabaseField(canBeNull = false, foreign = true)
+	private Account account;
+
 	@DatabaseField
 	private String name;
 
 	@DatabaseField
 	private byte qos;
+
 
 	public Topic() {
 	}
@@ -29,6 +33,14 @@ public class Topic {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+
+	public Account getAccount() {
+		return account;
+	}
+
+	public void setAccount(Account account) {
+		this.account = account;
 	}
 
 	public String getName() {

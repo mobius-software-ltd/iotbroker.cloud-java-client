@@ -1,5 +1,7 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import com.mobiussoftware.iotbroker.db.Account;
+
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
@@ -12,61 +14,56 @@ import java.util.Random;
 public class LogoPane extends JPanel implements PropertyChangeListener {
 
     JProgressBar progressBar;
+    private Account account;
 
+    public LogoPane(Account account) {
+        this.account = account;
+        drawUI();
 
-    public LogoPane() {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+    }
 
-        this.add(Box.createRigidArea(new Dimension(1, 15)));
+    private void drawUI() {
+		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        ImageIcon icon = new ImageIcon(UIConstants.IMAGE_RES_PATH + UIConstants.LOGO_FILE_PATH);
-        Image tmp = icon.getImage().getScaledInstance(180, 180,  java.awt.Image.SCALE_SMOOTH);
-        final ImageIcon logoIcn = new ImageIcon(tmp);
+		this.add(Box.createRigidArea(new Dimension(1, 15)));
 
-        icon = new ImageIcon(UIConstants.IMAGE_RES_PATH + UIConstants.IC_LOADING_FILE_PATH);
-        tmp = icon.getImage().getScaledInstance(96, 18,  java.awt.Image.SCALE_SMOOTH);
-        final ImageIcon textIcn = new ImageIcon(tmp);
+		ImageIcon icon = new ImageIcon(UIConstants.IMAGE_RES_PATH + UIConstants.LOGO_FILE_PATH);
+		Image tmp = icon.getImage().getScaledInstance(180, 180,  java.awt.Image.SCALE_SMOOTH);
+		final ImageIcon logoIcn = new ImageIcon(tmp);
 
-        JLabel logoLbl = new JLabel(logoIcn, SwingConstants.CENTER);
-        logoLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.add(logoLbl);
+		icon = new ImageIcon(UIConstants.IMAGE_RES_PATH + UIConstants.IC_LOADING_FILE_PATH);
+		tmp = icon.getImage().getScaledInstance(96, 18,  java.awt.Image.SCALE_SMOOTH);
+		final ImageIcon textIcn = new ImageIcon(tmp);
 
-        this.add(Box.createRigidArea(new Dimension(1, 15)));
+		JLabel logoLbl = new JLabel(logoIcn, SwingConstants.CENTER);
+		logoLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
+		this.add(logoLbl);
 
-        JLabel textLbl = new JLabel(textIcn, SwingConstants.CENTER);
-        textLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-        this.add(textLbl);
+		this.add(Box.createRigidArea(new Dimension(1, 15)));
 
-        this.add(Box.createRigidArea(new Dimension(1, 25)));
+		JLabel textLbl = new JLabel(textIcn, SwingConstants.CENTER);
+		textLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
+		this.add(textLbl);
 
-        ConnectingTask connectingTask = new ConnectingTask();
-        connectingTask.addPropertyChangeListener(this);
-        connectingTask.execute();
+		this.add(Box.createRigidArea(new Dimension(1, 25)));
 
-        progressBar = new JProgressBar();
-        progressBar.setUI(new BasicProgressBarUI());
-        progressBar.setString("");
-        progressBar.setBackground(new Color(190, 200, 200, 50));
-        progressBar.setForeground(UIConstants.APP_CONTRAST_COLOR);
-        progressBar.setBorder(BorderFactory.createLineBorder(new Color(170, 180, 180, 200)));
-        progressBar.setStringPainted(true);
-        progressBar.setMinimumSize(new Dimension(250,5));
-        progressBar.setPreferredSize(progressBar.getMinimumSize());
-        progressBar.setOpaque(true);
-        progressBar.setMaximumSize(progressBar.getMinimumSize());
+		ConnectingTask connectingTask = new ConnectingTask();
+		connectingTask.addPropertyChangeListener(this);
+		connectingTask.execute();
 
-        this.add(progressBar);
+		progressBar = new JProgressBar();
+		progressBar.setUI(new BasicProgressBarUI());
+		progressBar.setString("");
+		progressBar.setBackground(new Color(190, 200, 200, 50));
+		progressBar.setForeground(UIConstants.APP_CONTRAST_COLOR);
+		progressBar.setBorder(BorderFactory.createLineBorder(new Color(170, 180, 180, 200)));
+		progressBar.setStringPainted(true);
+		progressBar.setMinimumSize(new Dimension(250,5));
+		progressBar.setPreferredSize(progressBar.getMinimumSize());
+		progressBar.setOpaque(true);
+		progressBar.setMaximumSize(progressBar.getMinimumSize());
 
-//        int delay = 2000;
-//        Timer timer = new Timer( delay, new ActionListener(){
-//            @Override
-//            public void actionPerformed( ActionEvent e ){
-//                Main.createAndShowMainPane();
-//                Main.disposeLogoPane();
-//            }
-//        } );
-//        timer.setRepeats( false );
-//        timer.start();
+		this.add(progressBar);
     }
 
     class ConnectingTask extends SwingWorker<Void, Void> {
@@ -97,7 +94,7 @@ public class LogoPane extends JPanel implements PropertyChangeListener {
         @Override
         public void done() {
 //            Toolkit.getDefaultToolkit().beep();
-            Main.createAndShowMainPane();
+            Main.createAndShowMainPane(account);
             Main.disposeLogoPane();
 //            setCursor(null); //turn off the wait cursor
         }

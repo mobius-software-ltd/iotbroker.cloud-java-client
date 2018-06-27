@@ -1,5 +1,7 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import com.mobiussoftware.iotbroker.db.Account;
+
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
@@ -61,10 +63,10 @@ public class Main {
         }
     }
 
-    static void createAndShowMainPane() {
+    static void createAndShowMainPane(Account account) {
 
-        MainPane frame = new MainPane();
-        frame.setTitle("MQTT");
+        MainPane frame = new MainPane(account);
+        frame.setTitle(account.getProtocol().toString());
         frame.pack();
         frame.setVisible(true);
         ;
@@ -124,12 +126,12 @@ public class Main {
 		System.out.println(accountMgmtPane);
     }
 
-    static void createAndShowLogoPane() {
+    static void createAndShowLogoPane(Account account) {
 
-        JFrame frame = new JFrame("IotBroker");
+        JFrame frame = new JFrame(account.getProtocol().toString());
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
-        frame.getContentPane().add(new LogoPane());
+        frame.getContentPane().add(new LogoPane(account));
 
         frame.pack();
         frame.setVisible(true);

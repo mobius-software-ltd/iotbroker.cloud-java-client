@@ -57,9 +57,9 @@ public class AccountMgmtPane extends JPanel {
 
         int count = 0;
         try {
-            final DBHelper dbHelper = new DBHelper();
+            final DBHelper dbHelper = DBHelper.getInstance();
 
-            for (Account account : dbHelper.accountIterator()) {
+            for (final Account account : dbHelper.accountIterator()) {
 //            for (int i = 0; i < accountCount; i++) {
                 int id = account.getId();
                 String protocolStr = account.getProtocol().toString();
@@ -112,7 +112,7 @@ public class AccountMgmtPane extends JPanel {
                         Timer timer = new Timer( delay, new ActionListener(){
                             @Override
                             public void actionPerformed( ActionEvent e ){
-                                Main.createAndShowLogoPane();
+                                Main.createAndShowLogoPane(account);
                                 row[0].setBackground(UIConstants.APP_BG_COLOR);
                                 row[1].setBackground(UIConstants.APP_BG_COLOR);
                                 accountChosen = false;

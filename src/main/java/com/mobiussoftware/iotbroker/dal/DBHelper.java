@@ -11,15 +11,27 @@ import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.db.Topic;
 
 import java.sql.SQLException;
+import java.util.List;
 
 public class DBHelper {
 	private final static String DATABASE_URL = "jdbc:sqlite:iotbroker.db";
 
+	private static DBHelper instance = null;
+
 	ConnectionSource connectionSource;
 	Dao<Account, String> accountDao;
+	Dao<Topic, String> topicDao;
+	Dao<Message, String> messageDao;
 
-	public DBHelper() throws Exception {
+	protected DBHelper() throws Exception {
 		init();
+	}
+
+	public static DBHelper getInstance() throws Exception {
+		if (instance == null) {
+			instance = new DBHelper();
+		}
+		return instance;
 	}
 
 	private void init() throws Exception {
@@ -33,12 +45,14 @@ public class DBHelper {
 			System.out.println("database is set up");
 
 			accountDao = DaoManager.createDao(connectionSource, Account.class);
+			topicDao = DaoManager.createDao(connectionSource, Topic.class);
+			messageDao = DaoManager.createDao(connectionSource, Message.class);
 
 		} finally {
 			// destroy the data source which should close underlying connections
-//			if (connectionSource != null) {
-//				connectionSource.close();
-//			}
+			if (connectionSource != null) {
+				connectionSource.close();
+			}
 		}
 	}
 
@@ -58,5 +72,27 @@ public class DBHelper {
 
 	public void deleteAccount(String id) throws SQLException {
 		accountDao.deleteById(id);
+	}
+
+	public List<Topic> getTopics(Account account) throws SQLException {
+		List<Topic> topics = topicDao.queryBuilder().where().eq("account_id", account).query();
+		return topics;
+	}
+
+	public void saveTopic(Topic topic) throws SQLException {
+		topicDao.create(topic);
+	}
+
+	public void deleteTopic(String id) throws SQLException {
+		topicDao.deleteById(id);
+	}
+
+	public List<Message> getMessages(Account account) throws SQLException {
+		List<Message> messages = messageDao.queryBuilder().where().eq("account_id", account).query();
+		return messages;
+	}
+
+	public void saveMessage(Message message) throws SQLException {
+		messageDao.create(message);
 	}
 }
