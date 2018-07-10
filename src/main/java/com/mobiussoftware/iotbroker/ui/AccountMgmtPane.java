@@ -3,7 +3,6 @@ package com.mobiussoftware.iotbroker.ui;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.db.Account;
-import com.mobiussoftware.iotbroker.network.Service;
 
 import javax.swing.*;
 import java.awt.*;
@@ -112,8 +111,7 @@ public class AccountMgmtPane extends JPanel {
                         Timer timer = new Timer( delay, new ActionListener(){
                             @Override
                             public void actionPerformed( ActionEvent e ){
-								Service.login(account);
-//                                Main.createAndShowLogoPane(account);
+                                Main.createAndShowLogoPane(account);
                                 row[0].setBackground(UIConstants.APP_BG_COLOR);
                                 row[1].setBackground(UIConstants.APP_BG_COLOR);
                                 accountChosen = false;

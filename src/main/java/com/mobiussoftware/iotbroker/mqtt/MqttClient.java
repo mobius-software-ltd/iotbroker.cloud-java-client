@@ -53,7 +53,6 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice {
 		QoS qos = QoS.valueOf(account.getQos());
 		Topic topic = new Topic(topicName, qos);
 		this.will = new Will(topic, account.getWill().getBytes(), account.isRetain());
-		this.listener = listener;
 		client = new TCPClient(address, WORKER_THREADS);
 	}
 
