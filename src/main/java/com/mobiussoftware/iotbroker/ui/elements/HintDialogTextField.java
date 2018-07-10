@@ -32,7 +32,7 @@ public class HintDialogTextField extends HintTextField {
 
         text = textArea.getText().trim();
 
-        //logic of showing text/hint in will field
+        //network of showing text/hint in will field
         if (!text.isEmpty()) {
             super.setText("<...>");
             super.setBorder(BorderFactory.createLineBorder(Color.lightGray));

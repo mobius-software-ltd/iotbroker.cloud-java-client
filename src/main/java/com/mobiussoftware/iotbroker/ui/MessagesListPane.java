@@ -1,9 +1,12 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import com.mobiussoftware.iotbroker.dal.DBHelper;
+import com.mobius.software.mqtt.parser.avps.MessageType;
+import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
+import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
-import com.mobiussoftware.iotbroker.logic.ClientListener;
+import com.mobiussoftware.iotbroker.network.ClientListener;
+import com.mobiussoftware.iotbroker.network.ConnectionState;
 
 import javax.swing.*;
 import java.awt.*;
@@ -62,9 +65,9 @@ public class MessagesListPane extends JPanel implements ClientListener {
 
         int count = 0;
 		try {
-			final DBHelper dbHelper = DBHelper.getInstance();
+			final DBInterface dbInterface = DBHelper.getInstance();
 
-			for (Message msg : dbHelper.getMessages(account)) {
+			for (Message msg : dbInterface.getMessages(account)) {
 				Color bgColor = count%2 == 0 ? Color.white : UIConstants.ROW_ODD_COLOR;
 
 				JPanel messageData = new JPanel();
@@ -155,14 +158,19 @@ public class MessagesListPane extends JPanel implements ClientListener {
 	}
 
     @Override
-	public void messageReceived() {
+	public void messageReceived(MessageType suback) {
     	messagesPane.removeAll();
     	addMessagesPaneElements();
     	messagesPane.revalidate();
 		System.out.println("messagepane refreshed");
 	}
 
-    @Override
+	@Override
+	public void stateChanged(ConnectionState state) {
+
+	}
+
+	@Override
     protected void paintComponent(Graphics g) {
         Image bgImage = UIConstants.BG_IMAGE;
         g.drawImage(bgImage, 0, 0, null);

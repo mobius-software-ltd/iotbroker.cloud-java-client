@@ -1,6 +1,7 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import com.mobiussoftware.iotbroker.dal.DBHelper;
+import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
+import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
@@ -82,8 +83,8 @@ public class LogInPane extends JPanel {
 
 		Account account = getAccountObject();
 		try {
-			DBHelper dbHelper = DBHelper.getInstance();
-			dbHelper.storeAccount(account);
+			DBInterface dbInterface = DBHelper.getInstance();
+			dbInterface.storeAccount(account);
 		} catch (Exception e) {
 			//should not happen
 			e.printStackTrace();

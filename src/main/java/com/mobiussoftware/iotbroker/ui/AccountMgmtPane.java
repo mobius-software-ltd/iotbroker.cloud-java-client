@@ -1,16 +1,16 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import com.mobiussoftware.iotbroker.dal.DBHelper;
+import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
+import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.network.Service;
 
 import javax.swing.*;
-import javax.swing.border.CompoundBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class AccountMgmtPane extends JPanel {
 
@@ -57,9 +57,9 @@ public class AccountMgmtPane extends JPanel {
 
         int count = 0;
         try {
-            final DBHelper dbHelper = DBHelper.getInstance();
+            final DBInterface dbInterface = DBHelper.getInstance();
 
-            for (final Account account : dbHelper.accountIterator()) {
+            for (final Account account : dbInterface.accountIterator()) {
 //            for (int i = 0; i < accountCount; i++) {
                 int id = account.getId();
                 String protocolStr = account.getProtocol().toString();
@@ -112,7 +112,8 @@ public class AccountMgmtPane extends JPanel {
                         Timer timer = new Timer( delay, new ActionListener(){
                             @Override
                             public void actionPerformed( ActionEvent e ){
-                                Main.createAndShowLogoPane(account);
+								Service.login(account);
+//                                Main.createAndShowLogoPane(account);
                                 row[0].setBackground(UIConstants.APP_BG_COLOR);
                                 row[1].setBackground(UIConstants.APP_BG_COLOR);
                                 accountChosen = false;
@@ -172,7 +173,7 @@ public class AccountMgmtPane extends JPanel {
                         accountsPane.repaint();
 
                         try {
-							dbHelper.deleteAccount(String.valueOf(id));
+							dbInterface.deleteAccount(String.valueOf(id));
 						} catch (SQLException ex) {
                         	ex.printStackTrace();
 						}

@@ -126,7 +126,7 @@ public class Main {
 		System.out.println(accountMgmtPane);
     }
 
-    static void createAndShowLogoPane(Account account) {
+    public static void createAndShowLogoPane(Account account) {
 
         JFrame frame = new JFrame(account.getProtocol().toString());
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);

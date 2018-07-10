@@ -1,9 +1,10 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import com.mobiussoftware.iotbroker.dal.DBHelper;
+import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
+import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
-import com.mobiussoftware.iotbroker.logic.ClientListener;
+import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 
@@ -176,12 +177,12 @@ public class SendMessagePane extends JPanel {
         @Override
         public Void doInBackground() {
 			try {
-				DBHelper dbHelper = DBHelper.getInstance();
-				dbHelper.saveMessage(messageObj);
+				DBInterface dbInterface = DBHelper.getInstance();
+				dbInterface.saveMessage(messageObj);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-            //sent to server logic!!
+            //sent to server network!!
 
             return super.doInBackground();
         }

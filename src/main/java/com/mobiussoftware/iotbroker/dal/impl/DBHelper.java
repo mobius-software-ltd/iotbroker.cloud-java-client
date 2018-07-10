@@ -1,4 +1,4 @@
-package com.mobiussoftware.iotbroker.dal;
+package com.mobiussoftware.iotbroker.dal.impl;
 
 import com.j256.ormlite.dao.CloseableWrappedIterable;
 import com.j256.ormlite.dao.Dao;
@@ -6,6 +6,7 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.db.Topic;
@@ -13,10 +14,10 @@ import com.mobiussoftware.iotbroker.db.Topic;
 import java.sql.SQLException;
 import java.util.List;
 
-public class DBHelper {
+public class DBHelper implements DBInterface {
 	private final static String DATABASE_URL = "jdbc:sqlite:iotbroker.db";
 
-	private static DBHelper instance = null;
+	private static DBInterface instance = null;
 
 	ConnectionSource connectionSource;
 	Dao<Account, String> accountDao;
@@ -27,7 +28,7 @@ public class DBHelper {
 		init();
 	}
 
-	public static DBHelper getInstance() throws Exception {
+	public static DBInterface getInstance() throws Exception {
 		if (instance == null) {
 			instance = new DBHelper();
 		}
@@ -62,37 +63,50 @@ public class DBHelper {
 		TableUtils.createTableIfNotExists(connectionSource, Message.class);
 	}
 
+	@Override
 	public CloseableWrappedIterable<Account> accountIterator() {
 		return accountDao.getWrappedIterable();
 	}
 
+	@Override
 	public void storeAccount(Account account) throws SQLException {
 		accountDao.create(account);
 	}
 
+	@Override
 	public void deleteAccount(String id) throws SQLException {
 		accountDao.deleteById(id);
 	}
 
+	@Override
 	public List<Topic> getTopics(Account account) throws SQLException {
 		List<Topic> topics = topicDao.queryBuilder().where().eq("account_id", account).query();
 		return topics;
 	}
 
+	@Override
 	public void saveTopic(Topic topic) throws SQLException {
 		topicDao.create(topic);
 	}
 
+	@Override
 	public void deleteTopic(String id) throws SQLException {
 		topicDao.deleteById(id);
 	}
 
+	@Override
 	public List<Message> getMessages(Account account) throws SQLException {
 		List<Message> messages = messageDao.queryBuilder().where().eq("account_id", account).query();
 		return messages;
 	}
 
+	@Override
 	public void saveMessage(Message message) throws SQLException {
 		messageDao.create(message);
+	}
+
+	@Override
+	public void deleteAllTopics() {
+
 	}
 }

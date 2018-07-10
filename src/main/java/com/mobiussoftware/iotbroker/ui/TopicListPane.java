@@ -1,6 +1,7 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import com.mobiussoftware.iotbroker.dal.DBHelper;
+import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
+import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Topic;
 import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
@@ -117,9 +118,9 @@ public class TopicListPane extends JPanel {
 
 		int count = 0;
 		try {
-			final DBHelper dbHelper = DBHelper.getInstance();
+			final DBInterface dbInterface = DBHelper.getInstance();
 
-			for (Topic tp : dbHelper.getTopics(account)) {
+			for (Topic tp : dbInterface.getTopics(account)) {
 				int id = tp.getId();
 				String topicName = tp.getName();
 				String qosValue = String.valueOf(tp.getQos());
@@ -369,8 +370,8 @@ public class TopicListPane extends JPanel {
         @Override
         public Void doInBackground() {
 			try {
-				DBHelper dbHelper = DBHelper.getInstance();
-				dbHelper.saveTopic(topicObj);
+				DBInterface dbInterface = DBHelper.getInstance();
+				dbInterface.saveTopic(topicObj);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -396,8 +397,8 @@ public class TopicListPane extends JPanel {
 		@Override
 		public Void doInBackground() {
 			try {
-				DBHelper dbHelper = DBHelper.getInstance();
-				dbHelper.deleteTopic(id);
+				DBInterface dbInterface = DBHelper.getInstance();
+				dbInterface.deleteTopic(id);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

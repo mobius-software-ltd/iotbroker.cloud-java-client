@@ -141,4 +141,20 @@ public class Account {
 	public void setWillTopic(String willTopic) {
 		this.willTopic = willTopic;
 	}
+
+	public boolean isRetain() {
+		return retain;
+	}
+
+	public void setRetain(boolean retain) {
+		this.retain = retain;
+	}
+
+	public int getQos() {
+		return qos;
+	}
+
+	public void setQos(int qos) {
+		this.qos = qos;
+	}
 }
