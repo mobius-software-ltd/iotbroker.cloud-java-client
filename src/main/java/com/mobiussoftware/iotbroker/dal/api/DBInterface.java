@@ -26,4 +26,6 @@ public interface DBInterface {
 	void saveMessage(Message message) throws SQLException;
 
 	void deleteAllTopics();
+	
+	Boolean TopicExists(String topicName) throws SQLException;
 }

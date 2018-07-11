@@ -22,11 +22,13 @@ public class MQHandler extends SimpleChannelInboundHandler<MQMessage> {
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		super.channelInactive(ctx);
+		//super.channelInactive(ctx);
+		listener.connectionLost();
 	}
 
 	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-		super.channelReadComplete(ctx);
+		//super.channelReadComplete(ctx);
+		ctx.flush();
 	}
 }

@@ -1,55 +1,61 @@
 package com.mobiussoftware.iotbroker.mqtt.net;
 
+import java.io.UnsupportedEncodingException;
+import java.util.List;
+
 import com.mobius.software.mqtt.parser.MQParser;
 import com.mobius.software.mqtt.parser.exceptions.MalformedMessageException;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
-import java.util.List;
+public class MQDecoder extends ByteToMessageDecoder
+{
+	private MQParser parser;
 
-public class MQDecoder extends ByteToMessageDecoder {
+	public MQDecoder()
+	{
+	}
+
+	public MQDecoder(MQParser parser)
+	{
+		this.parser = parser;
+	}
+
 	@Override
-	protected void decode(ChannelHandlerContext context, ByteBuf input, List<Object> output)
+	protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws MalformedMessageException, UnsupportedEncodingException
 	{
 		ByteBuf nextHeader = null;
 		do
 		{
-			if (input.readableBytes() > 1)
+			if (buf.readableBytes() > 1)
 			{
 				try
 				{
-					nextHeader = MQParser.next(input);
+					nextHeader = MQParser.next(buf);
 				}
-				catch (Exception ex)
+				catch (MalformedMessageException | IndexOutOfBoundsException ex)
 				{
-					if (ex instanceof MalformedMessageException || ex instanceof IndexOutOfBoundsException)
-					{
-						input.resetReaderIndex();
-						if (nextHeader != null)
-						{
-							((ByteBuf) nextHeader).release();
-							nextHeader = null;
-						}
-					}
-                        else
-					throw ex;
+					buf.resetReaderIndex();
+					if (nextHeader != null)
+						nextHeader = null;
 				}
 			}
 
 			if (nextHeader != null)
 			{
-				input.readBytes(nextHeader, nextHeader.capacity());
+				buf.readBytes(nextHeader, nextHeader.capacity());
 				try
 				{
-					MQMessage header = MQParser.decode(nextHeader);
-					output.add(header);
+					MQMessage header = parser.decodeUsingCache(nextHeader);
+					out.add(header);
 				}
 				catch (Exception e)
 				{
-					input.resetReaderIndex();
-					context.channel().pipeline().remove(this);
+					buf.resetReaderIndex();
+					ctx.channel().pipeline().remove(this);
 					throw e;
 				}
 				finally
@@ -58,7 +64,12 @@ public class MQDecoder extends ByteToMessageDecoder {
 				}
 			}
 		}
-		while (input.readableBytes() > 1 && nextHeader != null);
+		while (buf.readableBytes() > 1 && nextHeader != null);
 	}
-}
 
+	public void setParser(MQParser parser)
+	{
+		this.parser = parser;
+	}
+	
+}

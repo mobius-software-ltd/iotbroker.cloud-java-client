@@ -109,4 +109,12 @@ public class DBHelper implements DBInterface {
 	public void deleteAllTopics() {
 
 	}
+
+	@Override
+	public Boolean TopicExists(String topicName)throws SQLException {
+		List<Topic> list = topicDao.queryBuilder().where().eq("name", topicName).query();
+		if (!list.isEmpty())
+			return true;
+		return false;
+	}
 }

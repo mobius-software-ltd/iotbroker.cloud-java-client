@@ -16,7 +16,7 @@ public class TCPClient implements NetworkChannel<MQMessage> {
 	private int workerThreads;
 
 	private Bootstrap bootstrap;
-	private MultithreadEventLoopGroup loopGroup;
+	private NioEventLoopGroup loopGroup;
 	private Channel channel;
 
 	// handlers for client connections
