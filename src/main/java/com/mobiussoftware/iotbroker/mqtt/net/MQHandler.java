@@ -9,8 +9,7 @@ public class MQHandler extends SimpleChannelInboundHandler<MQMessage> {
 
 	private ConnectionListener<MQMessage> listener;
 
-	public MQHandler(ConnectionListener<MQMessage> listener)
-	{
+	public MQHandler(ConnectionListener<MQMessage> listener) {
 		this.listener = listener;
 	}
 

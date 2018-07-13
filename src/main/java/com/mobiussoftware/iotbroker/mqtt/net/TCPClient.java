@@ -18,9 +18,9 @@ public class TCPClient implements NetworkChannel<MQMessage> {
 	private int workerThreads;
 
 	private Bootstrap bootstrap;
-	private NioEventLoopGroup loopGroup;
+	private MultithreadEventLoopGroup loopGroup;
 	private Channel channel;
-	private ChannelFuture channelConnect;
+//	private ChannelFuture channelConnect;
 
 	// handlers for client connections
 	public TCPClient(InetSocketAddress address, int workerThreads) {
@@ -38,7 +38,7 @@ public class TCPClient implements NetworkChannel<MQMessage> {
 			loopGroup.shutdownGracefully();
 	}
 
-	public void Close() {
+	public void close() {
 		if (channel != null) {
 			channel.closeFuture();
 			channel = null;
@@ -48,9 +48,9 @@ public class TCPClient implements NetworkChannel<MQMessage> {
 			loopGroup = null;
 		}
 	}
-	/*
+
 	public Boolean init(final ConnectionListener<MQMessage> listener) {
-		System.out.println("Init start channel=" + channel);
+		System.out.println("init started, channel=" + channel);
 		if (channel == null) {
 			bootstrap = new Bootstrap();
 			loopGroup = new NioEventLoopGroup(workerThreads);
@@ -69,23 +69,28 @@ public class TCPClient implements NetworkChannel<MQMessage> {
 				}
 			});
 			bootstrap.remoteAddress(address);
-			
+
 			try {
-				final ChannelFuture future = bootstrap.connect().awaitUninterruptibly();
+				final ChannelFuture future = bootstrap.connect();
 				future.addListener(new ChannelFutureListener() {
 					@Override
 					public void operationComplete(ChannelFuture channelFuture) throws Exception {
 						try {
 							channel = future.channel();
+							System.out.println("operation complete, channel is open=" + channel.isOpen());
 						} catch (Exception e) {
 							listener.connectFailed();
 							return;
 						}
 
-						if (channel != null)
+						if (channel != null) {
+							System.out.println("channel established?");
 							listener.connected();
-						else
+						}
+						else {
+							System.out.println("channel failed");
 							listener.connectFailed();
+						}
 					}
 
 				});
@@ -97,64 +102,62 @@ public class TCPClient implements NetworkChannel<MQMessage> {
 		}
 
 		return true;
-	}*/
-	
-	public boolean init(final ConnectionListener<MQMessage> listener) {
-		if (channel == null) {
-
-			
-
-			bootstrap = new Bootstrap();
-			loopGroup = new NioEventLoopGroup(workerThreads);
-			bootstrap.group(loopGroup);
-			bootstrap.channel(NioSocketChannel.class);
-			bootstrap.option(ChannelOption.TCP_NODELAY, true);
-			bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
-
-			bootstrap.handler(new ChannelInitializer<SocketChannel>() {
-				@Override
-				protected void initChannel(SocketChannel socketChannel) throws Exception {
-					
-					socketChannel.pipeline().addLast(new MQDecoder());
-					socketChannel.pipeline().addLast("handler", new MQHandler(listener));
-					socketChannel.pipeline().addLast(new MQEncoder());
-					socketChannel.pipeline().addLast(new ExceptionHandler());
-				}
-			});
-			bootstrap.remoteAddress(address);
-
-			try {
-				channelConnect = bootstrap.connect().sync();
-			}
-			catch (InterruptedException e) {
-				e.printStackTrace();
-				return false;
-			}
-			catch (Exception ex) {
-				ex.printStackTrace();
-				return false;
-			}
-		}
-		
-		listener.connected();
-		
-		return true;
 	}
 
-	
+//	public boolean init(final ConnectionListener<MQMessage> listener) {
+//		if (channel == null) {
+//
+//
+//
+//			bootstrap = new Bootstrap();
+//			loopGroup = new NioEventLoopGroup(workerThreads);
+//			bootstrap.group(loopGroup);
+//			bootstrap.channel(NioSocketChannel.class);
+//			bootstrap.option(ChannelOption.TCP_NODELAY, true);
+//			bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
+//
+//			bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+//				@Override
+//				protected void initChannel(SocketChannel socketChannel) throws Exception {
+//
+//					socketChannel.pipeline().addLast(new MQDecoder());
+//					socketChannel.pipeline().addLast("handler", new MQHandler(listener));
+//					socketChannel.pipeline().addLast(new MQEncoder());
+//					socketChannel.pipeline().addLast(new ExceptionHandler());
+//				}
+//			});
+//			bootstrap.remoteAddress(address);
+//
+//			try {
+//				channelConnect = bootstrap.connect().sync();
+//			}
+//			catch (InterruptedException e) {
+//				e.printStackTrace();
+//				return false;
+//			}
+//			catch (Exception ex) {
+//				ex.printStackTrace();
+//				return false;
+//			}
+//		}
+//
+//		listener.connected();
+//
+//		return true;
+//	}
+
+
 	public Boolean isConnected() {
 		return channel != null;
 	}
 
 	@Override
 	public void send(MQMessage message) {
-		
-		
-		System.out.println("Send channel= " + channelConnect.channel() + " isOpen " + channelConnect.channel().isOpen());
-		
-		if (channelConnect.channel() != null && channelConnect.channel().isOpen())
-			System.out.println("MqttClient send Message");
+		System.out.println("channel is " + channel + ", isOpen=" + channel.isOpen());
+		if (channel != null /*&& channel.isOpen()*/) {
+			System.out.println("message " + message + " is being sent");
 			channel.writeAndFlush(message);
+		}
 	}
 
 }

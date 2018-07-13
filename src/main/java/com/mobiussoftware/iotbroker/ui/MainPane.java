@@ -14,36 +14,34 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import java.awt.*;
 
-public class MainPane extends JFrame implements ClientListener{
+public class MainPane extends JFrame implements ClientListener {
 
-    private Account account;
+	private Account account;
 
-    private JPanel imagesPanel;
-    private JFrame mainFrame;
-    private DBInterface dbInterface;
-    private NetworkClient client;
-    
-    MainPane(Account account) throws Exception{
-    	this.account = account;
-    	this.dbInterface = DBHelper.getInstance();
-    	Main.getClient().setListener(MainPane.this);
-    	this.client = Main.getClient();
-    	drawUI();
-    }
+	private JPanel imagesPanel;
+	private JFrame mainFrame;
+	private DBInterface dbInterface;
+	private NetworkClient client;
 
-    private void drawUI() {
+	MainPane(Account account) throws Exception {
+		this.account = account;
+		this.dbInterface = DBHelper.getInstance();
+		drawUI();
+	}
+
+	private void drawUI() {
 		UIDefaults def = UIManager.getLookAndFeelDefaults();
 
-		Insets tabInsets = new Insets(20,0,20,0);
-		Insets zeroInsets = new Insets(0,0,0,0);
-		Color opaqueColor = new Color(0, 0,0,0);
+		Insets tabInsets = new Insets(20, 0, 20, 0);
+		Insets zeroInsets = new Insets(0, 0, 0, 0);
+		Color opaqueColor = new Color(0, 0, 0, 0);
 
-		def.put( "TabbedPane.tabInsets", tabInsets);
+		def.put("TabbedPane.tabInsets", tabInsets);
 //        def.put("TabbedPane.borderHightlightColor", new Insets(0,0,0,0));
 //        def.put("TabbedPane.tabsOpaque", false);
 		def.put("TabbedPane.focus", opaqueColor);
 		def.put("TabbedPane.selected", opaqueColor);
-		def.put("TabbedPane.darkShadow", new Color( 255,255,255));
+		def.put("TabbedPane.darkShadow", new Color(255, 255, 255));
 		def.put("TabbedPane.shadow", Color.lightGray);
 //        def.put("TabbedPane.light", new Color( 180,180,180));
 		def.put("TabbedPane.tabAreaInsets", zeroInsets);
@@ -71,6 +69,7 @@ public class MainPane extends JFrame implements ClientListener{
 		});
 		jtp.addChangeListener(new ChangeListener() {
 			int tabIndex = 0;
+
 			public void stateChanged(ChangeEvent e) {
 				ImageIcon icon = null;
 				switch (tabIndex) {
@@ -135,26 +134,25 @@ public class MainPane extends JFrame implements ClientListener{
 	@Override
 	public void messageSent() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void messageReceived(MessageType type) {
 		System.out.println("MainPane messageReceived=" + type);
 		switch (type) {
-		case SUBACK:
-		case UNSUBACK:
-		case PUBLISH:
-			System.out.println("MainPane messageReceived " + type);
-			
-			try {
-				Main.createAndShowMainPane(account);
-			}catch(Exception e) 
-			{
-				System.out.println("Error occured while createAndShowMainPane from MainPanel");
-				e.printStackTrace();
-			}
-			break;
+			case SUBACK:
+			case UNSUBACK:
+			case PUBLISH:
+				System.out.println("MainPane messageReceived " + type);
+
+				try {
+					Main.createAndShowMainPane(account);
+				} catch (Exception e) {
+					System.out.println("Error occured while createAndShowMainPane from MainPanel");
+					e.printStackTrace();
+				}
+				break;
 		}
 	}
 
@@ -162,17 +160,16 @@ public class MainPane extends JFrame implements ClientListener{
 	public void stateChanged(ConnectionState state) {
 		System.out.println("MainPane state changed state=" + state.toString());
 		switch (state) {
-		case CONNECTION_LOST:
-			try{
-				//dbInterface.unmarkAsDefault(account);
-			}catch(Exception e)
-			{}
-			Main.getClient().setListener(null);
-			Main.showAccountMgmtPane();
-			break;
-		default:
-			break;
-			
+			case CONNECTION_LOST:
+				try {
+					//dbInterface.unmarkAsDefault(account);
+				} catch (Exception e) {
+				}
+				Main.showAccountMgmtPane();
+				break;
+			default:
+				break;
+
 		}
 	}
 

@@ -149,7 +149,7 @@ public class TimersMap implements TimersMapInterface<MQMessage> {
 	public void cancelConnectTimer() {
 		if(connectTimer != null){
 			connectTimer.getFuture().cancel(true);
-			client.CancelConnection();	
+			client.cancelConnection();
 		}			
 	}
 
@@ -170,7 +170,7 @@ public class TimersMap implements TimersMapInterface<MQMessage> {
 	public void stopConnectTimer() {
 		if(connectTimer != null) {
 			connectTimer.getFuture().cancel(true);
-			client.CancelConnection();
+			client.cancelConnection();
 		}
 	}
 }

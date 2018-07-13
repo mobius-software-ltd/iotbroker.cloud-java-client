@@ -4,14 +4,24 @@ import com.mobius.software.mqtt.parser.avps.*;
 
 public interface NetworkClient {
 	void setListener(ClientListener listener);
-    Boolean createChannel();
-    void CloseChannel();
-    void Connect();
-    void Disconnect();
-    void Subscribe(Topic[] topics);
-    void Unsubscribe(String[] topics);
-    void Publish(Topic topic, byte[] content, Boolean retain, Boolean dup);
-    void CloseConnection();
-    void CancelConnection();
-    void setState(ConnectionState state);
+
+	Boolean createChannel();
+
+	void closeChannel();
+
+	void connect();
+
+	void disconnect();
+
+	void subscribe(Topic[] topics);
+
+	void unsubscribe(String[] topics);
+
+	void publish(Topic topic, byte[] content, Boolean retain, Boolean dup);
+
+	void closeConnection();
+
+	void cancelConnection();
+
+	void setState(ConnectionState state);
 }

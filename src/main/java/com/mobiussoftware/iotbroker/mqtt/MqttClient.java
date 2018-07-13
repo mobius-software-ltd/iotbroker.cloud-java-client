@@ -24,9 +24,10 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,NetworkClient {
-	
+public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, NetworkClient {
+
 	private static Logger logger = Logger.getLogger(MqttClient.class);
+
 	public static String MESSAGETYPE_PARAM = "MESSAGETYPE";
 	private int RESEND_PERIOND = 3000;
 	private int WORKER_THREADS = 4;
@@ -46,7 +47,7 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 	private DBInterface dbInterface;
 
 	public MqttClient(Account account, ClientListener listener) throws Exception {
-		
+
 		System.out.println("MqttClient constructor");
 		this.dbInterface = DBHelper.getInstance();
 		this.address = new InetSocketAddress(account.getServerHost(), account.getServerPort());
@@ -63,20 +64,21 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 		this.listener = listener;
 		client = new TCPClient(address, WORKER_THREADS);
 	}
-	
+
 	@Override
 	public void setListener(ClientListener listener) {
 		this.listener = listener;
 	}
-	
+
 	@Override
 	public void setState(ConnectionState state) {
 		System.out.println("setState listener= " + listener);
 		connectionState = state;
-		if(listener != null)
+		if (listener != null)
 			listener.stateChanged(state);
 	}
-	
+
+	@Override
 	public Boolean createChannel() {
 		setState(ConnectionState.CHANNEL_CREATING);
 		Boolean isSuccess = client.init(this);
@@ -98,44 +100,50 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 		return address;
 	}
 
-	public void CloseChannel() {
+	@Override
+	public void closeChannel() {
 		if (client != null)
 			client.shutdown();
 	}
 
-	public void Connect() {
-		
+	@Override
+	public void connect() {
+
 		setState(ConnectionState.CONNECTING);
+		System.out.println("state is " + ConnectionState.CONNECTING);
 		Connect connect = new Connect(username, password, clientID, isClean, keepalive, will);
-		
+
 		if (timers != null)
 			timers.stopAllTimers();
 
 		timers = new TimersMap(this, client, RESEND_PERIOND, keepalive * 1000);
-		
+
 		timers.storeConnectTimer(connect);
-			
+
 		if (client.isConnected())
 			client.send(connect);
 	}
 
-	public void Disconnect() {
+	@Override
+	public void disconnect() {
 		if (client.isConnected()) {
 			client.send(new Disconnect());
-			client.Close();
+			client.close();
 		}
 
 		setState(ConnectionState.NONE);
 		return;
 	}
 
-	public void Subscribe(Topic[] topics) {
+	@Override
+	public void subscribe(Topic[] topics) {
 		Subscribe subscribe = new Subscribe(null, topics);
 		timers.store(subscribe);
 		client.send(subscribe);
 	}
 
-	public void Unsubscribe(String[] topics) {
+	@Override
+	public void unsubscribe(String[] topics) {
 		Text[] texts = new Text[topics.length];
 		for (int i = 0; i < topics.length; i++) {
 			texts[i] = new Text(topics[i]);
@@ -145,7 +153,8 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 		client.send(unsubscribe);
 	}
 
-	public void Publish(Topic topic, byte[] content, Boolean retain, Boolean dup) {
+	@Override
+	public void publish(Topic topic, byte[] content, Boolean retain, Boolean dup) {
 		Publish publish = new Publish(null, topic, Unpooled.wrappedBuffer(content), retain, dup);
 		if (topic.getQos() != QoS.AT_MOST_ONCE)
 			timers.store(publish);
@@ -153,7 +162,7 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 		client.send(publish);
 	}
 
-	public void Reinit() {
+	public void reinit() {
 		setState(ConnectionState.CHANNEL_CREATING);
 
 		if (client != null)
@@ -162,7 +171,8 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 		client = new TCPClient(address, WORKER_THREADS);
 	}
 
-	public void CloseConnection() {
+	@Override
+	public void closeConnection() {
 		if (timers != null)
 			timers.stopAllTimers();
 
@@ -173,19 +183,17 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 		}
 	}
 
+	@Override
 	public void packetReceived(MQMessage message) {
-		try
-		{
+		try {
 			message.processBy(this);
-		}
-		catch (Exception ex)
-		{
+		} catch (Exception ex) {
 			client.shutdown();
 		}
 	}
 
 	@Override
-	public void CancelConnection() {
+	public void cancelConnection() {
 		client.shutdown();
 	}
 
@@ -202,6 +210,7 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 		}
 	}
 
+	@Override
 	public void processConnack(ConnackCode code, boolean sessionPresent) {
 		// CANCEL CONNECT TIMER
 		MessageResendTimer<MQMessage> timer = timers.getConnectTimer();
@@ -229,6 +238,7 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 		dbInterface.deleteAllTopics();
 	}
 
+	@Override
 	public void processSuback(Integer packetID, List<SubackCode> codes) {
 
 		MQMessage message = timers.remove(packetID);
@@ -236,8 +246,7 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 			if (code != SubackCode.FAILURE)
 				//throw new CoreLogicException("received invalid message suback");
 				logger.error("received invalid message suback");
-			else
-			{
+			else {
 				Subscribe subscribe = (Subscribe) message;
 				Topic topic = subscribe.getTopics()[0];
 				QoS expectedQos = topic.getQos();
@@ -256,6 +265,7 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 		}
 	}
 
+	@Override
 	public void processUnsuback(Integer packetID) {
 		MQMessage message = timers.remove(packetID);
 		if (message != null) {
@@ -273,6 +283,7 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 			listener.messageReceived(MessageType.UNSUBACK);
 	}
 
+	@Override
 	public void processPublish(Integer packetID, Topic topic, ByteBuf content, boolean retain, boolean isDup) {
 		QoS publisherQos = topic.getQos();
 		switch (publisherQos) {
@@ -292,10 +303,10 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 		try {
 			if (!dbInterface.topicExists(topicName.toString()))
 				return;
-		}catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		if (!(isDup && publisherQos == QoS.EXACTLY_ONCE)) {
 			byte[] bytes = new byte[content.readableBytes()];
 			content.readBytes(bytes);
@@ -311,12 +322,14 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 			listener.messageReceived(MessageType.PUBLISH);
 	}
 
+	@Override
 	public void processPuback(Integer packetID) {
 		timers.remove(packetID);
 		if (listener != null)
 			listener.messageReceived(MessageType.PUBACK);
 	}
 
+	@Override
 	public void processPubrec(Integer packetID) {
 		timers.remove(packetID);
 		if (listener != null)
@@ -326,25 +339,30 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 		client.send(message);
 	}
 
+	@Override
 	public void processPubrel(Integer packetID) {
 		client.send(new Pubcomp(packetID));
 	}
 
+	@Override
 	public void processPubcomp(Integer packetID) {
 		timers.remove(packetID);
 		if (listener != null)
 			listener.messageReceived(MessageType.PUBCOMP);
 	}
 
+	@Override
 	public void processPingresp() {
 		//DO NOTHING
 	}
 
+	@Override
 	public void processSubscribe(Integer packetID, Topic[] topics) {
 		//throw new CoreLogicException("received invalid message subscribe");
 		logger.error("received invalid message subscribe");
 	}
 
+	@Override
 	public void processConnect(boolean cleanSession, int keepalive, Will will) {
 //		throw new CoreLogicException("received invalid message connect");
 		logger.error("received invalid message connect");
@@ -362,23 +380,18 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 		logger.error("received invalid message disconnect");
 	}
 
+	@Override
 	public void processUnsubscribe(Integer packetID, Text[] topics) {
 //		throw new CoreLogicException("received invalid message unsubscribe");
 		logger.error("received invalid message unsubscribe");
 	}
 
+	@Override
 	public void connected() {
-			
-		// 	public Connect reInit(String username, String password, String clientID, boolean isClean, int keepalive, Will will)
-
-		System.out.println("start--");
-
-		Connect connect = new Connect("user","pass", "342re3r2", true, 12, null);
-		this.client.send(connect);
-		System.out.println("---end");
 		setState(ConnectionState.CHANNEL_ESTABLISHED);
 	}
 
+	@Override
 	public void connectFailed() {
 		setState(ConnectionState.CHANNEL_FAILED);
 	}

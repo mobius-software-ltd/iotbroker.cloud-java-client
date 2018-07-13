@@ -11,55 +11,41 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
-public class MQDecoder extends ByteToMessageDecoder
-{
+public class MQDecoder extends ByteToMessageDecoder {
 	private MQParser parser;
 
-	public MQDecoder()
-	{
+	public MQDecoder() {
 	}
 
-	public MQDecoder(MQParser parser)
-	{
+	public MQDecoder(MQParser parser) {
 		this.parser = parser;
 	}
 
 	@Override
-	protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws MalformedMessageException, UnsupportedEncodingException
-	{
+	protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws MalformedMessageException, UnsupportedEncodingException {
 		ByteBuf nextHeader = null;
-		do
-		{
-			if (buf.readableBytes() > 1)
-			{
-				try
-				{
+		do {
+			if (buf.readableBytes() > 1) {
+				try {
 					nextHeader = MQParser.next(buf);
-				}
-				catch (MalformedMessageException | IndexOutOfBoundsException ex)
-				{
+				} catch (MalformedMessageException | IndexOutOfBoundsException ex) {
 					buf.resetReaderIndex();
 					if (nextHeader != null)
 						nextHeader = null;
 				}
 			}
 
-			if (nextHeader != null)
-			{
+			if (nextHeader != null) {
 				buf.readBytes(nextHeader, nextHeader.capacity());
-				try
-				{
+				try {
 					MQMessage header = parser.decodeUsingCache(nextHeader);
 					out.add(header);
-				}
-				catch (Exception e)
-				{
+				} catch (Exception e) {
+					e.printStackTrace();
 					buf.resetReaderIndex();
 					ctx.channel().pipeline().remove(this);
 					throw e;
-				}
-				finally
-				{
+				} finally {
 					nextHeader.release();
 				}
 			}
@@ -67,9 +53,8 @@ public class MQDecoder extends ByteToMessageDecoder
 		while (buf.readableBytes() > 1 && nextHeader != null);
 	}
 
-	public void setParser(MQParser parser)
-	{
+	public void setParser(MQParser parser) {
 		this.parser = parser;
 	}
-	
+
 }

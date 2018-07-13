@@ -12,9 +12,6 @@ import com.mobiussoftware.iotbroker.network.NetworkClient;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
 import javax.swing.*;
 import javax.swing.plaf.ColorUIResource;
 import java.awt.*;
@@ -201,7 +198,7 @@ public class SendMessagePane extends JPanel {
             Topic topic = new Topic();
             topic.setName(new Text(topicName.getBytes(),0,topicName.length()));
             topic.setQos(qos);
-			client.Publish(topic,content,retain,dup);
+			client.publish(topic,content,retain,dup);
 			System.out.println("SendMessage Pane publish ok");
             return super.doInBackground();
         }

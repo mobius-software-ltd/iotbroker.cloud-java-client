@@ -111,7 +111,7 @@ public class DBHelper implements DBInterface {
 	}
 
 	@Override
-	public Boolean topicExists(String topicName)throws SQLException {
+	public Boolean topicExists(String topicName) throws SQLException {
 		List<Topic> list = topicDao.queryBuilder().where().eq("name", topicName).query();
 		if (!list.isEmpty())
 			return true;

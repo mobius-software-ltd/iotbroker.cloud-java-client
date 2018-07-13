@@ -2,10 +2,8 @@ package com.mobiussoftware.iotbroker.ui;
 
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.mqtt.MqttClient;
-import com.mobiussoftware.iotbroker.network.ClientListener;
 
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
 
 public class Main {
@@ -109,7 +107,7 @@ public class Main {
     }
 
     static void showAccountMgmtPane() {
-        if (accountMgmtPane.isDisplayable()) {
+        if (accountMgmtPane.isDisplayable() && !accountMgmtPane.isVisible()) {
 			accountMgmtPane.setVisible(true);
 			System.out.println("showing hidden mgmt pane");
 		} else {
@@ -131,7 +129,7 @@ public class Main {
         JFrame frame = new JFrame(account.getProtocol().toString());
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
-        frame.getContentPane().add(new LogoPane(account));
+        frame.getContentPane().add(new LoadingPane(account));
 
         frame.pack();
         frame.setVisible(true);
