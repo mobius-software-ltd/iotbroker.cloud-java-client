@@ -89,7 +89,14 @@ public class LogInPane extends JPanel {
 			//should not happen
 			e.printStackTrace();
 		}
-        Main.createAndShowMainPane(account);
+		//!!remove these two rows
+		try {
+			Main.createAndShowMainPane(account);
+		}catch(Exception e) 
+		{
+			System.out.println("Error occured while createAndShowMainPane from LoginPanel");
+			e.printStackTrace();
+		}
         Main.disposeLogInPane();
     }
 
@@ -333,7 +340,7 @@ public class LogInPane extends JPanel {
 		boolean retain = retainCB.isSelected();
 		int qos = qosCB.getSelectedIndex();
 
-		Account account = new Account(protocol, username, password, clientId, hostName, port, cleanSesssion, keepAlive, will, willTopic, retain, qos);
+		Account account = new Account(protocol, username, password, clientId, hostName, port, cleanSesssion, keepAlive, will, willTopic, retain, qos/*,false*/);
 
 		return account;
 	}

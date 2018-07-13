@@ -1,6 +1,12 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import com.mobius.software.mqtt.parser.avps.MessageType;
+import com.mobiussoftware.iotbroker.dal.api.DBInterface;
+import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.network.ClientListener;
+import com.mobiussoftware.iotbroker.network.ConnectionState;
+import com.mobiussoftware.iotbroker.network.NetworkClient;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -8,16 +14,20 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import java.awt.*;
 
-public class MainPane extends JFrame {
+public class MainPane extends JFrame implements ClientListener{
 
     private Account account;
 
     private JPanel imagesPanel;
     private JFrame mainFrame;
-
-
-    MainPane(Account account) {
+    private DBInterface dbInterface;
+    private NetworkClient client;
+    
+    MainPane(Account account) throws Exception{
     	this.account = account;
+    	this.dbInterface = DBHelper.getInstance();
+    	Main.getClient().setListener(MainPane.this);
+    	this.client = Main.getClient();
     	drawUI();
     }
 
@@ -112,7 +122,7 @@ public class MainPane extends JFrame {
 		MessagesListPane msgListJP = new MessagesListPane(account);
 		ImageIcon msgListIcon = new ImageIcon(UIConstants.IMAGE_RES_PATH + UIConstants.MSG_LIST_IMG);
 		jtp.addTab("", msgListIcon, msgListJP);
-		sendMsgJP.setListener(msgListJP);
+		sendMsgJP.setListener(MainPane.this);
 
 		JPanel logoutJP = new JPanel();
 		ImageIcon logoutIcon = new ImageIcon(UIConstants.IMAGE_RES_PATH + UIConstants.LOGOUT_IMG);
@@ -120,6 +130,50 @@ public class MainPane extends JFrame {
 
 		setContentPane(jtp);
 		setBackground(Color.white);
+	}
+
+	@Override
+	public void messageSent() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void messageReceived(MessageType type) {
+		System.out.println("MainPane messageReceived=" + type);
+		switch (type) {
+		case SUBACK:
+		case UNSUBACK:
+		case PUBLISH:
+			System.out.println("MainPane messageReceived " + type);
+			
+			try {
+				Main.createAndShowMainPane(account);
+			}catch(Exception e) 
+			{
+				System.out.println("Error occured while createAndShowMainPane from MainPanel");
+				e.printStackTrace();
+			}
+			break;
+		}
+	}
+
+	@Override
+	public void stateChanged(ConnectionState state) {
+		System.out.println("MainPane state changed state=" + state.toString());
+		switch (state) {
+		case CONNECTION_LOST:
+			try{
+				//dbInterface.unmarkAsDefault(account);
+			}catch(Exception e)
+			{}
+			Main.getClient().setListener(null);
+			Main.showAccountMgmtPane();
+			break;
+		default:
+			break;
+			
+		}
 	}
 
 

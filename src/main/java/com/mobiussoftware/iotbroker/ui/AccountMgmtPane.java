@@ -1,15 +1,31 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
-import com.mobiussoftware.iotbroker.dal.api.DBInterface;
-import com.mobiussoftware.iotbroker.db.Account;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
+
+import com.mobiussoftware.iotbroker.dal.api.DBInterface;
+import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
+import com.mobiussoftware.iotbroker.db.Account;
 
 public class AccountMgmtPane extends JPanel {
 

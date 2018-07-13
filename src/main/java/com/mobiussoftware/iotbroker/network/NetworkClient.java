@@ -3,7 +3,7 @@ package com.mobiussoftware.iotbroker.network;
 import com.mobius.software.mqtt.parser.avps.*;
 
 public interface NetworkClient {
-	void SetListener(ClientListener listener);
+	void setListener(ClientListener listener);
     Boolean createChannel();
     void CloseChannel();
     void Connect();
@@ -13,5 +13,5 @@ public interface NetworkClient {
     void Publish(Topic topic, byte[] content, Boolean retain, Boolean dup);
     void CloseConnection();
     void CancelConnection();
-    void SetState(ConnectionState state);
+    void setState(ConnectionState state);
 }

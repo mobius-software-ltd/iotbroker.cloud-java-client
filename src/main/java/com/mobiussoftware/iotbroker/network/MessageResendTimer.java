@@ -1,6 +1,6 @@
 package com.mobiussoftware.iotbroker.network;
 
-import io.netty.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledFuture;
 
 public class MessageResendTimer<T> implements Runnable{
 	private static int MAX_CONNECT_RESEND = 5;

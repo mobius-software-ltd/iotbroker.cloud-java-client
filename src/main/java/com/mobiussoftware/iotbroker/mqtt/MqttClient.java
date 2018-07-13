@@ -5,6 +5,7 @@ import com.mobius.software.mqtt.parser.header.api.MQDevice;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.*;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
+import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.mqtt.net.TCPClient;
@@ -44,9 +45,10 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 	private ClientListener listener;
 	private DBInterface dbInterface;
 
-	public MqttClient(Account account, DBInterface dbInterface,ClientListener listener) {
-
-		this.dbInterface = dbInterface;
+	public MqttClient(Account account, ClientListener listener) throws Exception {
+		
+		System.out.println("MqttClient constructor");
+		this.dbInterface = DBHelper.getInstance();
 		this.address = new InetSocketAddress(account.getServerHost(), account.getServerPort());
 		this.username = account.getUsername();
 		this.password = account.getPassword();
@@ -63,22 +65,24 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 	}
 	
 	@Override
-	public void SetListener(ClientListener listener) {
-		listener = listener;
+	public void setListener(ClientListener listener) {
+		this.listener = listener;
 	}
 	
 	@Override
-	public void SetState(ConnectionState state) {
+	public void setState(ConnectionState state) {
+		System.out.println("setState listener= " + listener);
 		connectionState = state;
 		if(listener != null)
 			listener.stateChanged(state);
 	}
 	
 	public Boolean createChannel() {
-		SetState(ConnectionState.CHANNEL_CREATING);
-		Boolean isSuccess = client.Init(this);
+		setState(ConnectionState.CHANNEL_CREATING);
+		Boolean isSuccess = client.init(this);
+		System.out.println("client.init ok isSuccess=" + isSuccess);
 		if (!isSuccess)
-			SetState(ConnectionState.CHANNEL_FAILED);
+			setState(ConnectionState.CHANNEL_FAILED);
 		return isSuccess;
 	}
 
@@ -100,15 +104,17 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 	}
 
 	public void Connect() {
-		SetState(ConnectionState.CONNECTING);
+		
+		setState(ConnectionState.CONNECTING);
 		Connect connect = new Connect(username, password, clientID, isClean, keepalive, will);
-
+		
 		if (timers != null)
 			timers.stopAllTimers();
 
 		timers = new TimersMap(this, client, RESEND_PERIOND, keepalive * 1000);
+		
 		timers.storeConnectTimer(connect);
-
+			
 		if (client.isConnected())
 			client.send(connect);
 	}
@@ -119,7 +125,7 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 			client.Close();
 		}
 
-		SetState(ConnectionState.NONE);
+		setState(ConnectionState.NONE);
 		return;
 	}
 
@@ -148,7 +154,7 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 	}
 
 	public void Reinit() {
-		SetState(ConnectionState.CHANNEL_CREATING);
+		setState(ConnectionState.CHANNEL_CREATING);
 
 		if (client != null)
 			client.shutdown();
@@ -192,7 +198,7 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 
 		if (client != null) {
 			client.shutdown();
-			SetState(ConnectionState.CONNECTION_LOST);
+			setState(ConnectionState.CONNECTION_LOST);
 		}
 	}
 
@@ -203,7 +209,7 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 
 		// CHECK CODE , IF OK THEN MOVE TO CONNECTED AND NOTIFY NETWORK SESSION
 		if (code == ConnackCode.ACCEPTED) {
-			SetState(ConnectionState.CONNECTION_ESTABLISHED);
+			setState(ConnectionState.CONNECTION_ESTABLISHED);
 
 			if (timer != null) {
 				Connect connect = (Connect) timer.getMessage();
@@ -215,7 +221,7 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 		} else {
 			timers.stopAllTimers();
 			client.shutdown();
-			SetState(ConnectionState.CONNECTION_FAILED);
+			setState(ConnectionState.CONNECTION_FAILED);
 		}
 	}
 
@@ -284,7 +290,7 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 
 		Text topicName = topic.getName();
 		try {
-			if (!dbInterface.TopicExists(topicName.toString()))
+			if (!dbInterface.topicExists(topicName.toString()))
 				return;
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -362,10 +368,18 @@ public class MqttClient implements ConnectionListener<MQMessage>,MQDevice,Networ
 	}
 
 	public void connected() {
-		SetState(ConnectionState.CHANNEL_ESTABLISHED);
+			
+		// 	public Connect reInit(String username, String password, String clientID, boolean isClean, int keepalive, Will will)
+
+		System.out.println("start--");
+
+		Connect connect = new Connect("user","pass", "342re3r2", true, 12, null);
+		this.client.send(connect);
+		System.out.println("---end");
+		setState(ConnectionState.CHANNEL_ESTABLISHED);
 	}
 
 	public void connectFailed() {
-		SetState(ConnectionState.CHANNEL_FAILED);
+		setState(ConnectionState.CHANNEL_FAILED);
 	}
 }

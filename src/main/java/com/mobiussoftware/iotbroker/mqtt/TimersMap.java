@@ -8,8 +8,7 @@ import com.mobiussoftware.iotbroker.mqtt.net.TCPClient;
 import com.mobiussoftware.iotbroker.network.MessageResendTimer;
 import com.mobiussoftware.iotbroker.network.TimersMapInterface;
 
-import io.netty.util.concurrent.ScheduledFuture;
-
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -74,7 +73,7 @@ public class TimersMap implements TimersMapInterface<MQMessage> {
 			}
 				
 		
-			ScheduledFuture<?> timer_future  = (ScheduledFuture<?>) scheduledservice.schedule(timer, resendPeriod, TimeUnit.SECONDS);
+			ScheduledFuture<?> timer_future  =  scheduledservice.schedule(timer, resendPeriod, TimeUnit.SECONDS);
 			timer.setFuture(timer_future);
 		}
 	}
@@ -141,7 +140,7 @@ public class TimersMap implements TimersMapInterface<MQMessage> {
 		if(connectTimer != null)
 			connectTimer.getFuture().cancel(true);
 		
-		connectTimer = new MessageResendTimer<MQMessage>(message,listener,this,true);	
+		connectTimer = new MessageResendTimer<MQMessage>(message,listener,this,true);
 		ScheduledFuture<?> connectTimer_future  = (ScheduledFuture<?>) scheduledservice.schedule(connectTimer, resendPeriod, TimeUnit.SECONDS);
 		connectTimer.setFuture(connectTimer_future);
 	}

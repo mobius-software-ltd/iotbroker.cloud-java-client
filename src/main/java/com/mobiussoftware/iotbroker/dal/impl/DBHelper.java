@@ -111,10 +111,21 @@ public class DBHelper implements DBInterface {
 	}
 
 	@Override
-	public Boolean TopicExists(String topicName)throws SQLException {
+	public Boolean topicExists(String topicName)throws SQLException {
 		List<Topic> list = topicDao.queryBuilder().where().eq("name", topicName).query();
 		if (!list.isEmpty())
 			return true;
 		return false;
 	}
+	/*
+	public void markAsDefault(Account account)throws SQLException {
+		account.setDefault(true);
+		accountDao.update(account);
+	}
+	
+	@Override
+	public void unmarkAsDefault(Account account)throws SQLException {
+		account.setDefault(false);
+		accountDao.update(account);
+	}*/
 }

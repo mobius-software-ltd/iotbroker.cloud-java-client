@@ -1,6 +1,12 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import com.mobius.software.mqtt.parser.avps.MessageType;
+import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.mqtt.MqttClient;
+import com.mobiussoftware.iotbroker.network.ClientListener;
+import com.mobiussoftware.iotbroker.network.ConnectionListener;
+import com.mobiussoftware.iotbroker.network.ConnectionState;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
@@ -11,15 +17,15 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Random;
 
-public class LogoPane extends JPanel implements PropertyChangeListener {
+public class LogoPane extends JPanel implements PropertyChangeListener, ClientListener {
 
     JProgressBar progressBar;
     private Account account;
+    private ConnectingTask connectingTask;
 
     public LogoPane(Account account) {
         this.account = account;
         drawUI();
-
     }
 
     private void drawUI() {
@@ -47,7 +53,7 @@ public class LogoPane extends JPanel implements PropertyChangeListener {
 
 		this.add(Box.createRigidArea(new Dimension(1, 25)));
 
-		ConnectingTask connectingTask = new ConnectingTask();
+		connectingTask = new ConnectingTask();
 		connectingTask.addPropertyChangeListener(this);
 		connectingTask.execute();
 
@@ -72,6 +78,24 @@ public class LogoPane extends JPanel implements PropertyChangeListener {
          */
         @Override
         public Void doInBackground() {
+        	
+        	
+	      	try {
+				switch (account.getProtocol()) {
+					case MQTT:
+						MqttClient client = new MqttClient(account, LogoPane.this);
+						client.createChannel();
+						System.out.println("LogoPane createChannel OK");
+						Main.setClient(client);
+						break;
+					default:
+						break;
+				}
+	      	} catch(Exception e) {
+	      		//handle exeption
+	      	}
+
+        	 
             Random random = new Random();
             int progress = 0;
             //Initialize progress property.
@@ -93,10 +117,11 @@ public class LogoPane extends JPanel implements PropertyChangeListener {
          */
         @Override
         public void done() {
-//            Toolkit.getDefaultToolkit().beep();
-            Main.createAndShowMainPane(account);
-            Main.disposeLogoPane();
-//            setCursor(null); //turn off the wait cursor
+        	if (!isCancelled()) {
+	        	System.out.println("done");
+	            Main.disposeLogoPane();
+	            Main.showAccountMgmtPane();
+        	}
         }
     }
 
@@ -115,4 +140,46 @@ public class LogoPane extends JPanel implements PropertyChangeListener {
         Image bgImage = UIConstants.BG_IMAGE;
         graphics.drawImage(bgImage, 0, 0, null);
     }
+
+	@Override
+	public void messageSent() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void messageReceived(MessageType type) {
+		// TODO Auto-generated method stub
+		System.out.println("LogoPanel messageReceived");
+	}
+
+	@Override
+	public void stateChanged(ConnectionState state) {
+		System.out.println("LogoPane state changed state=" + state.toString());
+		switch (state) {
+		case CHANNEL_ESTABLISHED:
+			Main.disposeLogoPane();
+			
+			//System.out.println("LogoPane after dispose "+ Main.getClient().getConnectionState());
+			
+			try {
+				Main.createAndShowMainPane(account);
+			}catch(Exception e) 
+			{
+				System.out.println("Error occured while createAndShowMainPane from LogoPanel");
+				e.printStackTrace();
+			}
+			
+			connectingTask.cancel(true);
+			break;
+		case CHANNEL_FAILED:
+			Main.disposeLogoPane();
+			Main.showAccountMgmtPane();
+			connectingTask.cancel(true);
+			break;
+		default:
+			break;
+		}
+		
+	}
 }

@@ -27,5 +27,7 @@ public interface DBInterface {
 
 	void deleteAllTopics();
 	
-	Boolean TopicExists(String topicName) throws SQLException;
+	Boolean topicExists(String topicName) throws SQLException;
+	
+	//void unmarkAsDefault(Account account) throws SQLException;
 }

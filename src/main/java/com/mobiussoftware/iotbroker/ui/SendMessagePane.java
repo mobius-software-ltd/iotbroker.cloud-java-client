@@ -1,12 +1,19 @@
 package com.mobiussoftware.iotbroker.ui;
 
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
+import com.mobius.software.mqtt.parser.avps.QoS;
+import com.mobius.software.mqtt.parser.avps.Text;
+import com.mobius.software.mqtt.parser.avps.Topic;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.network.ClientListener;
+import com.mobiussoftware.iotbroker.network.NetworkClient;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import javax.swing.*;
 import javax.swing.plaf.ColorUIResource;
@@ -34,11 +41,12 @@ public class SendMessagePane extends JPanel {
 
 	private MouseListener sendMsgBtnListener;
 	private JPanel sendMsgBtn;
-
+	private NetworkClient client;
+	
     SendMessagePane(Account account) {
         super();
-
 		this.account = account;
+		this.client = Main.getClient();
 		drawUI();
     }
 
@@ -183,18 +191,31 @@ public class SendMessagePane extends JPanel {
 				e.printStackTrace();
 			}
             //sent to server network!!
-
+			
+			byte[] content =  contentTF.getText().getBytes();
+            String topicName = topicTF.getText();
+            QoS qos = QoS.valueOf(qosCB.getSelectedIndex());
+            Boolean retain = retainCB.isSelected();
+            Boolean dup = duplicateCB.isSelected();
+            
+            Topic topic = new Topic();
+            topic.setName(new Text(topicName.getBytes(),0,topicName.length()));
+            topic.setQos(qos);
+			client.Publish(topic,content,retain,dup);
+			System.out.println("SendMessage Pane publish ok");
             return super.doInBackground();
         }
 
         @Override
         protected void done() {
             System.out.println("Sent!");
+            
             listener.messageSent();
+            
             removeProgressBar();
 
             sendMsgBtn.addMouseListener(sendMsgBtnListener);
-
+            
             contentTF.clearText();
             topicTF.setText("");
             qosCB.setSelectedIndex(0);

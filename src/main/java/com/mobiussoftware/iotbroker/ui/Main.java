@@ -1,6 +1,8 @@
 package com.mobiussoftware.iotbroker.ui;
 
 import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.mqtt.MqttClient;
+import com.mobiussoftware.iotbroker.network.ClientListener;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
@@ -14,7 +16,8 @@ public class Main {
     static JFrame mainPane;
     static JFrame accountMgmtPane;
     static JFrame logoPane;
-
+    static MqttClient client;
+    
     public static void main(String[] args) {
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
@@ -32,8 +35,6 @@ public class Main {
                 createAndShowAccountMgmtPane();
             }
         });
-
-
     }
 
     static void setLocation(JFrame frame) {
@@ -63,9 +64,8 @@ public class Main {
         }
     }
 
-    static void createAndShowMainPane(Account account) {
-
-        MainPane frame = new MainPane(account);
+    static void createAndShowMainPane(Account account) throws Exception{
+    	MainPane frame = new MainPane(account);
         frame.setTitle(account.getProtocol().toString());
         frame.pack();
         frame.setVisible(true);
@@ -144,8 +144,16 @@ public class Main {
     }
 
     static void disposeLogoPane() {
-        if (logoPane != null) {
+        if (logoPane != null) {  	
             logoPane.dispose();
         }
     }
+
+	public static MqttClient getClient() {
+		return client;
+	}
+
+	public static void setClient(MqttClient client) {
+		Main.client = client;
+	}
 }
