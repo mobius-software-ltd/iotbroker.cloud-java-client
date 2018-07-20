@@ -222,7 +222,7 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 
 			if (timer != null) {
 				Connect connect = (Connect) timer.getMessage();
-				if (connect.isClean())
+				if (connect.isCleanSession())
 					clearAccountTopics();
 			}
 

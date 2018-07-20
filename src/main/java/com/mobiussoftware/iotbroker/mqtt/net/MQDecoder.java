@@ -12,15 +12,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
 public class MQDecoder extends ByteToMessageDecoder {
-	private MQParser parser;
-
-	public MQDecoder() {
-	}
-
-	public MQDecoder(MQParser parser) {
-		this.parser = parser;
-	}
-
+	
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws MalformedMessageException, UnsupportedEncodingException {
 		ByteBuf nextHeader = null;
@@ -38,7 +30,7 @@ public class MQDecoder extends ByteToMessageDecoder {
 			if (nextHeader != null) {
 				buf.readBytes(nextHeader, nextHeader.capacity());
 				try {
-					MQMessage header = parser.decodeUsingCache(nextHeader);
+					MQMessage header = MQParser.decode(nextHeader);
 					out.add(header);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -52,9 +44,4 @@ public class MQDecoder extends ByteToMessageDecoder {
 		}
 		while (buf.readableBytes() > 1 && nextHeader != null);
 	}
-
-	public void setParser(MQParser parser) {
-		this.parser = parser;
-	}
-
 }
