@@ -61,7 +61,7 @@ public class TCPClient implements NetworkChannel<MQMessage> {
 			bootstrap.handler(new ChannelInitializer<SocketChannel>() {
 				@Override
 				public void initChannel(SocketChannel ch) throws InterruptedException {
-					ChannelPipeline pipeline = channel.pipeline();
+					ChannelPipeline pipeline = ch.pipeline();
 					pipeline.addLast(new MQDecoder());
 					pipeline.addLast("handler", new MQHandler(listener));
 					pipeline.addLast(new MQEncoder());
@@ -69,34 +69,12 @@ public class TCPClient implements NetworkChannel<MQMessage> {
 				}
 			});
 			bootstrap.remoteAddress(address);
-
 			try {
-				final ChannelFuture future = bootstrap.connect();
-				future.addListener(new ChannelFutureListener() {
-					@Override
-					public void operationComplete(ChannelFuture channelFuture) throws Exception {
-						try {
-							channel = future.channel();
-							System.out.println("operation complete, channel is open=" + channel.isOpen());
-						} catch (Exception e) {
-							listener.connectFailed();
-							return;
-						}
-
-						if (channel != null) {
-							System.out.println("channel established?");
-							listener.connected();
-						}
-						else {
-							System.out.println("channel failed");
-							listener.connectFailed();
-						}
-					}
-
-				});
-			} catch (Exception e) {
-				System.out.println("Error: " + e.getMessage());
-				e.printStackTrace();
+				channel = bootstrap.connect().sync().channel();
+				listener.connected();
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+				listener.connectFailed();
 				return false;
 			}
 		}
