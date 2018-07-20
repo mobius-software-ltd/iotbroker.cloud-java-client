@@ -17,6 +17,30 @@
                     <target>7</target>
                 </configuration>
             </plugin>
+            <plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>com.mobiussoftware.iotbroker.ui.Main</mainClass>
+						</manifest>
+					</archive>
+					<finalName>mqtt-client</finalName>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+					<appendAssemblyId>false</appendAssemblyId>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id> <!-- this is used for inheritance merges -->
+						<phase>package</phase> <!-- bind to the packaging phase -->
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
         </plugins>
     </build>
 
@@ -60,7 +84,7 @@
         <dependency>
             <groupId>com.mobius-software.mqtt</groupId>
             <artifactId>parser</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.3</version>
         </dependency>
         <dependency>
             <groupId>com.mobius-software.mqttsn</groupId>
