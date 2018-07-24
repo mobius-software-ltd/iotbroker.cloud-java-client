@@ -12,57 +12,58 @@ import javax.swing.border.Border;
 @SuppressWarnings("unused")
 public class HintDialogTextField extends HintTextField {
 
-    /**
+	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -7413423837551286778L;
 	private boolean textAreaIsShown = false;
-    private String text = "";
+	private String text = "";
+	private String title;
+	public HintDialogTextField(String title, String hint, Border border) {
+		super(hint, border);
+		this.title = title;
+	}
 
-    public HintDialogTextField(String hint, Border border) {
-        super(hint, border);
-    }
+	@Override
+	public void focusGained(FocusEvent e) {
+		super.focusGained(e);
+		transferFocus();
 
-    @Override
-    public void focusGained(FocusEvent e) {
-        super.focusGained(e);
-        transferFocus();
+		JTextArea textArea = new JTextArea(text, 20, 30);
+		textArea.setSize(textArea.getPreferredSize().width, 1);
+		textAreaIsShown = true;
 
-        JTextArea textArea = new JTextArea(text, 20, 30);
-        textArea.setSize(textArea.getPreferredSize().width, 1);
-        textAreaIsShown = true;
+		// remove this line if you want to keep "<...> even when text area is
+		// shown"
+		super.setText("");
 
-        //remove this line if you want to keep "<...> even when text area is shown"
-        super.setText("");
+		JOptionPane.showMessageDialog(null, new JScrollPane(textArea), title, JOptionPane.PLAIN_MESSAGE);
 
-        JOptionPane.showMessageDialog(null, new JScrollPane( textArea), "Will", JOptionPane.PLAIN_MESSAGE);
+		text = textArea.getText().trim();
 
-        text = textArea.getText().trim();
+		// network of showing text/hint in will field
+		if (!text.isEmpty()) {
+			super.setText("<...>");
+			super.setBorder(BorderFactory.createLineBorder(Color.lightGray));
+		} else
+			super.setText("");
 
-        //network of showing text/hint in will field
-        if (!text.isEmpty()) {
-            super.setText("<...>");
-            super.setBorder(BorderFactory.createLineBorder(Color.lightGray));
-        }
-        else
-            super.setText("");
+		super.focusLost(e);
 
-        super.focusLost(e);
+		textAreaIsShown = false;
+	}
 
-        textAreaIsShown = false;
-    }
+	@Override
+	public void focusLost(FocusEvent e) {
+	}
 
-    @Override
-    public void focusLost(FocusEvent e) {
-    }
+	public String getText() {
+		return text;
+	}
 
-    public String getText() {
-        return text;
-    }
-
-    @Override
-    public void clearText() {
-        text = "";
-        super.clearText();
-    }
+	@Override
+	public void clearText() {
+		text = "";
+		super.clearText();
+	}
 }

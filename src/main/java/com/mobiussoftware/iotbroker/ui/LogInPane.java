@@ -319,7 +319,7 @@ public class LogInPane extends JPanel {
 		settingsPane.add(UIHelper.wrapInJPanel(willTopicTF, rowColor(i++)));
 
 		settingsPane.add(UIHelper.createParameterLabel("Will:", settingsIcn, parameterAlignment, rowColor(i)));
-		willTF = UIHelper.createTextArea("will", tfDimension);
+		willTF = UIHelper.createTextArea("Will", "will", tfDimension);
 		settingsPane.add(UIHelper.wrapInJPanel(willTF, rowColor(i++)));
 
 		settingsPane.add(UIHelper.createParameterLabel("Retain:", settingsIcn, parameterAlignment, rowColor(i)));
