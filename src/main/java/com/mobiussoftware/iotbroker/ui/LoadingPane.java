@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.mqtt.MqttClient;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
@@ -176,7 +177,7 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 	}
 
 	@Override
-	public void messageSent() {
+	public void messageSent(Message messageObj) {
 	}
 
 	@Override
@@ -209,6 +210,8 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 			break;
 		case CONNECTION_LOST:
 			// TODO: show "Connection closed by server" dialog
+			Main.disposeMainPane();
+			Main.showAccountMgmtPane();
 			closeConnection();
 			break;
 		case CONNECTION_FAILED:

@@ -2,6 +2,7 @@ package com.mobiussoftware.iotbroker.mqtt;
 
 import java.net.InetSocketAddress;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -22,6 +23,7 @@ import com.mobius.software.mqtt.parser.header.impl.Pubcomp;
 import com.mobius.software.mqtt.parser.header.impl.Publish;
 import com.mobius.software.mqtt.parser.header.impl.Pubrec;
 import com.mobius.software.mqtt.parser.header.impl.Pubrel;
+import com.mobius.software.mqtt.parser.header.impl.Suback;
 import com.mobius.software.mqtt.parser.header.impl.Subscribe;
 import com.mobius.software.mqtt.parser.header.impl.Unsubscribe;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
@@ -54,7 +56,6 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 
 	private Account account;
 
-	private Will will;
 	private ClientListener listener;
 	private DBInterface dbInterface;
 
@@ -62,12 +63,7 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 		this.dbInterface = DBHelper.getInstance();
 		this.account = account;
 		this.address = new InetSocketAddress(account.getServerHost(), account.getServerPort());
-
-		Text topicName = new Text(account.getWillTopic());
-		QoS qos = QoS.valueOf(account.getQos());
-		Topic topic = new Topic(topicName, qos);
-		this.will = new Will(topic, account.getWill().getBytes(), account.isRetain());
-		client = new TCPClient(address, WORKER_THREADS);
+		this.client = new TCPClient(address, WORKER_THREADS);
 	}
 
 	@Override
@@ -113,6 +109,11 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 	public void connect() {
 
 		setState(ConnectionState.CONNECTING);
+
+		Text topicName = new Text(account.getWillTopic());
+		QoS qos = QoS.valueOf(account.getQos());
+		Topic topic = new Topic(topicName, qos);
+		Will will = new Will(topic, account.getWill().getBytes(), account.isRetain());
 		Connect connect = new Connect(account.getUsername(), account.getPassword(), account.getClientId(),
 				account.isCleanSession(), account.getKeepAlive(), will);
 
@@ -202,8 +203,6 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 
 	@Override
 	public void connectionLost() {
-		if (account.isCleanSession())
-			clearAccountTopics();
 
 		if (timers != null)
 			timers.stopAllTimers();
@@ -218,7 +217,7 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 	public void processConnack(ConnackCode code, boolean sessionPresent) {
 		// CANCEL CONNECT TIMER
 		MessageResendTimer<MQMessage> timer = timers.getConnectTimer();
-		timers.stopConnectTimer();
+		timers.cancelConnectTimer();
 
 		// CHECK CODE , IF OK THEN MOVE TO CONNECTED AND NOTIFY NETWORK SESSION
 		if (code == ConnackCode.ACCEPTED) {
@@ -226,11 +225,10 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 
 			if (timer != null) {
 				Connect connect = (Connect) timer.getMessage();
-				if (connect.isCleanSession())
-					clearAccountTopics();
-			}
 
-			timers.startPingTimer();
+				if (connect.getKeepalive() > 0)
+					timers.startPingTimer();
+			}
 		} else {
 			timers.stopAllTimers();
 			client.shutdown();
@@ -238,14 +236,10 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 		}
 	}
 
-	private void clearAccountTopics() {
-		dbInterface.deleteAllTopics();
-	}
-
 	@Override
 	public void processSuback(Integer packetID, List<SubackCode> codes) {
 
-		logger.info("processing suback...");
+		logger.info("processing incoming suback...");
 
 		MQMessage message = timers.remove(packetID);
 		if (message == null || message.getType() != MessageType.SUBSCRIBE) {
@@ -263,26 +257,29 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 				if (!account.isCleanSession()) {
 					try {
 						if (expectedQos == actualQos)
-							dbInterface.saveTopic(new com.mobiussoftware.iotbroker.db.Topic(topic.getName().toString(),
-									(byte) expectedQos.getValue()));
+							dbInterface.saveTopic(new com.mobiussoftware.iotbroker.db.Topic(account,
+									topic.getName().toString(), (byte) expectedQos.getValue()));
 						else
-							dbInterface.saveTopic(new com.mobiussoftware.iotbroker.db.Topic(topic.getName().toString(),
-									(byte) actualQos.getValue()));
+							dbInterface.saveTopic(new com.mobiussoftware.iotbroker.db.Topic(account,
+									topic.getName().toString(), (byte) actualQos.getValue()));
 					} catch (SQLException e) {
 						e.printStackTrace();
 					}
 				}
 				if (listener != null)
 					listener.messageReceived(new Subscribe(packetID, new Topic[] { topic }));
-			} else
+			} else {
 				logger.warn("received suback failure");
+				if (listener != null)
+					listener.messageReceived(new Suback(packetID, Arrays.asList(SubackCode.FAILURE)));
+			}
 		}
 	}
 
 	@Override
 	public void processUnsuback(Integer packetID) {
 
-		logger.info("processing unsuback...");
+		logger.info("processing incoming unsuback...");
 
 		MQMessage message = timers.remove(packetID);
 		if (message == null || message.getType() != MessageType.UNSUBSCRIBE) {
@@ -307,6 +304,9 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 
 	@Override
 	public void processPublish(Integer packetID, Topic topic, ByteBuf content, boolean retain, boolean isDup) {
+
+		logger.info("processing incoming publish...");
+
 		QoS publisherQos = topic.getQos();
 		switch (publisherQos) {
 		case AT_LEAST_ONCE:
@@ -322,26 +322,25 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 		}
 
 		Text topicName = topic.getName();
-		try {
-			if (!dbInterface.topicExists(topicName.toString()))
-				return;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
 		if (!(isDup && publisherQos == QoS.EXACTLY_ONCE)) {
 			byte[] bytes = new byte[content.readableBytes()];
 			content.readBytes(bytes);
 			Message message = new Message(account, topicName.toString(), new String(bytes), true,
 					(byte) publisherQos.getValue(), retain, isDup);
-			try {
-				dbInterface.saveMessage(message);
-			} catch (SQLException e) {
-				e.printStackTrace();
+
+			if (!account.isCleanSession()) {
+				try {
+					logger.info("storing publish to DB");
+					dbInterface.saveMessage(message);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
 			}
 
-			if (listener != null)
+			if (listener != null) {
+				logger.info("notifying listener on publish received");
 				listener.messageReceived(new Publish(topic, content, retain, isDup));
+			}
 		}
 	}
 

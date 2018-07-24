@@ -10,10 +10,10 @@ public class HintTextField extends JTextField implements FocusListener {
 
 	private static final long serialVersionUID = -1534516902639919627L;
 
-	private final String hint;
+	private String hint;
 	private boolean showingHint;
 
-	public HintTextField(final String hint, Border border) {
+	public HintTextField(String hint, Border border) {
 		super(hint);
 		super.setForeground(Color.gray);
 		this.hint = hint;
@@ -27,7 +27,7 @@ public class HintTextField extends JTextField implements FocusListener {
 		if (this.getText().isEmpty()) {
 			super.setText("");
 			super.setForeground(Color.black);
-			showingHint = false;
+			this.showingHint = false;
 		}
 	}
 
@@ -37,7 +37,7 @@ public class HintTextField extends JTextField implements FocusListener {
 			super.setText(hint);
 			super.setForeground(Color.gray);
 			super.setBorder(BorderFactory.createLineBorder(Color.lightGray));
-			showingHint = true;
+			this.showingHint = true;
 		}
 	}
 
@@ -49,6 +49,6 @@ public class HintTextField extends JTextField implements FocusListener {
 	public void clearText() {
 		super.setText(hint);
 		super.setForeground(Color.gray);
-		showingHint = true;
+		this.showingHint = true;
 	}
 }

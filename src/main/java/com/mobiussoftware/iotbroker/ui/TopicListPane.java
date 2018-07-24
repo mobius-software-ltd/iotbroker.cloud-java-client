@@ -14,6 +14,8 @@ import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.TexturePaint;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -46,6 +48,7 @@ import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Topic;
 import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
+import com.sun.javafx.stage.FocusUngrabEvent;
 
 public class TopicListPane extends JPanel {
 
@@ -383,13 +386,10 @@ public class TopicListPane extends JPanel {
 	class AddTopicTask extends NetworkTask<Void, Void> {
 		private String topicName;
 		private int qosVal;
-		private Topic topicObj;
 
 		public AddTopicTask(String topicName, int qosVal) {
 			this.topicName = topicName;
 			this.qosVal = qosVal;
-			topicObj = new Topic(topicName, (byte) qosVal);
-			topicObj.setAccount(account);
 		}
 
 		@Override
@@ -405,16 +405,18 @@ public class TopicListPane extends JPanel {
 
 		@Override
 		protected void done() {
-
 			topicInput.setText("");
 			removeProgressBar();
 		}
 	}
 
 	public void finishAddingTopic(String topicName, int qosVal) {
-		System.out.println("finishAddingTopic:" + topicName + "," + qosVal);
 		addTopicBtn.addMouseListener(addTopicBtnListener);
 		addTopicListRow(topicName, qosVal);
+	}
+
+	public void finishAddingTopicFailed() {
+		// TODO: show error message on UI
 	}
 
 	class DeleteTopicTask extends NetworkTask<Void, Void> {
@@ -495,7 +497,7 @@ public class TopicListPane extends JPanel {
 		g2d.setPaint(paint);
 		g2d.fillRect(0, 0, getWidth(), getHeight());
 	}
-	
+
 	class RoundedFilledLabel extends JLabel {
 
 		private static final long serialVersionUID = -8353580452631276508L;
@@ -522,8 +524,9 @@ public class TopicListPane extends JPanel {
 
 			// Draws the rounded panel with borders.
 			g2d.setColor(color);
-			g2d.fillRoundRect(horizontalOffset, verticalOffset, width - horizontalOffset - 1, height - verticalOffset - 3,
-					cornerRadius, cornerRadius);// paint background
+			g2d.fillRoundRect(horizontalOffset, verticalOffset, width - horizontalOffset - 1,
+					height - verticalOffset - 3, cornerRadius, cornerRadius);// paint
+																				// background
 			super.paintComponent(g);
 		}
 	}

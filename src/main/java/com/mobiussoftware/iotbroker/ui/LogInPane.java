@@ -23,6 +23,8 @@ import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
+import org.apache.log4j.Logger;
+
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
@@ -31,6 +33,8 @@ import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 
 public class LogInPane extends JPanel {
 
+	private final Logger logger = Logger.getLogger(getClass());
+	
 	private static final long serialVersionUID = 8294913343212905727L;
 
 	private final int columns = 2;
@@ -94,7 +98,7 @@ public class LogInPane extends JPanel {
 	}
 
 	private void loginBtnClicked(MouseEvent event) {
-		System.out.println("LogIn button clicked!");
+		logger.info("LogIn button clicked!");
 
 		if (!UIHelper.validateTF(usernameTF, passwordTF, clientIdTF, hostNameTF, willTopicTF)
 				|| !UIHelper.validateNumTF(portTF, keepAliveTF) || !UIHelper.validateDialogTF(willTF))
@@ -108,13 +112,7 @@ public class LogInPane extends JPanel {
 			// should not happen
 			e.printStackTrace();
 		}
-		// !!remove these two rows
-		try {
-			Main.createAndShowMainPane(account);
-		} catch (Exception e) {
-			System.out.println("Error occured while createAndShowMainPane from LoginPanel");
-			e.printStackTrace();
-		}
+		Main.showAccountMgmtPane();
 		Main.disposeLogInPane();
 	}
 

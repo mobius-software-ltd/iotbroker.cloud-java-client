@@ -189,7 +189,8 @@ public class SendMessagePane extends JPanel {
 		@Override
 		public Void doInBackground() {
 			try {
-				DBHelper.getInstance().saveMessage(messageObj);
+				if (!account.isCleanSession())
+					DBHelper.getInstance().saveMessage(messageObj);
 				sendMessage();
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -213,7 +214,7 @@ public class SendMessagePane extends JPanel {
 		@Override
 		protected void done() {
 
-			listener.messageSent();
+			listener.messageSent(messageObj);
 
 			removeProgressBar();
 

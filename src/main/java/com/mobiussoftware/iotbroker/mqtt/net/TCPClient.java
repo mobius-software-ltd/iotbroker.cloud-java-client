@@ -117,8 +117,7 @@ public class TCPClient implements NetworkChannel<MQMessage> {
 		if (isConnected()) {
 			logger.info("message " + message + " is being sent");
 			channel.writeAndFlush(message);
-		} else
-			System.out.println("not sending " + message.getType());
+		}
 	}
 
 }

@@ -21,7 +21,8 @@ public class Topic {
 	public Topic() {
 	}
 
-	public Topic(String name, byte qos) {
+	public Topic(Account account, String name, byte qos) {
+		this.account = account;
 		this.name = name;
 		this.qos = qos;
 	}

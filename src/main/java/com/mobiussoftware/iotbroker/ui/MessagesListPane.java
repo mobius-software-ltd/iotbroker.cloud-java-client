@@ -24,6 +24,7 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
+import com.mobius.software.mqtt.parser.header.impl.Publish;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
@@ -82,82 +83,17 @@ public class MessagesListPane extends JPanel implements ClientListener {
 
 	private void addMessagesPaneElements() {
 		messagesPane.setLayout(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-
-		int count = 0;
 		try {
 			final DBInterface dbInterface = DBHelper.getInstance();
 
 			for (Message msg : dbInterface.getMessages(account)) {
-				Color bgColor = count % 2 == 0 ? Color.white : UIConstants.ROW_ODD_COLOR;
-
-				JPanel messageData = new JPanel();
-				messageData.setLayout(new BoxLayout(messageData, BoxLayout.Y_AXIS));
-				messageData.setBackground(bgColor);
-				// messageData.setBorder(BorderFactory.createLineBorder(Color.blue));
-
-				JLabel topic = new JLabel(msg.getTopic(), SwingConstants.LEFT);
-				topic.setFont(UIConstants.REGULAR_BOLD_FONT);
-				topic.setBorder(BorderFactory.createEmptyBorder(5, 5, 2, 5));
-
-				JLabel text = new JLabel("<html>" + msg.getContents() + "</html>", SwingConstants.LEFT);
-				text.setFont(UIConstants.REGULAR_FONT);
-				text.setBorder(BorderFactory.createEmptyBorder(1, 5, 3, 5));
-
-				messageData.add(topic);
-				messageData.add(text);
-
-				c.fill = GridBagConstraints.BOTH;
-				c.gridx = 0;
-				c.gridy = count++;
-				c.weightx = 10;
-				c.anchor = GridBagConstraints.NORTHWEST;
-
-				messagesPane.add(messageData, c);
-
-				JPanel extraData = new TwoColorRoundedRect();
-				extraData.setBackground(bgColor);
-				extraData.setMinimumSize(new Dimension(COLORED_LABEL_WIDTH, 1));
-				extraData.setPreferredSize(extraData.getMinimumSize());
-				extraData.setLayout(new BoxLayout(extraData, BoxLayout.Y_AXIS));
-
-				JLabel direction = new JLabel(msg.isIncoming() ? "in" : "out", SwingConstants.CENTER);
-				direction.setFont(UIConstants.REGULAR_FONT);
-				direction.setForeground(Color.white);
-				direction.setAlignmentX(Component.CENTER_ALIGNMENT);
-				// direction.setMaximumSize(new
-				// Dimension((int)extraData.getMinimumSize().getWidth(),
-				// (int)extraData.getMinimumSize().getHeight()/2));
-				// direction.setMaximumSize(new Dimension(extraData.getWidth(),
-				// extraData.getHeight()/2));
-				direction.setBorder(BorderFactory.createEmptyBorder(extraData.getHeight() / 2, 0, 0, 0));
-
-				JLabel qos = new JLabel("QoS:" + msg.getQos(), SwingConstants.CENTER);
-				qos.setBorder(BorderFactory.createEmptyBorder(3, 0, 0, 0));
-				qos.setFont(UIConstants.REGULAR_FONT);
-				qos.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-				extraData.add(direction);
-				// extraData.add(Box.createRigidArea(new Dimension(1,6)));
-				extraData.add(qos);
-
-				c.fill = GridBagConstraints.VERTICAL;
-				c.gridx = 1;
-				c.weightx = 0;
-				c.anchor = GridBagConstraints.NORTHEAST;
-
-				messagesPane.add(extraData, c);
-
-				c.gridx = 2;
-				c.weightx = 0;
-				c.anchor = GridBagConstraints.NORTHEAST;
-
-				messagesPane.add(Box.createRigidArea(new Dimension(5, 5)), c);
+				addMessagesPaneElement(msg);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
+		GridBagConstraints c = new GridBagConstraints();
 		c.weighty = 1;
 		c.gridy = msgCount;
 		c.gridx = 0;
@@ -172,17 +108,87 @@ public class MessagesListPane extends JPanel implements ClientListener {
 		messagesPane.add(emptySpace, c);
 	}
 
+	public void addMessagesPaneElement(Message msg) {
+		Color bgColor = messagesPane.getComponentCount() % 2 == 0 ? Color.white : UIConstants.ROW_ODD_COLOR;
+
+		JPanel messageData = new JPanel();
+		messageData.setLayout(new BoxLayout(messageData, BoxLayout.Y_AXIS));
+		messageData.setBackground(bgColor);
+		// messageData.setBorder(BorderFactory.createLineBorder(Color.blue));
+
+		JLabel topic = new JLabel(msg.getTopic(), SwingConstants.LEFT);
+		topic.setFont(UIConstants.REGULAR_BOLD_FONT);
+		topic.setBorder(BorderFactory.createEmptyBorder(5, 5, 2, 5));
+
+		JLabel text = new JLabel("<html>" + msg.getContents() + "</html>", SwingConstants.LEFT);
+		text.setFont(UIConstants.REGULAR_FONT);
+		text.setBorder(BorderFactory.createEmptyBorder(1, 5, 3, 5));
+
+		messageData.add(topic);
+		messageData.add(text);
+
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.BOTH;
+		c.gridx = 0;
+		c.gridy = messagesPane.getComponentCount() + 1;
+		c.weightx = 10;
+		c.anchor = GridBagConstraints.NORTHWEST;
+
+		messagesPane.add(messageData, c);
+
+		JPanel extraData = new TwoColorRoundedRect();
+		extraData.setBackground(bgColor);
+		extraData.setMinimumSize(new Dimension(COLORED_LABEL_WIDTH, 1));
+		extraData.setPreferredSize(extraData.getMinimumSize());
+		extraData.setLayout(new BoxLayout(extraData, BoxLayout.Y_AXIS));
+
+		JLabel direction = new JLabel(msg.isIncoming() ? "in" : "out", SwingConstants.CENTER);
+		direction.setFont(UIConstants.REGULAR_FONT);
+		direction.setForeground(Color.white);
+		direction.setAlignmentX(Component.CENTER_ALIGNMENT);
+		// direction.setMaximumSize(new
+		// Dimension((int)extraData.getMinimumSize().getWidth(),
+		// (int)extraData.getMinimumSize().getHeight()/2));
+		// direction.setMaximumSize(new Dimension(extraData.getWidth(),
+		// extraData.getHeight()/2));
+		direction.setBorder(BorderFactory.createEmptyBorder(extraData.getHeight() / 2, 0, 0, 0));
+
+		JLabel qos = new JLabel("QoS:" + msg.getQos(), SwingConstants.CENTER);
+		qos.setBorder(BorderFactory.createEmptyBorder(3, 0, 0, 0));
+		qos.setFont(UIConstants.REGULAR_FONT);
+		qos.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+		extraData.add(direction);
+		// extraData.add(Box.createRigidArea(new Dimension(1,6)));
+		extraData.add(qos);
+
+		c.fill = GridBagConstraints.VERTICAL;
+		c.gridx = 1;
+		c.weightx = 0;
+		c.anchor = GridBagConstraints.NORTHEAST;
+
+		messagesPane.add(extraData, c);
+
+		c.gridx = 2;
+		c.weightx = 0;
+		c.anchor = GridBagConstraints.NORTHEAST;
+
+		messagesPane.add(Box.createRigidArea(new Dimension(5, 5)), c);
+	}
+
 	@Override
-	public void messageSent() {
-		messagesPane.removeAll();
-		addMessagesPaneElements();
+	public void messageSent(Message messageObj) {
+		addMessagesPaneElement(messageObj);
 		messagesPane.revalidate();
 	}
 
 	@Override
 	public void messageReceived(MQMessage message) {
-		messagesPane.removeAll();
-		addMessagesPaneElements();
+		Publish publish = (Publish) message;
+		Message msg = new Message(account, publish.getTopic().getName().toString(),
+				new String(publish.getContent().array()), true, (byte) publish.getTopic().getQos().getValue(),
+				publish.isRetain(), publish.isDup());
+		addMessagesPaneElement(msg);
 		messagesPane.revalidate();
 	}
 

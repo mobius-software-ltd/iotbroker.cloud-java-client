@@ -1,5 +1,7 @@
 package com.mobiussoftware.iotbroker.mqtt;
 
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -70,17 +72,6 @@ public class TimersMap implements TimersMapInterface<MQMessage> {
 		}
 	}
 
-	public void store(Integer packetID, MQMessage message) {
-		Boolean isConnect = false;
-		if (message.getType() == MessageType.CONNECT)
-			isConnect = true;
-		MessageResendTimer<MQMessage> timer = new MessageResendTimer<MQMessage>(message, listener, this, isConnect);
-		timersMap.put(packetID, timer);
-		ScheduledFuture<?> timer_future = (ScheduledFuture<?>) scheduledservice.schedule(timer, resendPeriod,
-				TimeUnit.MILLISECONDS);
-		timer.setFuture(timer_future);
-	}
-
 	@Override
 	public void refreshTimer(MessageResendTimer<MQMessage> timer) {
 		ScheduledFuture<?> timer_future = null;
@@ -98,27 +89,19 @@ public class TimersMap implements TimersMapInterface<MQMessage> {
 	}
 
 	public MQMessage remove(Integer packetID) {
-		MessageResendTimer<MQMessage> timer = timersMap.get(packetID);
-		timersMap.remove(packetID);
-		if (timer != null) {
-			timer.getFuture().cancel(true);
-			return timer.getMessage();
-		}
-
-		return null;
+		return cancelTimer(timersMap.remove(packetID));
 	}
 
 	public void stopAllTimers() {
-		if (connectTimer != null)
-			connectTimer.getFuture().cancel(true);
 
-		if (pingTimer != null)
-			pingTimer.getFuture().cancel(true);
+		cancelConnectTimer();
+		cancelTimer(pingTimer);
 
-		for (Integer key : timersMap.keySet())
-			timersMap.get(key).getFuture().cancel(true);
-
-		timersMap.clear();
+		Iterator<Entry<Integer, MessageResendTimer<MQMessage>>> iterator = timersMap.entrySet().iterator();
+		while (iterator.hasNext()) {
+			cancelTimer(iterator.next().getValue());
+			iterator.remove();
+		}
 	}
 
 	public void storeConnectTimer(MQMessage message) {
@@ -133,9 +116,17 @@ public class TimersMap implements TimersMapInterface<MQMessage> {
 
 	@Override
 	public void cancelConnectTimer() {
-		if (connectTimer != null) {
-			connectTimer.getFuture().cancel(true);
+		cancelTimer(connectTimer);
+	}
+
+	private MQMessage cancelTimer(MessageResendTimer<MQMessage> timer) {
+		MQMessage pendingMessage = null;
+		if (timer != null) {
+			timer.getFuture().cancel(true);
+			pendingMessage = timer.getMessage();
+			timer = null;
 		}
+		return pendingMessage;
 	}
 
 	public MessageResendTimer<MQMessage> getConnectTimer() {
@@ -143,18 +134,12 @@ public class TimersMap implements TimersMapInterface<MQMessage> {
 	}
 
 	public void startPingTimer() {
-		if (pingTimer != null)
-			pingTimer.getFuture().cancel(true);
+
+		cancelTimer(pingTimer);
 
 		pingTimer = new MessageResendTimer<MQMessage>(new Pingreq(), listener, this, false);
 		ScheduledFuture<?> pingTimer_future = (ScheduledFuture<?>) scheduledservice.schedule(pingTimer, keepalivePeriod,
 				TimeUnit.MILLISECONDS);
 		pingTimer.setFuture(pingTimer_future);
-	}
-
-	public void stopConnectTimer() {
-		if (connectTimer != null) {
-			connectTimer.getFuture().cancel(true);
-		}
 	}
 }

@@ -14,12 +14,15 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 
+import com.mobius.software.mqtt.parser.avps.SubackCode;
 import com.mobius.software.mqtt.parser.avps.Text;
 import com.mobius.software.mqtt.parser.avps.Topic;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
+import com.mobius.software.mqtt.parser.header.impl.Suback;
 import com.mobius.software.mqtt.parser.header.impl.Subscribe;
 import com.mobius.software.mqtt.parser.header.impl.Unsubscribe;
 import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
 
@@ -132,7 +135,7 @@ public class MainPane extends JFrame implements ClientListener {
 		this.msgListJP = new MessagesListPane(account);
 		ImageIcon msgListIcon = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.MSG_LIST_IMG);
 		jtp.addTab("", msgListIcon, this.msgListJP);
-		sendMsgJP.setListener(MainPane.this);
+		sendMsgJP.setListener(msgListJP);
 
 		JPanel logoutJP = new JPanel();
 		ImageIcon logoutIcon = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.LOGOUT_IMG);
@@ -143,14 +146,17 @@ public class MainPane extends JFrame implements ClientListener {
 	}
 
 	@Override
-	public void messageSent() {
-		// TODO Auto-generated method stub
-
+	public void messageSent(Message messageObj) {
 	}
 
 	@Override
 	public void messageReceived(MQMessage message) {
 		switch (message.getType()) {
+		case SUBACK:
+			Suback suback = (Suback) message;
+			if (suback.getReturnCodes().contains(SubackCode.FAILURE))
+				topicListJP.finishAddingTopicFailed();
+			break;
 		case SUBSCRIBE:
 			Subscribe subscribe = (Subscribe) message;
 			for (Topic subscribeTopic : subscribe.getTopics())
