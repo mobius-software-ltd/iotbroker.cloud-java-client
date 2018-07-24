@@ -34,14 +34,16 @@ public class Account {
 	private boolean retain;
 	@DatabaseField(canBeNull = true)
 	private int qos;
-	/*@DatabaseField(canBeNull = true)
-	private boolean isDefault;*/
+	/*
+	 * @DatabaseField(canBeNull = true) private boolean isDefault;
+	 */
 
 	public Account() {
 	}
 
-	public Account(Protocol protocol, String username, String password, String clientId, String serverHost, int serverPort,
-				   boolean cleanSession, int keepAlive, String will, String willTopic, boolean retain, int qos/*, boolean isDefault*/) {
+	public Account(Protocol protocol, String username, String password, String clientId, String serverHost,
+			int serverPort, boolean cleanSession, int keepAlive, String will, String willTopic, boolean retain,
+			int qos/* , boolean isDefault */) {
 		this.protocol = protocol;
 		this.username = username;
 		this.password = password;
@@ -54,7 +56,7 @@ public class Account {
 		this.willTopic = willTopic;
 		this.retain = retain;
 		this.qos = qos;
-		//this.isDefault = isDefault;
+		// this.isDefault = isDefault;
 	}
 
 	public int getId() {
@@ -160,13 +162,9 @@ public class Account {
 	public void setQos(int qos) {
 		this.qos = qos;
 	}
-/*
-	public boolean isDefault() {
-		return isDefault;
-	}
-
-	public void setDefault(boolean isDefault) {
-		this.isDefault = isDefault;
-	}
-	*/
+	/*
+	 * public boolean isDefault() { return isDefault; }
+	 * 
+	 * public void setDefault(boolean isDefault) { this.isDefault = isDefault; }
+	 */
 }

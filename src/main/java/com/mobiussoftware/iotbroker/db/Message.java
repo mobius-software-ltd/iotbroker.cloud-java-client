@@ -30,12 +30,12 @@ public class Message {
 	@DatabaseField
 	private Boolean duplicate;
 
-
-
 	public Message() {
 	}
 
-	public Message(String topic, String contents, boolean incoming, byte qos, Boolean retain, Boolean duplicate) {
+	public Message(Account account, String topic, String contents, boolean incoming, byte qos, Boolean retain,
+			Boolean duplicate) {
+		this.account = account;
 		this.topic = topic;
 		this.contents = contents;
 		this.incoming = incoming;

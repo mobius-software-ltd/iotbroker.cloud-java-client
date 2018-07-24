@@ -10,11 +10,11 @@ import io.netty.handler.codec.MessageToByteEncoder;
 
 @Sharable
 public class MQEncoder extends MessageToByteEncoder<MQMessage> {
-	
+
 	@Override
 	protected void encode(ChannelHandlerContext ctx, MQMessage message, ByteBuf out) throws Exception {
 		ByteBuf buf = MQParser.encode(message);
 		out.writeBytes(buf);
 	}
-	
+
 }

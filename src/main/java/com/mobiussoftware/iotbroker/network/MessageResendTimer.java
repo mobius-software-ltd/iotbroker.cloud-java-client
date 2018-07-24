@@ -2,7 +2,7 @@ package com.mobiussoftware.iotbroker.network;
 
 import java.util.concurrent.ScheduledFuture;
 
-public class MessageResendTimer<T> implements Runnable{
+public class MessageResendTimer<T> implements Runnable {
 	private static int MAX_CONNECT_RESEND = 5;
 
 	private T message;
@@ -10,7 +10,7 @@ public class MessageResendTimer<T> implements Runnable{
 	private TimersMapInterface<T> timersMap;
 	private Integer retriesLeft = null;
 	private ScheduledFuture<?> future;
-	
+
 	public MessageResendTimer(T message, NetworkChannel<T> client, TimersMapInterface<T> timersMap, Boolean isConnect) {
 		if (isConnect)
 			retriesLeft = MAX_CONNECT_RESEND;
@@ -24,7 +24,7 @@ public class MessageResendTimer<T> implements Runnable{
 	public void run() {
 		onTimedEvent();
 	}
-	
+
 	public void onTimedEvent() {
 		if (retriesLeft != null) {
 			retriesLeft--;
@@ -37,7 +37,7 @@ public class MessageResendTimer<T> implements Runnable{
 		client.send(message);
 		timersMap.refreshTimer(this);
 	}
-	
+
 	public T getMessage() {
 		return message;
 	}

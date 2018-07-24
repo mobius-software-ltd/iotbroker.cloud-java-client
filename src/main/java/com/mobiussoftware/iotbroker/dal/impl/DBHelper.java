@@ -1,5 +1,10 @@
 package com.mobiussoftware.iotbroker.dal.impl;
 
+import java.sql.SQLException;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+
 import com.j256.ormlite.dao.CloseableWrappedIterable;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
@@ -11,10 +16,10 @@ import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.db.Topic;
 
-import java.sql.SQLException;
-import java.util.List;
-
 public class DBHelper implements DBInterface {
+
+	private final Logger logger = Logger.getLogger(getClass());
+
 	private final static String DATABASE_URL = "jdbc:sqlite:iotbroker.db";
 
 	private static DBInterface instance = null;
@@ -43,7 +48,7 @@ public class DBHelper implements DBInterface {
 
 			// setup our database and DAOs
 			setupDatabase(connectionSource);
-			System.out.println("database is set up");
+			logger.info("database is set up");
 
 			accountDao = DaoManager.createDao(connectionSource, Account.class);
 			topicDao = DaoManager.createDao(connectionSource, Topic.class);
@@ -85,6 +90,11 @@ public class DBHelper implements DBInterface {
 	}
 
 	@Override
+	public Topic getTopic(String id) throws SQLException {
+		return topicDao.queryForId(id);
+	}
+
+	@Override
 	public void saveTopic(Topic topic) throws SQLException {
 		topicDao.create(topic);
 	}
@@ -118,14 +128,10 @@ public class DBHelper implements DBInterface {
 		return false;
 	}
 	/*
-	public void markAsDefault(Account account)throws SQLException {
-		account.setDefault(true);
-		accountDao.update(account);
-	}
-	
-	@Override
-	public void unmarkAsDefault(Account account)throws SQLException {
-		account.setDefault(false);
-		accountDao.update(account);
-	}*/
+	 * public void markAsDefault(Account account)throws SQLException {
+	 * account.setDefault(true); accountDao.update(account); }
+	 * 
+	 * @Override public void unmarkAsDefault(Account account)throws SQLException
+	 * { account.setDefault(false); accountDao.update(account); }
+	 */
 }

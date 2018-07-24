@@ -1,15 +1,22 @@
 package com.mobiussoftware.iotbroker.ui.elements;
 
-import javax.swing.*;
-import javax.swing.border.Border;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.Color;
 import java.awt.event.FocusEvent;
 
+import javax.swing.BorderFactory;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.border.Border;
+
+@SuppressWarnings("unused")
 public class HintDialogTextField extends HintTextField {
 
-    private boolean textAreaIsShown = false;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7413423837551286778L;
+	private boolean textAreaIsShown = false;
     private String text = "";
 
     public HintDialogTextField(String hint, Border border) {

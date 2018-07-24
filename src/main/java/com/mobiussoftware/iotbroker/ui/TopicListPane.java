@@ -1,17 +1,19 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
-import com.mobiussoftware.iotbroker.dal.api.DBInterface;
-import com.mobiussoftware.iotbroker.db.Account;
-import com.mobiussoftware.iotbroker.db.Topic;
-import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
-import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.ColorUIResource;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.TexturePaint;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -21,44 +23,70 @@ import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.ColorUIResource;
+import javax.swing.plaf.basic.BasicComboBoxRenderer;
+
+import com.mobius.software.mqtt.parser.avps.QoS;
+import com.mobius.software.mqtt.parser.avps.Text;
+import com.mobiussoftware.iotbroker.dal.api.DBInterface;
+import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
+import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.db.Topic;
+import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
+import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
+
 public class TopicListPane extends JPanel {
+
+	private static final long serialVersionUID = -615880735007928743L;
 
 	private Account account;
 
-    private JPanel emptySpace;
-    private JPanel topics;
+	private JPanel emptySpace;
+	private JPanel topics;
 
-    private JPanel progressBarSpace;
-    private JProgressBar progressBar;
+	private JPanel progressBarSpace;
+	private JProgressBar progressBar;
 
-    private Map<Integer, Component[]> componentList = new HashMap<>();
+	private Map<Integer, Component[]> componentList = new HashMap<>();
 
-    private HintTextField topicInput;
-    private JComboBox<Integer> dropDown;
+	private HintTextField topicInput;
+	private JComboBox<Integer> dropDown;
 
-    private MouseListener addTopicBtnListener;
-    private JPanel addTopicBtn;
+	private MouseListener addTopicBtnListener;
+	private JPanel addTopicBtn;
 
 	TopicListPane(Account account) {
-        super();
-        this.account = account;
-        drawUI();
-    }
+		super();
+		this.account = account;
+		drawUI();
+	}
 
-    private void drawUI() {
+	private void drawUI() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 		emptySpace = new JPanel();
 		emptySpace.setLayout(new BoxLayout(emptySpace, BoxLayout.Y_AXIS));
 		emptySpace.setBackground(Color.white);
-//        emptySpace.setBorder(BorderFactory.createLineBorder(Color.blue));
-		emptySpace.add(Box.createRigidArea(new Dimension(50,5)));
+		// emptySpace.setBorder(BorderFactory.createLineBorder(Color.blue));
+		emptySpace.add(Box.createRigidArea(new Dimension(50, 5)));
 
 		progressBarSpace = UIHelper.createProgressBarSpace(5);
 		this.add(progressBarSpace);
 
 		JPanel txtLbl1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		txtLbl1.setBackground(new Color(0,0,0,0));
+		txtLbl1.setBackground(new Color(0, 0, 0, 0));
 
 		JLabel topicListLbl = new JLabel("topics list:", SwingConstants.LEFT);
 		topicListLbl.setFont(UIConstants.TEXT_LABEL_FONT);
@@ -73,7 +101,7 @@ public class TopicListPane extends JPanel {
 		this.add(UIHelper.wrapInScrollAndBorderLayout(topics, BorderLayout.CENTER));
 
 		JPanel txtLbl2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		txtLbl2.setBackground(new Color(0,0,0,0));
+		txtLbl2.setBackground(new Color(0, 0, 0, 0));
 
 		JLabel addTopicLbl = new JLabel("add new topic:");
 		addTopicLbl.setFont(UIConstants.TEXT_LABEL_FONT);
@@ -91,11 +119,10 @@ public class TopicListPane extends JPanel {
 
 		this.add(addTopic);
 
-
 		addTopicBtnListener = new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-//                System.out.println("Add button clicked!");
+				// System.out.println("Add button clicked!");
 				arg0.getComponent().removeMouseListener(this);
 				addTopicAction();
 				dropDown.setSelectedIndex(0);
@@ -108,13 +135,13 @@ public class TopicListPane extends JPanel {
 		addAddTopicElements(addTopic);
 	}
 
-    //adding subelements to topicList panel
-    private void addTopicListElements(final JPanel parent) {
+	// adding subelements to topicList panel
+	private void addTopicListElements(final JPanel parent) {
 
-        parent.setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
+		parent.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
 
-        c.fill = GridBagConstraints.VERTICAL;
+		c.fill = GridBagConstraints.VERTICAL;
 
 		int count = 0;
 		try {
@@ -159,7 +186,6 @@ public class TopicListPane extends JPanel {
 
 				parent.add(deleteBtn, c);
 
-
 				Component[] row = new Component[3];
 				row[0] = topic;
 				row[1] = qos;
@@ -171,322 +197,334 @@ public class TopicListPane extends JPanel {
 			e.printStackTrace();
 		}
 
-        c.weighty = 1;
-        c.gridy = count;
-        c.gridx = 0;
-        c.weightx = 1;
-        c.anchor = GridBagConstraints.WEST;
+		c.weighty = 1;
+		c.gridy = count;
+		c.gridx = 0;
+		c.weightx = 1;
+		c.anchor = GridBagConstraints.WEST;
 
-        parent.add(emptySpace, c);
-    }
+		parent.add(emptySpace, c);
+	}
 
-    private void addTopicListRow(String topicText, int qosValue) {
-        int rowNumber = ((GridBagLayout)topics.getLayout()).getLayoutDimensions()[1].length - 1;
+	private void addTopicListRow(String topicText, int qosValue) {
+		int rowNumber = ((GridBagLayout) topics.getLayout()).getLayoutDimensions()[1].length - 1;
 
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.VERTICAL;
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.VERTICAL;
 
-        JLabel topic = new JLabel(topicText, SwingConstants.LEFT);
-        topic.setFont(UIConstants.REGULAR_FONT);
-        topic.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+		JLabel topic = new JLabel(topicText, SwingConstants.LEFT);
+		topic.setFont(UIConstants.REGULAR_FONT);
+		topic.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        c.gridx = 0;
-        c.gridy = rowNumber;
-        c.weightx = 10;
-        c.weighty = 0;
-        c.anchor = GridBagConstraints.NORTHWEST;
+		c.gridx = 0;
+		c.gridy = rowNumber;
+		c.weightx = 10;
+		c.weighty = 0;
+		c.anchor = GridBagConstraints.NORTHWEST;
 
-        topics.add(topic, c);
+		topics.add(topic, c);
 
-        JLabel qos = new RoundedFilledLabel(new Color(252, 227, 79), 20, 0, 4);
-        qos.setText("QoS:" + qosValue);
-        qos.setHorizontalAlignment(SwingConstants.LEFT);
-        qos.setFont(UIConstants.REGULAR_FONT);
-        qos.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+		JLabel qos = new RoundedFilledLabel(new Color(252, 227, 79), 20, 0, 4);
+		qos.setText("QoS:" + qosValue);
+		qos.setHorizontalAlignment(SwingConstants.LEFT);
+		qos.setFont(UIConstants.REGULAR_FONT);
+		qos.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        c.gridx = 1;
-        c.weightx = 0.1;
-        c.weighty = 0;
-        c.anchor = GridBagConstraints.NORTHEAST;
+		c.gridx = 1;
+		c.weightx = 0.1;
+		c.weighty = 0;
+		c.anchor = GridBagConstraints.NORTHEAST;
 
-        topics.add(qos, c);
-//
-        JLabel deleteBtn = new JLabel(UIConstants.IC_TRASH, SwingConstants.CENTER);
-        deleteBtn.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-        deleteBtn.addMouseListener(deleteTopicAction());
+		topics.add(qos, c);
+		//
+		JLabel deleteBtn = new JLabel(UIConstants.IC_TRASH, SwingConstants.CENTER);
+		deleteBtn.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		deleteBtn.addMouseListener(deleteTopicAction());
 
-        deleteBtn.setName(String.valueOf(rowNumber));
+		deleteBtn.setName(String.valueOf(rowNumber));
 
-        c.gridx = 2;
-        c.weightx = 0.1;
-        c.weighty = 0;
-        c.anchor = GridBagConstraints.NORTHEAST;
+		c.gridx = 2;
+		c.weightx = 0.1;
+		c.weighty = 0;
+		c.anchor = GridBagConstraints.NORTHEAST;
 
-        topics.add(deleteBtn, c);
-        topics.revalidate();
-        topics.repaint();
+		topics.add(deleteBtn, c);
+		topics.revalidate();
+		topics.repaint();
 
-        Component[] row = new Component[3];
-        row[0] = topic;
-        row[1] = qos;
-        row[2] = deleteBtn;
+		Component[] row = new Component[3];
+		row[0] = topic;
+		row[1] = qos;
+		row[2] = deleteBtn;
 
-        componentList.put(rowNumber, row);
+		componentList.put(rowNumber, row);
 
-        c.weighty = 1;
-        c.gridy = rowNumber + 1;
-        c.gridx = 0;
-        c.weightx = 1;
-        c.anchor = GridBagConstraints.WEST;
+		c.weighty = 1;
+		c.gridy = rowNumber + 1;
+		c.gridx = 0;
+		c.weightx = 1;
+		c.anchor = GridBagConstraints.WEST;
 
-        topics.add(emptySpace, c);
-    }
+		topics.add(emptySpace, c);
+	}
 
-    private void deleteListRow(String index) {
-        System.out.println("Delete topic clicked! " + index);
-        int i = Integer.valueOf(index);
+	private void deleteListRow(String index) {
+		int i = Integer.valueOf(index);
 
-        Component[] row = componentList.get(i);
-        topics.remove(row[0]);
-        topics.remove(row[1]);
-        topics.remove(row[2]);
+		Component[] row = componentList.get(i);
+		topics.remove(row[0]);
+		topics.remove(row[1]);
+		topics.remove(row[2]);
 
-        componentList.remove(i);
-        topics.revalidate();
-        topics.repaint();
-    }
+		componentList.remove(i);
+		topics.revalidate();
+		topics.repaint();
+	}
 
-    //adding subelements to addtopic panel
-    private void addAddTopicElements(JPanel parent) {
-        UIManager.put("ComboBox.background", new ColorUIResource(Color.white));
-        UIManager.put("ComboBox.selectionBackground", UIConstants.SELECTION_COLOR);
-        UIManager.put("ComboBox.selectionForeground", new ColorUIResource(Color.gray));
+	// adding subelements to addtopic panel
+	private void addAddTopicElements(JPanel parent) {
+		UIManager.put("ComboBox.background", new ColorUIResource(Color.white));
+		UIManager.put("ComboBox.selectionBackground", UIConstants.SELECTION_COLOR);
+		UIManager.put("ComboBox.selectionForeground", new ColorUIResource(Color.gray));
 
-        JPanel el1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        el1.setBackground(Color.white);
-        Image tmp2 = UIConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25,  java.awt.Image.SCALE_SMOOTH);
-        JLabel icon = new JLabel(new ImageIcon(tmp2));
-        icon.setBorder(new EmptyBorder(0, 10, 0, 10));
-        JLabel text = new JLabel("Topic:");
-        text.setFont(UIConstants.REGULAR_FONT);
+		JPanel el1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		el1.setBackground(Color.white);
+		Image tmp2 = UIConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
+		JLabel icon = new JLabel(new ImageIcon(tmp2));
+		icon.setBorder(new EmptyBorder(0, 10, 0, 10));
+		JLabel text = new JLabel("Topic:");
+		text.setFont(UIConstants.REGULAR_FONT);
 
-        el1.add(icon);
-        el1.add(text);
+		el1.add(icon);
+		el1.add(text);
 
-        JPanel el2 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        el2.setBackground(Color.white);
+		JPanel el2 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		el2.setBackground(Color.white);
 
-        topicInput = new HintTextField("topic", BorderFactory.createLineBorder(Color.lightGray));
-        topicInput.setHorizontalAlignment(JTextField.RIGHT);
-        topicInput.setFont(UIConstants.REGULAR_FONT);
-        topicInput.setMinimumSize(new Dimension(150, 28));
-        topicInput.setPreferredSize(topicInput.getMinimumSize());
+		topicInput = new HintTextField("topic", BorderFactory.createLineBorder(Color.lightGray));
+		topicInput.setHorizontalAlignment(JTextField.RIGHT);
+		topicInput.setFont(UIConstants.REGULAR_FONT);
+		topicInput.setMinimumSize(new Dimension(150, 28));
+		topicInput.setPreferredSize(topicInput.getMinimumSize());
 
-        el2.add(topicInput);
+		el2.add(topicInput);
 
-        JPanel el3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        el3.setBackground(UIConstants.ROW_ODD_COLOR);
+		JPanel el3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		el3.setBackground(UIConstants.ROW_ODD_COLOR);
 
-        text = new JLabel("QoS:");
-        text.setFont(UIConstants.REGULAR_FONT);
-        JLabel icon2 = new JLabel(new ImageIcon(tmp2));
-        icon2.setBorder(new EmptyBorder(0, 10, 0, 10));
-        dropDown = new JComboBox<>(AppConstants.QOS_VALUES);
+		text = new JLabel("QoS:");
+		text.setFont(UIConstants.REGULAR_FONT);
+		JLabel icon2 = new JLabel(new ImageIcon(tmp2));
+		icon2.setBorder(new EmptyBorder(0, 10, 0, 10));
+		dropDown = new JComboBox<>(AppConstants.QOS_VALUES);
 
-        JPanel el4 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        el4.setBackground(UIConstants.ROW_ODD_COLOR);
+		JPanel el4 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		el4.setBackground(UIConstants.ROW_ODD_COLOR);
 
-        JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT,0,0));
-        wrapper.setBackground(Color.yellow);
-        wrapper.setMinimumSize(new Dimension(72, 24));
-        wrapper.setPreferredSize(wrapper.getMinimumSize());
-        wrapper.setBorder(BorderFactory.createLineBorder(Color.lightGray));
+		JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+		wrapper.setBackground(Color.yellow);
+		wrapper.setMinimumSize(new Dimension(72, 24));
+		wrapper.setPreferredSize(wrapper.getMinimumSize());
+		wrapper.setBorder(BorderFactory.createLineBorder(Color.lightGray));
 
-        dropDown.setFont(UIConstants.REGULAR_FONT);
-        dropDown.setMinimumSize(new Dimension(70, 22));
-        dropDown.setPreferredSize(dropDown.getMinimumSize());
-        dropDown.setUI(CustomComboBoxUI.createUI(dropDown));
+		dropDown.setFont(UIConstants.REGULAR_FONT);
+		dropDown.setMinimumSize(new Dimension(70, 22));
+		dropDown.setPreferredSize(dropDown.getMinimumSize());
+		dropDown.setUI(CustomComboBoxUI.createUI(dropDown));
 
-        BasicComboBoxRenderer renderer = (BasicComboBoxRenderer)dropDown.getRenderer();
-        renderer.setBorder(new EmptyBorder(0,7,0,0));
+		BasicComboBoxRenderer renderer = (BasicComboBoxRenderer) dropDown.getRenderer();
+		renderer.setBorder(new EmptyBorder(0, 7, 0, 0));
 
-        el4.add(wrapper);
-        wrapper.add(dropDown);
+		el4.add(wrapper);
+		wrapper.add(dropDown);
 
-        el3.add(icon2);
-        el3.add(text);
+		el3.add(icon2);
+		el3.add(text);
 
-        parent.setLayout(new GridLayout(2, 2));
-        parent.add(el1);
-        parent.add(el2);
-        parent.add(el3);
-        parent.add(el4);
-    }
+		parent.setLayout(new GridLayout(2, 2));
+		parent.add(el1);
+		parent.add(el2);
+		parent.add(el3);
+		parent.add(el4);
+	}
 
-    private void addTopicAction() {
+	private void addTopicAction() {
 
-        if (UIHelper.validateTF(topicInput)) {
+		if (UIHelper.validateTF(topicInput)) {
 
-            int qos = dropDown.getSelectedIndex();
+			int qos = dropDown.getSelectedIndex();
 
-            addProgressBar();
+			addProgressBar();
 
-            AddTopicTask task = new AddTopicTask(topicInput.getText(), qos);
-            task.addPropertyChangeListener(propertyChangeListener());
-            task.execute();
-        } else {
-            addTopicBtn.addMouseListener(addTopicBtnListener);
-        }
-    }
-
-    private MouseListener deleteTopicAction() {
-        return new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent arg0) {
-                JLabel btnClicked = (JLabel)arg0.getSource();
-                btnClicked.removeMouseListener(this);
-
-                addProgressBar();
-
-                DeleteTopicTask task = new DeleteTopicTask(btnClicked.getName());
-                task.addPropertyChangeListener(propertyChangeListener());
-                task.execute();
-            }
-        };
-    }
-
-    class AddTopicTask extends NetworkTask<Void, Void> {
-        private String topicName;
-        private int qosVal;
-        private Topic topicObj;
-
-        public AddTopicTask(String topicName, int qosVal) {
-            this.topicName = topicName;
-            this.qosVal = qosVal;
-			topicObj = new Topic(topicName, (byte)qosVal);
-			topicObj.setAccount(account);
-        }
-
-        @Override
-        public Void doInBackground() {
-			try {
-				DBInterface dbInterface = DBHelper.getInstance();
-				dbInterface.saveTopic(topicObj);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-            return super.doInBackground();
-        }
-
-        @Override
-        protected void done() {
+			AddTopicTask task = new AddTopicTask(topicInput.getText(), qos);
+			task.addPropertyChangeListener(propertyChangeListener());
+			task.execute();
+		} else {
 			addTopicBtn.addMouseListener(addTopicBtnListener);
-            addTopicListRow(topicName, qosVal);
-            topicInput.setText("");
-            removeProgressBar();
-        }
-    }
+		}
+	}
 
-    class DeleteTopicTask extends NetworkTask<Void, Void> {
-        private String id;
+	private MouseListener deleteTopicAction() {
+		return new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				JLabel btnClicked = (JLabel) arg0.getSource();
+				btnClicked.removeMouseListener(this);
 
-        public DeleteTopicTask(String id) {
-            this.id = id;
-        }
+				addProgressBar();
+
+				DeleteTopicTask task = new DeleteTopicTask(btnClicked.getName());
+				task.addPropertyChangeListener(propertyChangeListener());
+				task.execute();
+			}
+		};
+	}
+
+	class AddTopicTask extends NetworkTask<Void, Void> {
+		private String topicName;
+		private int qosVal;
+		private Topic topicObj;
+
+		public AddTopicTask(String topicName, int qosVal) {
+			this.topicName = topicName;
+			this.qosVal = qosVal;
+			topicObj = new Topic(topicName, (byte) qosVal);
+			topicObj.setAccount(account);
+		}
 
 		@Override
 		public Void doInBackground() {
 			try {
-				DBInterface dbInterface = DBHelper.getInstance();
-				dbInterface.deleteTopic(id);
+				Main.getCurrentClient().subscribe(new com.mobius.software.mqtt.parser.avps.Topic[] {
+						new com.mobius.software.mqtt.parser.avps.Topic(new Text(topicName), QoS.valueOf(qosVal)) });
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			return super.doInBackground();
 		}
 
+		@Override
+		protected void done() {
+
+			topicInput.setText("");
+			removeProgressBar();
+		}
+	}
+
+	public void finishAddingTopic(String topicName, int qosVal) {
+		System.out.println("finishAddingTopic:" + topicName + "," + qosVal);
+		addTopicBtn.addMouseListener(addTopicBtnListener);
+		addTopicListRow(topicName, qosVal);
+	}
+
+	class DeleteTopicTask extends NetworkTask<Void, Void> {
+
+		private String id;
+
+		public DeleteTopicTask(String id) {
+			this.id = id;
+		}
 
 		@Override
-        public void done() {
-            deleteListRow(id);
-            removeProgressBar();
-        }
-    }
+		public Void doInBackground() {
+			try {
+				Main.getCurrentClient().unsubscribe(new String[] { id });
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return super.doInBackground();
+		}
 
-    private PropertyChangeListener propertyChangeListener() {
-        return new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                if (evt.getPropertyName() == "progress") {
-                    int progress = (Integer) evt.getNewValue();
-                    progressBar.setValue(progress);
-                }
-            }
-        };
-    }
+		@Override
+		public void done() {
+			removeProgressBar();
+		}
+	}
 
-    private void addProgressBar() {
-        progressBar = UIHelper.createProgressBar();
-        if (progressBarSpace.getComponents().length > 0) {
-            for (Component c:progressBarSpace.getComponents()) {
-                progressBarSpace.remove(c);
-            }
-        }
-        progressBarSpace.add(progressBar);
-        progressBar.revalidate();
-    }
+	public void finishDeletingTopic(String id) {
+		deleteListRow(id);
+	}
 
-    private void removeProgressBar() {
-        progressBarSpace.remove(progressBar);
-        TopicListPane.this.revalidate();
-        TopicListPane.this.repaint();
-    }
+	private PropertyChangeListener propertyChangeListener() {
+		return new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getPropertyName() == "progress") {
+					int progress = (Integer) evt.getNewValue();
+					progressBar.setValue(progress);
+				}
+			}
+		};
+	}
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        Image bgImage = UIConstants.BG_IMAGE;
-        g.drawImage(bgImage, 0, 0, null);
+	private void addProgressBar() {
+		progressBar = UIHelper.createProgressBar();
+		if (progressBarSpace.getComponents().length > 0) {
+			for (Component c : progressBarSpace.getComponents()) {
+				progressBarSpace.remove(c);
+			}
+		}
+		progressBarSpace.add(progressBar);
+		progressBar.revalidate();
+	}
 
-        BufferedImage bimage = new BufferedImage(bgImage.getWidth(null), bgImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+	private void removeProgressBar() {
+		progressBarSpace.remove(progressBar);
+		TopicListPane.this.revalidate();
+		TopicListPane.this.repaint();
+	}
 
-        // Draw the image on to the buffered image
-        Graphics2D bGr = bimage.createGraphics();
-        bGr.drawImage(bgImage, 0, 0, null);
-        bGr.dispose();
+	@Override
+	protected void paintComponent(Graphics g) {
+		Image bgImage = UIConstants.BG_IMAGE;
+		g.drawImage(bgImage, 0, 0, null);
 
-        super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
+		BufferedImage bimage = new BufferedImage(bgImage.getWidth(null), bgImage.getHeight(null),
+				BufferedImage.TYPE_INT_ARGB);
 
-        TexturePaint paint = new TexturePaint(bimage, new Rectangle(0, 0, bgImage.getWidth(null), bgImage.getHeight(null)));
-        g2d.setPaint(paint);
-        g2d.fillRect(0, 0, getWidth(), getHeight());
-    }
-}
+		// Draw the image on to the buffered image
+		Graphics2D bGr = bimage.createGraphics();
+		bGr.drawImage(bgImage, 0, 0, null);
+		bGr.dispose();
 
-class RoundedFilledLabel extends JLabel {
-    private Color color;
-    private int cornerRadius;
-    private int verticalOffset;
-    private int horizontalOffset;
+		super.paintComponent(g);
+		Graphics2D g2d = (Graphics2D) g;
 
-    RoundedFilledLabel(Color color, int cornerRadius, int horizontalOffset, int verticalOffset) {
-        this.color = color;
-        this.cornerRadius = cornerRadius;
-        this.verticalOffset = verticalOffset;
-        this.horizontalOffset = horizontalOffset;
-    }
+		TexturePaint paint = new TexturePaint(bimage,
+				new Rectangle(0, 0, bgImage.getWidth(null), bgImage.getHeight(null)));
+		g2d.setPaint(paint);
+		g2d.fillRect(0, 0, getWidth(), getHeight());
+	}
+	
+	class RoundedFilledLabel extends JLabel {
 
-    @Override
-    protected void paintComponent(Graphics g) {
+		private static final long serialVersionUID = -8353580452631276508L;
 
-        int width = getWidth();
-        int height = getHeight();
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		private Color color;
+		private int cornerRadius;
+		private int verticalOffset;
+		private int horizontalOffset;
 
-        //Draws the rounded panel with borders.
-        g2d.setColor(color);
-        g2d.fillRoundRect(horizontalOffset, verticalOffset, width-horizontalOffset-1, height-verticalOffset-3, cornerRadius, cornerRadius);//paint background
-        super.paintComponent(g);
-    }
+		RoundedFilledLabel(Color color, int cornerRadius, int horizontalOffset, int verticalOffset) {
+			this.color = color;
+			this.cornerRadius = cornerRadius;
+			this.verticalOffset = verticalOffset;
+			this.horizontalOffset = horizontalOffset;
+		}
+
+		@Override
+		protected void paintComponent(Graphics g) {
+
+			int width = getWidth();
+			int height = getHeight();
+			Graphics2D g2d = (Graphics2D) g;
+			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+			// Draws the rounded panel with borders.
+			g2d.setColor(color);
+			g2d.fillRoundRect(horizontalOffset, verticalOffset, width - horizontalOffset - 1, height - verticalOffset - 3,
+					cornerRadius, cornerRadius);// paint background
+			super.paintComponent(g);
+		}
+	}
 }

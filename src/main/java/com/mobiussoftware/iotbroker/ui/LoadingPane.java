@@ -1,23 +1,39 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import com.mobius.software.mqtt.parser.avps.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Random;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.SwingConstants;
+import javax.swing.SwingWorker;
+import javax.swing.plaf.basic.BasicProgressBarUI;
+
+import org.apache.log4j.Logger;
+
+import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.mqtt.MqttClient;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
 import com.mobiussoftware.iotbroker.network.NetworkClient;
-import org.apache.log4j.Logger;
-
-import javax.swing.*;
-import javax.swing.plaf.basic.BasicProgressBarUI;
-import java.awt.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.Random;
 
 public class LoadingPane extends JPanel implements PropertyChangeListener, ClientListener {
 
-	private static Logger logger = Logger.getLogger(LoadingPane.class);
+	private static final long serialVersionUID = 3454494855396228813L;
+
+	private static final Logger logger = Logger.getLogger(LoadingPane.class);
 
 	JProgressBar progressBar;
 	private Account account;
@@ -34,11 +50,11 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 
 		this.add(Box.createRigidArea(new Dimension(1, 15)));
 
-		ImageIcon icon = new ImageIcon(UIConstants.IMAGE_RES_PATH + UIConstants.LOGO_FILE_PATH);
+		ImageIcon icon = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.LOGO_FILE_PATH);
 		Image tmp = icon.getImage().getScaledInstance(180, 180, java.awt.Image.SCALE_SMOOTH);
 		final ImageIcon logoIcn = new ImageIcon(tmp);
 
-		icon = new ImageIcon(UIConstants.IMAGE_RES_PATH + UIConstants.IC_LOADING_FILE_PATH);
+		icon = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.IC_LOADING_FILE_PATH);
 		tmp = icon.getImage().getScaledInstance(96, 18, java.awt.Image.SCALE_SMOOTH);
 		final ImageIcon textIcn = new ImageIcon(tmp);
 
@@ -80,31 +96,29 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 		@Override
 		public Void doInBackground() {
 
-
 			try {
 				switch (account.getProtocol()) {
-					case MQTT:
-						initConnectMqtt();
-						break;
-					default:
-						break;
+				case MQTT:
+					initConnectMqtt();
+					break;
+				default:
+					break;
 				}
 			} catch (Exception e) {
-				//handle exeption
+				// handle exeption
 			}
-
 
 			Random random = new Random();
 			int progress = 0;
-			//Initialize progress property.
+			// Initialize progress property.
 			setProgress(0);
 			while (progress < 1000) {
-				//Sleep for up to one second.
+				// Sleep for up to one second.
 				try {
 					Thread.sleep(random.nextInt(1000));
 				} catch (InterruptedException ignore) {
 				}
-				//Make random progress.
+				// Make random progress.
 				progress += random.nextInt(2) + 1;
 				setProgress(Math.min(progress, 1000));
 			}
@@ -125,22 +139,20 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 	}
 
 	private void initConnectMqtt() throws Exception {
-		client = new MqttClient(account, this);
-
+		client = new MqttClient(account);
+		client.setListener(this);
+		Main.updateCurrentClient(client);
 		boolean channelCreated = client.createChannel();
 		if (!channelCreated) {
-			//TODO: dialog that error occurred
+			// TODO: dialog that error occurred
 			System.out.println("mqtt connection failed");
-			;
 			progressBar.setValue(0);
 			return;
 		}
 	}
 
-	private void closeConnection()
-	{
-		if (client != null)
-		{
+	private void closeConnection() {
+		if (client != null) {
 			System.out.println("closing connection...");
 			client.closeChannel();
 			client = null;
@@ -165,47 +177,50 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 
 	@Override
 	public void messageSent() {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
-	public void messageReceived(MessageType type) {
-		// TODO Auto-generated method stub
-		System.out.println("LogoPanel messageReceived");
+	public void messageReceived(MQMessage message) {
+		Main.mainPane.messageReceived(message);
 	}
 
 	@Override
 	public void stateChanged(ConnectionState state) {
 		System.out.println("LoadingPane state changed state=" + state.toString());
 		switch (state) {
-			case CHANNEL_ESTABLISHED:
-				client.connect();
-				break;
-			case CHANNEL_FAILED:
-				Main.disposeLogoPane();
-				Main.showAccountMgmtPane();
-				connectingTask.cancel(true);
-				break;
-			case CONNECTION_ESTABLISHED:
-				Main.disposeLogoPane();
-				try {
-					Main.createAndShowMainPane(account);
-				} catch (Exception e) {
-					logger.error("Error occured while createAndShowMainPane from LoadingPanel");
-					System.out.println("Error occured while createAndShowMainPane from LoadingPanel");
-					e.printStackTrace();
-				}
-				connectingTask.cancel(true);
-				break;
-			case CONNECTION_LOST:
-				//TODO: show "Connection closed by server" dialog
-				closeConnection();
-				break;
-			case CONNECTION_FAILED:
-				//TODO: show "Connection failed" dialog
-				closeConnection();
-				break;
+		case CHANNEL_ESTABLISHED:
+			client.connect();
+			break;
+		case CHANNEL_FAILED:
+			Main.disposeLogoPane();
+			Main.showAccountMgmtPane();
+			connectingTask.cancel(true);
+			break;
+		case CONNECTION_ESTABLISHED:
+			Main.disposeLogoPane();
+			try {
+				Main.createAndShowMainPane(account);
+			} catch (Exception e) {
+				logger.error("Error occured while createAndShowMainPane from LoadingPanel");
+				System.out.println("Error occured while createAndShowMainPane from LoadingPanel");
+				e.printStackTrace();
+			}
+			connectingTask.cancel(true);
+			break;
+		case CONNECTION_LOST:
+			// TODO: show "Connection closed by server" dialog
+			closeConnection();
+			break;
+		case CONNECTION_FAILED:
+			// TODO: show "Connection failed" dialog
+			closeConnection();
+			break;
+
+		case CHANNEL_CREATING:
+		case CONNECTING:
+		case NONE:
+		default:
+			break;
 		}
 
 	}

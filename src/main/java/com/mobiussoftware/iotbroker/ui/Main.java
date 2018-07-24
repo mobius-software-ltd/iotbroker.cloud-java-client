@@ -1,157 +1,163 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import com.mobiussoftware.iotbroker.db.Account;
-import com.mobiussoftware.iotbroker.mqtt.MqttClient;
+import java.awt.Dimension;
+import java.awt.Toolkit;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFrame;
+import javax.swing.UIDefaults;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
+
+import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.network.NetworkClient;
 
 public class Main {
 
-    static final Dimension SCREEN_DIMENSION = Toolkit.getDefaultToolkit().getScreenSize();
+	static final Dimension SCREEN_DIMENSION = Toolkit.getDefaultToolkit().getScreenSize();
 
-    static JFrame logInPane;
-    static JFrame mainPane;
-    static JFrame accountMgmtPane;
-    static JFrame logoPane;
-    static MqttClient client;
-    
-    public static void main(String[] args) {
-        //Schedule a job for the event-dispatching thread:
-        //creating and showing this application's GUI.
+	static JFrame logInPane;
+	static MainPane mainPane;
+	static JFrame accountMgmtPane;
+	static JFrame logoPane;
+	static NetworkClient client;
 
-        UIDefaults def = UIManager.getLookAndFeelDefaults();
-        def.put("ProgressBar.repaintInterval", 10);
+	public static void main(String[] args) {
+		// Schedule a job for the event-dispatching thread:
+		// creating and showing this application's GUI.
 
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                for(Object key : UIManager.getLookAndFeelDefaults().keySet()){
-                    boolean tbp = key.toString().startsWith("ProgressBar");
-                    if (tbp)
-                        System.out.println(key + " = " + UIManager.get(key));
-                }
-                createAndShowAccountMgmtPane();
-            }
-        });
-    }
+		UIDefaults def = UIManager.getLookAndFeelDefaults();
+		def.put("ProgressBar.repaintInterval", 10);
 
-    static void setLocation(JFrame frame) {
-        frame.setLocation(SCREEN_DIMENSION.width/2-frame.getSize().width/2, SCREEN_DIMENSION.height/2-frame.getSize().height/2);
-    }
+		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				for (Object key : UIManager.getLookAndFeelDefaults().keySet()) {
+					boolean tbp = key.toString().startsWith("ProgressBar");
+					if (tbp)
+						System.out.println(key + " = " + UIManager.get(key));
+				}
+				createAndShowAccountMgmtPane();
+			}
+		});
+	}
 
-    static void createAndShowLogInPane() {
+	static void setLocation(JFrame frame) {
+		frame.setLocation(SCREEN_DIMENSION.width / 2 - frame.getSize().width / 2,
+				SCREEN_DIMENSION.height / 2 - frame.getSize().height / 2);
+	}
 
-        JFrame frame = new JFrame("Log In");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	static void createAndShowLogInPane() {
 
-        frame.getContentPane().add(new LogInPane());
+		JFrame frame = new JFrame("Log In");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        frame.pack();
-        frame.setVisible(true);
-        frame.setSize(new Dimension(UIConstants.LOGIN_FRAME_WIDTH, UIConstants.LOGIN_FRAME_HEIGHT));
+		frame.getContentPane().add(new LogInPane());
 
-//        frame.setLocation(SCREEN_DIMENSION.width/2-frame.getSize().width/2, SCREEN_DIMENSION.height/2-frame.getSize().height/2);
-        setLocation(frame);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setSize(new Dimension(UIConstants.LOGIN_FRAME_WIDTH, UIConstants.LOGIN_FRAME_HEIGHT));
 
-        logInPane = frame;
-    }
+		// frame.setLocation(SCREEN_DIMENSION.width/2-frame.getSize().width/2,
+		// SCREEN_DIMENSION.height/2-frame.getSize().height/2);
+		setLocation(frame);
 
-    static void disposeLogInPane() {
-        if (logInPane != null) {
-            logInPane.dispose();
-        }
-    }
+		logInPane = frame;
+	}
 
-    static void createAndShowMainPane(Account account) throws Exception{
-    	MainPane frame = new MainPane(account);
-        frame.setTitle(account.getProtocol().toString());
-        frame.pack();
-        frame.setVisible(true);
-        ;
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.setSize(new Dimension(UIConstants.MAIN_FRAME_WIDTH, UIConstants.MAIN_FRAME_HEIGHT));
+	static void disposeLogInPane() {
+		if (logInPane != null) {
+			logInPane.dispose();
+		}
+	}
 
-        setLocation(frame);
+	static void createAndShowMainPane(Account account) throws Exception {
+		MainPane frame = new MainPane(account);
+		frame.setTitle(account.getProtocol().toString());
+		frame.pack();
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		frame.setSize(new Dimension(UIConstants.MAIN_FRAME_WIDTH, UIConstants.MAIN_FRAME_HEIGHT));
 
-        mainPane = frame;
-    }
+		setLocation(frame);
 
-    static void disposeMainPane() {
-        if (mainPane != null) {
-            mainPane.dispose();
-        }
-    }
+		mainPane = frame;
+	}
 
-    static void createAndShowAccountMgmtPane() {
+	static void disposeMainPane() {
+		if (mainPane != null) {
+			mainPane.dispose();
+		}
+	}
 
-//        UIDefaults def = UIManager.getLookAndFeelDefaults();
+	static void createAndShowAccountMgmtPane() {
 
-        JFrame frame = new JFrame("Accounts");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		// UIDefaults def = UIManager.getLookAndFeelDefaults();
 
-        frame.getContentPane().add(new AccountMgmtPane());
+		JFrame frame = new JFrame("Accounts");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        frame.pack();
-        frame.setVisible(true);
-        frame.setSize(new Dimension(UIConstants.ACCNT_MGMT_FRAME_WIDTH, UIConstants.ACCNT_MGMT_FRAME_HEIGHT));
+		frame.getContentPane().add(new AccountMgmtPane());
 
-        setLocation(frame);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setSize(new Dimension(UIConstants.ACCNT_MGMT_FRAME_WIDTH, UIConstants.ACCNT_MGMT_FRAME_HEIGHT));
 
-        accountMgmtPane = frame;
-    }
+		setLocation(frame);
 
-    static void hideAccountMgmtPane() {
-        if (accountMgmtPane != null) {
-            accountMgmtPane.setVisible(false);
-        }
-    }
+		accountMgmtPane = frame;
+	}
 
-    static void showAccountMgmtPane() {
-        if (accountMgmtPane.isDisplayable() && !accountMgmtPane.isVisible()) {
+	static void hideAccountMgmtPane() {
+		if (accountMgmtPane != null) {
+			accountMgmtPane.setVisible(false);
+		}
+	}
+
+	static void showAccountMgmtPane() {
+		if (accountMgmtPane.isDisplayable() && !accountMgmtPane.isVisible()) {
 			accountMgmtPane.setVisible(true);
 			System.out.println("showing hidden mgmt pane");
 		} else {
 			System.out.println("creating account mgmt pane again");
-        	createAndShowAccountMgmtPane();
+			createAndShowAccountMgmtPane();
 		}
-    }
+	}
 
-    static void disposeAccountMgmtPane() {
+	static void disposeAccountMgmtPane() {
 		System.out.print("disposing accnt mgmt pane: ");
-        if (accountMgmtPane != null) {
-            accountMgmtPane.dispose();
-        }
+		if (accountMgmtPane != null) {
+			accountMgmtPane.dispose();
+		}
 		System.out.println(accountMgmtPane);
-    }
+	}
 
-    public static void createAndShowLogoPane(Account account) {
+	public static void createAndShowLogoPane(Account account) {
 
-        JFrame frame = new JFrame(account.getProtocol().toString());
-        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		JFrame frame = new JFrame(account.getProtocol().toString());
+		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
-        frame.getContentPane().add(new LoadingPane(account));
+		frame.getContentPane().add(new LoadingPane(account));
 
-        frame.pack();
-        frame.setVisible(true);
-        frame.setSize(new Dimension(UIConstants.LOGO_FRAME_WIDTH, UIConstants.LOGO_FRAME_HEIGHT));
-        frame.setResizable(false);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setSize(new Dimension(UIConstants.LOGO_FRAME_WIDTH, UIConstants.LOGO_FRAME_HEIGHT));
+		frame.setResizable(false);
 
-        setLocation(frame);
+		setLocation(frame);
 
-        logoPane = frame;
-    }
+		logoPane = frame;
+	}
 
-    static void disposeLogoPane() {
-        if (logoPane != null) {  	
-            logoPane.dispose();
-        }
-    }
+	static void disposeLogoPane() {
+		if (logoPane != null) {
+			logoPane.dispose();
+		}
+	}
 
-	public static MqttClient getClient() {
+	public static NetworkClient getCurrentClient() {
 		return client;
 	}
 
-	public static void setClient(MqttClient client) {
+	public static void updateCurrentClient(NetworkClient client) {
 		Main.client = client;
 	}
 }

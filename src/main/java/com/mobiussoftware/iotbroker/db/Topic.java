@@ -18,7 +18,6 @@ public class Topic {
 	@DatabaseField
 	private byte qos;
 
-
 	public Topic() {
 	}
 

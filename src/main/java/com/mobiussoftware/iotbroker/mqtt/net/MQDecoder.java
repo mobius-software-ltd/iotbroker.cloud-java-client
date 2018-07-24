@@ -12,9 +12,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
 public class MQDecoder extends ByteToMessageDecoder {
-	
+
 	@Override
-	protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws MalformedMessageException, UnsupportedEncodingException {
+	protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out)
+			throws MalformedMessageException, UnsupportedEncodingException {
 		ByteBuf nextHeader = null;
 		do {
 			if (buf.readableBytes() > 1) {
@@ -41,7 +42,6 @@ public class MQDecoder extends ByteToMessageDecoder {
 					nextHeader.release();
 				}
 			}
-		}
-		while (buf.readableBytes() > 1 && nextHeader != null);
+		} while (buf.readableBytes() > 1 && nextHeader != null);
 	}
 }

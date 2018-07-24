@@ -1,14 +1,15 @@
 package com.mobiussoftware.iotbroker.dal.api;
 
+import java.sql.SQLException;
+import java.util.List;
+
 import com.j256.ormlite.dao.CloseableWrappedIterable;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.db.Topic;
 
-import java.sql.SQLException;
-import java.util.List;
-
 public interface DBInterface {
+	
 	CloseableWrappedIterable<Account> accountIterator();
 
 	void storeAccount(Account account) throws SQLException;
@@ -16,6 +17,8 @@ public interface DBInterface {
 	void deleteAccount(String id) throws SQLException;
 
 	List<Topic> getTopics(Account account) throws SQLException;
+
+	Topic getTopic(String id) throws SQLException;
 
 	void saveTopic(Topic topic) throws SQLException;
 
@@ -28,6 +31,4 @@ public interface DBInterface {
 	void deleteAllTopics();
 
 	Boolean topicExists(String topicName) throws SQLException;
-
-	//void unmarkAsDefault(Account account) throws SQLException;
 }

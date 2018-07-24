@@ -1,6 +1,6 @@
 package com.mobiussoftware.iotbroker.network;
 
-import com.mobius.software.mqtt.parser.avps.*;
+import com.mobius.software.mqtt.parser.avps.Topic;
 
 public interface NetworkClient {
 	void setListener(ClientListener listener);
