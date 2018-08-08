@@ -11,9 +11,12 @@ import io.netty.handler.codec.MessageToMessageEncoder;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-public class SnEncoder extends MessageToMessageEncoder<AddressedEnvelope<SNMessage, InetSocketAddress>> {
-	@Override
-	protected void encode(ChannelHandlerContext context, AddressedEnvelope<SNMessage, InetSocketAddress> message, List<Object> output) throws Exception {
+public class SnEncoder
+		extends MessageToMessageEncoder<AddressedEnvelope<SNMessage, InetSocketAddress>>
+{
+	@Override protected void encode(ChannelHandlerContext context, AddressedEnvelope<SNMessage, InetSocketAddress> message, List<Object> output)
+			throws Exception
+	{
 		ByteBuf buffer = Parser.encode(message.content());
 		output.add(new DatagramPacket(buffer, message.sender(), message.recipient()));
 	}

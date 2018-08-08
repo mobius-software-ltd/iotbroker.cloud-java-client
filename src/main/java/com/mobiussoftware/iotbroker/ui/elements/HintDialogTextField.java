@@ -1,16 +1,13 @@
 package com.mobiussoftware.iotbroker.ui.elements;
 
-import java.awt.Color;
+import javax.swing.*;
+import javax.swing.border.Border;
+import java.awt.*;
 import java.awt.event.FocusEvent;
 
-import javax.swing.BorderFactory;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.border.Border;
-
-@SuppressWarnings("unused")
-public class HintDialogTextField extends HintTextField {
+@SuppressWarnings("unused") public class HintDialogTextField
+		extends HintTextField
+{
 
 	/**
 	 *
@@ -19,12 +16,13 @@ public class HintDialogTextField extends HintTextField {
 	private boolean textAreaIsShown = false;
 	private String text = "";
 
-	public HintDialogTextField(String hint, Border border) {
+	public HintDialogTextField(String hint, Border border)
+	{
 		super(hint, border);
 	}
 
-	@Override
-	public void focusGained(FocusEvent e) {
+	@Override public void focusGained(FocusEvent e)
+	{
 		super.focusGained(e);
 		transferFocus();
 
@@ -41,10 +39,12 @@ public class HintDialogTextField extends HintTextField {
 		text = textArea.getText().trim();
 
 		// network of showing text/hint in will field
-		if (!text.isEmpty()) {
+		if (!text.isEmpty())
+		{
 			super.setText("<...>");
 			super.setBorder(BorderFactory.createLineBorder(Color.lightGray));
-		} else
+		}
+		else
 			super.setText("");
 
 		super.focusLost(e);
@@ -52,16 +52,17 @@ public class HintDialogTextField extends HintTextField {
 		textAreaIsShown = false;
 	}
 
-	@Override
-	public void focusLost(FocusEvent e) {
+	@Override public void focusLost(FocusEvent e)
+	{
 	}
 
-	public String getText() {
+	public String getText()
+	{
 		return text;
 	}
 
-	@Override
-	public void clearText() {
+	@Override public void clearText()
+	{
 		text = "";
 		super.clearText();
 	}

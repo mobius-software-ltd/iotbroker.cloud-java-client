@@ -1,45 +1,5 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Image;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.TexturePaint;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
-import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.ColorUIResource;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
-
 import com.mobius.software.mqtt.parser.avps.QoS;
 import com.mobius.software.mqtt.parser.avps.Text;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
@@ -49,7 +9,23 @@ import com.mobiussoftware.iotbroker.db.Topic;
 import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 
-public class TopicListPane extends JPanel {
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.ColorUIResource;
+import javax.swing.plaf.basic.BasicComboBoxRenderer;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.HashMap;
+import java.util.Map;
+
+public class TopicListPane
+		extends JPanel
+{
 
 	private static final long serialVersionUID = -615880735007928743L;
 
@@ -69,13 +45,15 @@ public class TopicListPane extends JPanel {
 	private MouseListener addTopicBtnListener;
 	private JPanel addTopicBtn;
 
-	TopicListPane(Account account) {
+	TopicListPane(Account account)
+	{
 		super();
 		this.account = account;
 		drawUI();
 	}
 
-	private void drawUI() {
+	private void drawUI()
+	{
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 		emptySpace = new JPanel();
@@ -121,9 +99,10 @@ public class TopicListPane extends JPanel {
 
 		this.add(addTopic);
 
-		addTopicBtnListener = new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent arg0) {
+		addTopicBtnListener = new MouseAdapter()
+		{
+			@Override public void mouseClicked(MouseEvent arg0)
+			{
 				// System.out.println("Add button clicked!");
 				arg0.getComponent().removeMouseListener(this);
 				addTopicAction();
@@ -138,7 +117,8 @@ public class TopicListPane extends JPanel {
 	}
 
 	// adding subelements to topicList panel
-	private void addTopicListElements(final JPanel parent) {
+	private void addTopicListElements(final JPanel parent)
+	{
 
 		parent.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -146,10 +126,12 @@ public class TopicListPane extends JPanel {
 		c.fill = GridBagConstraints.VERTICAL;
 
 		int count = 0;
-		try {
+		try
+		{
 			final DBInterface dbInterface = DBHelper.getInstance();
 
-			for (Topic tp : dbInterface.getTopics(account)) {
+			for (Topic tp : dbInterface.getTopics(account))
+			{
 				int id = tp.getId();
 				String topicName = tp.getName();
 				String qosValue = String.valueOf(tp.getQos());
@@ -195,7 +177,9 @@ public class TopicListPane extends JPanel {
 
 				componentList.put(id, row);
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 		}
 
@@ -208,7 +192,8 @@ public class TopicListPane extends JPanel {
 		parent.add(emptySpace, c);
 	}
 
-	private void addTopicListRow(String topicText, int qosValue) {
+	private void addTopicListRow(String topicText, int qosValue)
+	{
 		int rowNumber = ((GridBagLayout) topics.getLayout()).getLayoutDimensions()[1].length - 1;
 
 		GridBagConstraints c = new GridBagConstraints();
@@ -270,7 +255,8 @@ public class TopicListPane extends JPanel {
 		topics.add(emptySpace, c);
 	}
 
-	private void deleteListRow(String index) {
+	private void deleteListRow(String index)
+	{
 		int i = Integer.valueOf(index);
 
 		Component[] row = componentList.get(i);
@@ -284,7 +270,8 @@ public class TopicListPane extends JPanel {
 	}
 
 	// adding subelements to addtopic panel
-	private void addAddTopicElements(JPanel parent) {
+	private void addAddTopicElements(JPanel parent)
+	{
 		UIManager.put("ComboBox.background", new ColorUIResource(Color.white));
 		UIManager.put("ComboBox.selectionBackground", UIConstants.SELECTION_COLOR);
 		UIManager.put("ComboBox.selectionForeground", new ColorUIResource(Color.gray));
@@ -350,9 +337,11 @@ public class TopicListPane extends JPanel {
 		parent.add(el4);
 	}
 
-	private void addTopicAction() {
+	private void addTopicAction()
+	{
 
-		if (UIHelper.validateTF(topicInput)) {
+		if (UIHelper.validateTF(topicInput))
+		{
 
 			int qos = dropDown.getSelectedIndex();
 
@@ -361,15 +350,19 @@ public class TopicListPane extends JPanel {
 			AddTopicTask task = new AddTopicTask(topicInput.getText(), qos);
 			task.addPropertyChangeListener(propertyChangeListener());
 			task.execute();
-		} else {
+		}
+		else
+		{
 			addTopicBtn.addMouseListener(addTopicBtnListener);
 		}
 	}
 
-	private MouseListener deleteTopicAction() {
-		return new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent arg0) {
+	private MouseListener deleteTopicAction()
+	{
+		return new MouseAdapter()
+		{
+			@Override public void mouseClicked(MouseEvent arg0)
+			{
 				JLabel btnClicked = (JLabel) arg0.getSource();
 				btnClicked.removeMouseListener(this);
 
@@ -382,75 +375,30 @@ public class TopicListPane extends JPanel {
 		};
 	}
 
-	class AddTopicTask extends NetworkTask<Void, Void> {
-		private String topicName;
-		private int qosVal;
-
-		public AddTopicTask(String topicName, int qosVal) {
-			this.topicName = topicName;
-			this.qosVal = qosVal;
-		}
-
-		@Override
-		public Void doInBackground() {
-			try {
-				Main.getCurrentClient().subscribe(new com.mobius.software.mqtt.parser.avps.Topic[] {
-						new com.mobius.software.mqtt.parser.avps.Topic(new Text(topicName), QoS.valueOf(qosVal)) });
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			return super.doInBackground();
-		}
-
-		@Override
-		protected void done() {
-			topicInput.setText("");
-			removeProgressBar();
-		}
-	}
-
-	public void finishAddingTopic(String topicName, int qosVal) {
+	public void finishAddingTopic(String topicName, int qosVal)
+	{
 		addTopicBtn.addMouseListener(addTopicBtnListener);
 		addTopicListRow(topicName, qosVal);
 	}
 
-	public void finishAddingTopicFailed() {
+	public void finishAddingTopicFailed()
+	{
 		// TODO: show error message on UI
 	}
 
-	class DeleteTopicTask extends NetworkTask<Void, Void> {
-
-		private String id;
-
-		public DeleteTopicTask(String id) {
-			this.id = id;
-		}
-
-		@Override
-		public Void doInBackground() {
-			try {
-				Main.getCurrentClient().unsubscribe(new String[] { id });
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			return super.doInBackground();
-		}
-
-		@Override
-		public void done() {
-			removeProgressBar();
-		}
-	}
-
-	public void finishDeletingTopic(String id) {
+	public void finishDeletingTopic(String id)
+	{
 		deleteListRow(id);
 	}
 
-	private PropertyChangeListener propertyChangeListener() {
-		return new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				if (evt.getPropertyName() == "progress") {
+	private PropertyChangeListener propertyChangeListener()
+	{
+		return new PropertyChangeListener()
+		{
+			@Override public void propertyChange(PropertyChangeEvent evt)
+			{
+				if (evt.getPropertyName() == "progress")
+				{
 					int progress = (Integer) evt.getNewValue();
 					progressBar.setValue(progress);
 				}
@@ -458,10 +406,13 @@ public class TopicListPane extends JPanel {
 		};
 	}
 
-	private void addProgressBar() {
+	private void addProgressBar()
+	{
 		progressBar = UIHelper.createProgressBar();
-		if (progressBarSpace.getComponents().length > 0) {
-			for (Component c : progressBarSpace.getComponents()) {
+		if (progressBarSpace.getComponents().length > 0)
+		{
+			for (Component c : progressBarSpace.getComponents())
+			{
 				progressBarSpace.remove(c);
 			}
 		}
@@ -469,19 +420,19 @@ public class TopicListPane extends JPanel {
 		progressBar.revalidate();
 	}
 
-	private void removeProgressBar() {
+	private void removeProgressBar()
+	{
 		progressBarSpace.remove(progressBar);
 		TopicListPane.this.revalidate();
 		TopicListPane.this.repaint();
 	}
 
-	@Override
-	protected void paintComponent(Graphics g) {
+	@Override protected void paintComponent(Graphics g)
+	{
 		Image bgImage = UIConstants.BG_IMAGE;
 		g.drawImage(bgImage, 0, 0, null);
 
-		BufferedImage bimage = new BufferedImage(bgImage.getWidth(null), bgImage.getHeight(null),
-				BufferedImage.TYPE_INT_ARGB);
+		BufferedImage bimage = new BufferedImage(bgImage.getWidth(null), bgImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
 
 		// Draw the image on to the buffered image
 		Graphics2D bGr = bimage.createGraphics();
@@ -491,13 +442,76 @@ public class TopicListPane extends JPanel {
 		super.paintComponent(g);
 		Graphics2D g2d = (Graphics2D) g;
 
-		TexturePaint paint = new TexturePaint(bimage,
-				new Rectangle(0, 0, bgImage.getWidth(null), bgImage.getHeight(null)));
+		TexturePaint paint = new TexturePaint(bimage, new Rectangle(0, 0, bgImage.getWidth(null), bgImage.getHeight(null)));
 		g2d.setPaint(paint);
 		g2d.fillRect(0, 0, getWidth(), getHeight());
 	}
 
-	class RoundedFilledLabel extends JLabel {
+	class AddTopicTask
+			extends NetworkTask<Void, Void>
+	{
+		private String topicName;
+		private int qosVal;
+
+		public AddTopicTask(String topicName, int qosVal)
+		{
+			this.topicName = topicName;
+			this.qosVal = qosVal;
+		}
+
+		@Override public Void doInBackground()
+		{
+			try
+			{
+				Main.getCurrentClient().subscribe(new com.mobius.software.mqtt.parser.avps.Topic[] { new com.mobius.software.mqtt.parser.avps.Topic(new Text(topicName), QoS.valueOf(qosVal)) });
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+			return super.doInBackground();
+		}
+
+		@Override protected void done()
+		{
+			topicInput.setText("");
+			removeProgressBar();
+		}
+	}
+
+	class DeleteTopicTask
+			extends NetworkTask<Void, Void>
+	{
+
+		private String id;
+
+		public DeleteTopicTask(String id)
+		{
+			this.id = id;
+		}
+
+		@Override public Void doInBackground()
+		{
+			try
+			{
+				Main.getCurrentClient().unsubscribe(new String[] { id });
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+			return super.doInBackground();
+		}
+
+		@Override public void done()
+		{
+			removeProgressBar();
+		}
+	}
+
+	class RoundedFilledLabel
+			extends JLabel
+	{
 
 		private static final long serialVersionUID = -8353580452631276508L;
 
@@ -506,15 +520,16 @@ public class TopicListPane extends JPanel {
 		private int verticalOffset;
 		private int horizontalOffset;
 
-		RoundedFilledLabel(Color color, int cornerRadius, int horizontalOffset, int verticalOffset) {
+		RoundedFilledLabel(Color color, int cornerRadius, int horizontalOffset, int verticalOffset)
+		{
 			this.color = color;
 			this.cornerRadius = cornerRadius;
 			this.verticalOffset = verticalOffset;
 			this.horizontalOffset = horizontalOffset;
 		}
 
-		@Override
-		protected void paintComponent(Graphics g) {
+		@Override protected void paintComponent(Graphics g)
+		{
 
 			int width = getWidth();
 			int height = getHeight();
@@ -523,9 +538,8 @@ public class TopicListPane extends JPanel {
 
 			// Draws the rounded panel with borders.
 			g2d.setColor(color);
-			g2d.fillRoundRect(horizontalOffset, verticalOffset, width - horizontalOffset - 1,
-					height - verticalOffset - 3, cornerRadius, cornerRadius);// paint
-																				// background
+			g2d.fillRoundRect(horizontalOffset, verticalOffset, width - horizontalOffset - 1, height - verticalOffset - 3, cornerRadius, cornerRadius);// paint
+			// background
 			super.paintComponent(g);
 		}
 	}

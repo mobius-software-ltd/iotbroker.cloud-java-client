@@ -1,39 +1,28 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-import javax.swing.Timer;
-
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 
-public class AccountMgmtPane extends JPanel {
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+public class AccountMgmtPane
+		extends JPanel
+{
 
 	private static final long serialVersionUID = -2902157175553624396L;
 
 	JPanel accountsPane;
+	private boolean accountChosen = false;
+	private Map<Integer, Component[]> componentList = new HashMap<>();
 
-	AccountMgmtPane() {
+	AccountMgmtPane()
+	{
 		setBackground(UIConstants.APP_BG_COLOR);
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -49,20 +38,18 @@ public class AccountMgmtPane extends JPanel {
 		// wrapper.add(scrollPane, BorderLayout.CENTER);
 		// this.add(wrapper);
 
-		MouseListener listener = new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent arg0) {
+		MouseListener listener = new MouseAdapter()
+		{
+			@Override public void mouseClicked(MouseEvent arg0)
+			{
 				addAccountBtnClicked(arg0);
 			}
 		};
 		this.add(UIHelper.createButton("Add new account", 40, listener));
 	}
 
-	private boolean accountChosen = false;
-
-	private Map<Integer, Component[]> componentList = new HashMap<>();
-
-	private void addAccounts() {
+	private void addAccounts()
+	{
 		// final int accountCount = 3;
 		final int parameterAlignment = SwingConstants.LEFT;
 
@@ -72,10 +59,12 @@ public class AccountMgmtPane extends JPanel {
 		c.fill = GridBagConstraints.BOTH;
 
 		int count = 0;
-		try {
+		try
+		{
 			final DBInterface dbInterface = DBHelper.getInstance();
 
-			for (final Account account : dbInterface.accountIterator()) {
+			for (final Account account : dbInterface.accountIterator())
+			{
 				// for (int i = 0; i < accountCount; i++) {
 				int id = account.getId();
 				String protocolStr = account.getProtocol().toString();
@@ -93,7 +82,8 @@ public class AccountMgmtPane extends JPanel {
 				// CompoundBorder(BorderFactory.createLineBorder(Color.blue),(BorderFactory.createEmptyBorder(5,5,2,5))));
 				accountData.add(protocol);
 
-				if (account.getProtocol() != Protocol.CoAP) {
+				if (account.getProtocol() != Protocol.CoAP)
+				{
 					JLabel clientId = new JLabel("<html>" + clientIdStr + "</html>", parameterAlignment);
 					clientId.setFont(UIConstants.REGULAR_FONT);
 					clientId.setBorder(BorderFactory.createEmptyBorder(1, 5, 3, 5));
@@ -110,24 +100,29 @@ public class AccountMgmtPane extends JPanel {
 				// CompoundBorder(BorderFactory.createLineBorder(Color.blue),BorderFactory.createEmptyBorder(1,5,3,5)));
 				accountData.add(hostPort);
 
-				if (account.getProtocol().equals(Protocol.CoAP)) {
+				if (account.getProtocol().equals(Protocol.CoAP))
+				{
 					accountData.add(new JLabel(" "));
 				}
 
 				accountData.setName(String.valueOf(id));
 
-				accountData.addMouseListener(new MouseAdapter() {
+				accountData.addMouseListener(new MouseAdapter()
+				{
 
-					@Override
-					public void mouseClicked(MouseEvent mouseEvent) {
+					@Override public void mouseClicked(MouseEvent mouseEvent)
+					{
 						if (accountChosen)
 							return;
 						accountChosen = true;
 
-						try {
+						try
+						{
 							final DBInterface dbInterface = DBHelper.getInstance();
 							dbInterface.markAsDefault(account);
-						} catch (Exception ex) {
+						}
+						catch (Exception ex)
+						{
 							ex.printStackTrace();
 						}
 
@@ -137,9 +132,10 @@ public class AccountMgmtPane extends JPanel {
 						row[1].setBackground(UIConstants.SELECTION_COLOR);
 
 						int delay = 200;
-						Timer timer = new Timer(delay, new ActionListener() {
-							@Override
-							public void actionPerformed(ActionEvent e) {
+						Timer timer = new Timer(delay, new ActionListener()
+						{
+							@Override public void actionPerformed(ActionEvent e)
+							{
 								Main.createAndShowLoadingPane(account);
 								row[0].setBackground(UIConstants.APP_BG_COLOR);
 								row[1].setBackground(UIConstants.APP_BG_COLOR);
@@ -151,8 +147,8 @@ public class AccountMgmtPane extends JPanel {
 						timer.start();
 					}
 
-					@Override
-					public void mouseEntered(MouseEvent mouseEvent) {
+					@Override public void mouseEntered(MouseEvent mouseEvent)
+					{
 						super.mouseEntered(mouseEvent);
 						String tag = ((Component) mouseEvent.getSource()).getName();
 						final Component[] row = componentList.get(Integer.valueOf(tag));
@@ -160,8 +156,8 @@ public class AccountMgmtPane extends JPanel {
 						row[1].setBackground(UIConstants.HOVER_COLOR);
 					}
 
-					@Override
-					public void mouseExited(MouseEvent mouseEvent) {
+					@Override public void mouseExited(MouseEvent mouseEvent)
+					{
 						super.mouseExited(mouseEvent);
 						String tag = ((Component) mouseEvent.getSource()).getName();
 						final Component[] row = componentList.get(Integer.valueOf(tag));
@@ -183,9 +179,10 @@ public class AccountMgmtPane extends JPanel {
 				deleteBtn.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 				// deleteBtn.setBorder(new
 				// CompoundBorder(BorderFactory.createLineBorder(Color.cyan),BorderFactory.createEmptyBorder(5,5,5,5)));
-				deleteBtn.addMouseListener(new MouseAdapter() {
-					@Override
-					public void mouseClicked(MouseEvent arg0) {
+				deleteBtn.addMouseListener(new MouseAdapter()
+				{
+					@Override public void mouseClicked(MouseEvent arg0)
+					{
 
 						JLabel btnClicked = (JLabel) arg0.getSource();
 						String index = btnClicked.getName();
@@ -199,9 +196,12 @@ public class AccountMgmtPane extends JPanel {
 						accountsPane.revalidate();
 						accountsPane.repaint();
 
-						try {
+						try
+						{
 							dbInterface.deleteAccount(String.valueOf(id));
-						} catch (SQLException ex) {
+						}
+						catch (SQLException ex)
+						{
 							ex.printStackTrace();
 						}
 					}
@@ -221,7 +221,9 @@ public class AccountMgmtPane extends JPanel {
 				componentList.put(id, row);
 			}
 
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			// should not happen
 			e.printStackTrace();
 		}
@@ -241,7 +243,8 @@ public class AccountMgmtPane extends JPanel {
 		accountsPane.add(emptySpace, c);
 	}
 
-	private void addAccountBtnClicked(MouseEvent event) {
+	private void addAccountBtnClicked(MouseEvent event)
+	{
 		Main.createAndShowLogInPane();
 		Main.disposeAccountMgmtPane();
 	}

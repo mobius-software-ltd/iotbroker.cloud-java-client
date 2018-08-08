@@ -3,19 +3,25 @@ package com.mobiussoftware.iotbroker.ui;
 import javax.swing.*;
 import java.util.Random;
 
-public class NetworkTask<T, V> extends SwingWorker<T, V> {
+public class NetworkTask<T, V>
+		extends SwingWorker<T, V>
+{
 
-	@Override
-	public T doInBackground() {
+	@Override public T doInBackground()
+	{
 		Random random = new Random();
 		int progress = 0;
 		// Initialize progress property.
 		setProgress(0);
-		while (progress < 100) {
+		while (progress < 100)
+		{
 			// Sleep for up to one second.
-			try {
+			try
+			{
 				Thread.sleep(10);
-			} catch (InterruptedException ignore) {
+			}
+			catch (InterruptedException ignore)
+			{
 			}
 			// Make random progress.
 			progress += random.nextInt(2) + 1;

@@ -3,38 +3,31 @@ package com.mobiussoftware.iotbroker.db;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "messages")
-public class Message {
+@DatabaseTable(tableName = "messages") public class Message
+{
 
-	@DatabaseField(generatedId = true)
-	private int id;
+	@DatabaseField(generatedId = true) private int id;
 
-	@DatabaseField(canBeNull = false, foreign = true)
-	private Account account;
+	@DatabaseField(canBeNull = false, foreign = true) private Account account;
 
-	@DatabaseField
-	private String topic;
+	@DatabaseField private String topic;
 
-	@DatabaseField
-	private String contents;
+	@DatabaseField private String contents;
 
-	@DatabaseField
-	private boolean incoming;
+	@DatabaseField private boolean incoming;
 
-	@DatabaseField
-	private byte qos;
+	@DatabaseField private byte qos;
 
-	@DatabaseField
-	private Boolean retain;
+	@DatabaseField private Boolean retain;
 
-	@DatabaseField
-	private Boolean duplicate;
+	@DatabaseField private Boolean duplicate;
 
-	public Message() {
+	public Message()
+	{
 	}
 
-	public Message(Account account, String topic, String contents, boolean incoming, byte qos, Boolean retain,
-			Boolean duplicate) {
+	public Message(Account account, String topic, String contents, boolean incoming, byte qos, Boolean retain, Boolean duplicate)
+	{
 		this.account = account;
 		this.topic = topic;
 		this.contents = contents;
@@ -44,67 +37,83 @@ public class Message {
 		this.duplicate = duplicate;
 	}
 
-	public int getId() {
+	public int getId()
+	{
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(int id)
+	{
 		this.id = id;
 	}
 
-	public Account getAccount() {
+	public Account getAccount()
+	{
 		return account;
 	}
 
-	public void setAccount(Account account) {
+	public void setAccount(Account account)
+	{
 		this.account = account;
 	}
 
-	public String getTopic() {
+	public String getTopic()
+	{
 		return topic;
 	}
 
-	public void setTopic(String topic) {
+	public void setTopic(String topic)
+	{
 		this.topic = topic;
 	}
 
-	public String getContents() {
+	public String getContents()
+	{
 		return contents;
 	}
 
-	public void setContents(String contents) {
+	public void setContents(String contents)
+	{
 		this.contents = contents;
 	}
 
-	public boolean isIncoming() {
+	public boolean isIncoming()
+	{
 		return incoming;
 	}
 
-	public void setIncoming(boolean incoming) {
+	public void setIncoming(boolean incoming)
+	{
 		this.incoming = incoming;
 	}
 
-	public byte getQos() {
+	public byte getQos()
+	{
 		return qos;
 	}
 
-	public void setQos(byte qos) {
+	public void setQos(byte qos)
+	{
 		this.qos = qos;
 	}
 
-	public Boolean getRetain() {
+	public Boolean getRetain()
+	{
 		return retain;
 	}
 
-	public void setRetain(Boolean retain) {
+	public void setRetain(Boolean retain)
+	{
 		this.retain = retain;
 	}
 
-	public Boolean getDuplicate() {
+	public Boolean getDuplicate()
+	{
 		return duplicate;
 	}
 
-	public void setDuplicate(Boolean duplicate) {
+	public void setDuplicate(Boolean duplicate)
+	{
 		this.duplicate = duplicate;
 	}
 }

@@ -1,15 +1,14 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Image;
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-
-public class UIConstants {
+public class UIConstants
+{
+	public static final Color APP_CONTRAST_COLOR = new Color(25, 163, 219);
 	static final int ACCNT_MGMT_FRAME_WIDTH = 347;
 	static final int ACCNT_MGMT_FRAME_HEIGHT = 458;
 	static final int MAIN_FRAME_WIDTH = 428;
@@ -18,9 +17,7 @@ public class UIConstants {
 	static final int LOGIN_FRAME_HEIGHT = 548;
 	static final int LOGO_FRAME_WIDTH = 299;
 	static final int LOGO_FRAME_HEIGHT = 287;
-
 	static final Color APP_BG_COLOR = Color.white;
-	public static final Color APP_CONTRAST_COLOR = new Color(25, 163, 219);
 	static final Color SELECTION_COLOR = new Color(25, 186, 248, 21);
 	static final Color HOVER_COLOR = new Color(252, 227, 79, 50);
 	static final Color ROW_EVEN_COLOR = Color.white;
@@ -39,9 +36,13 @@ public class UIConstants {
 	static final String SEND_MSG_IMG = "ic_tab_send_msg_gray.png";
 	static final String MSG_LIST_IMG = "ic_tab_msg_list_gray.png";
 	static final String LOGOUT_IMG = "ic_tab_logout_gray.png";
-
+	static final String LOGO_FILE_PATH = "logo.png";
+	static final String IC_LOADING_FILE_PATH = "ic_loading_text.png";
+	static final Font TEXT_LABEL_FONT = new Font("SansSerif", Font.BOLD, 10);
+	static final Font REGULAR_FONT = new Font("SansSerif", Font.PLAIN, 12);
+	static final Font REGULAR_BOLD_FONT = new Font("SansSerif", Font.BOLD, 12);
+	static final Font BUTTON_FONT = new Font("SansSerif", Font.BOLD, 14);
 	private static final String BG_IMG = "img_background.jpg";
-
 	private static final String IC_SETTINGS_FILE_PATH = "ic_settings.png";
 	private static final String IC_USERNAME_FILE_PATH = "ic_username.png";
 	private static final String IC_PASSWORD_FILE_PATH = "ic_password.png";
@@ -50,15 +51,6 @@ public class UIConstants {
 	private static final String IC_CLEAN_SESSION_FILE_PATH = "ic_clean_session.png";
 	private static final String IC_KEEP_ALIVE_FILE_PATH = "ic_keep_alive.png";
 	private static final String IC_TRASH_FILE_PATH = "ic_trash.png";
-
-	static final String LOGO_FILE_PATH = "logo.png";
-	static final String IC_LOADING_FILE_PATH = "ic_loading_text.png";
-
-	static final Font TEXT_LABEL_FONT = new Font("SansSerif", Font.BOLD, 10);
-	static final Font REGULAR_FONT = new Font("SansSerif", Font.PLAIN, 12);
-	static final Font REGULAR_BOLD_FONT = new Font("SansSerif", Font.BOLD, 12);
-	static final Font BUTTON_FONT = new Font("SansSerif", Font.BOLD, 14);
-
 	static Image BG_IMAGE;
 	static ImageIcon IC_TRASH;
 	static ImageIcon IC_SETTINGS;
@@ -69,7 +61,8 @@ public class UIConstants {
 	static ImageIcon IC_CLEAN_SESSION;
 	static ImageIcon IC_KEEP_ALIVE;
 
-	static {
+	static
+	{
 		BG_IMAGE = initImage(IMAGES_PATH + BG_IMG);
 		IC_TRASH = initImageIcon(IMAGES_PATH + IC_TRASH_FILE_PATH);
 		IC_SETTINGS = initImageIcon(IMAGES_PATH + IC_SETTINGS_FILE_PATH);
@@ -81,17 +74,22 @@ public class UIConstants {
 		IC_KEEP_ALIVE = initImageIcon(IMAGES_PATH + IC_KEEP_ALIVE_FILE_PATH);
 	}
 
-	public static Image initImage(String path) {
-		try {
+	public static Image initImage(String path)
+	{
+		try
+		{
 			InputStream in = UIConstants.class.getResourceAsStream(path);
 			return ImageIO.read(in);
-		} catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 			e.printStackTrace();
 			return null;
 		}
 	}
 
-	public static ImageIcon initImageIcon(String path) {
+	public static ImageIcon initImageIcon(String path)
+	{
 		return new ImageIcon(initImage(path));
 	}
 }

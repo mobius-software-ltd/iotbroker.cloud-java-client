@@ -2,7 +2,9 @@ package com.mobiussoftware.iotbroker.network;
 
 import java.util.concurrent.ScheduledFuture;
 
-public class MessageResendTimer<T> implements Runnable {
+public class MessageResendTimer<T>
+		implements Runnable
+{
 	private static int MAX_CONNECT_RESEND = 5;
 
 	private T message;
@@ -11,7 +13,8 @@ public class MessageResendTimer<T> implements Runnable {
 	private Integer retriesLeft = null;
 	private ScheduledFuture<?> future;
 
-	public MessageResendTimer(T message, NetworkChannel<T> client, TimersMapInterface<T> timersMap, Boolean isConnect) {
+	public MessageResendTimer(T message, NetworkChannel<T> client, TimersMapInterface<T> timersMap, Boolean isConnect)
+	{
 		if (isConnect)
 			retriesLeft = MAX_CONNECT_RESEND;
 
@@ -20,15 +23,18 @@ public class MessageResendTimer<T> implements Runnable {
 		this.timersMap = timersMap;
 	}
 
-	@Override
-	public void run() {
+	@Override public void run()
+	{
 		onTimedEvent();
 	}
 
-	public void onTimedEvent() {
-		if (retriesLeft != null) {
+	public void onTimedEvent()
+	{
+		if (retriesLeft != null)
+		{
 			retriesLeft--;
-			if (retriesLeft == 0) {
+			if (retriesLeft == 0)
+			{
 				timersMap.cancelConnectTimer();
 				return;
 			}
@@ -38,15 +44,18 @@ public class MessageResendTimer<T> implements Runnable {
 		timersMap.refreshTimer(this);
 	}
 
-	public T getMessage() {
+	public T getMessage()
+	{
 		return message;
 	}
 
-	public ScheduledFuture<?> getFuture() {
+	public ScheduledFuture<?> getFuture()
+	{
 		return future;
 	}
 
-	public void setFuture(ScheduledFuture<?> future) {
+	public void setFuture(ScheduledFuture<?> future)
+	{
 		this.future = future;
 	}
 

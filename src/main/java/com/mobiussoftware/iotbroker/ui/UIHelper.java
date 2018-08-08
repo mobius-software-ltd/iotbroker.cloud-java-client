@@ -1,39 +1,27 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseListener;
+import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
+import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
+import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 
-import javax.swing.BorderFactory;
-import javax.swing.Icon;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.basic.BasicCheckBoxUI;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import javax.swing.plaf.basic.BasicProgressBarUI;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseListener;
 
-import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
-import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
-import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
+public class UIHelper
+{
 
-public class UIHelper {
+	private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyz123456789       ";
 
-	static JPanel createProgressBarSpace(int height) {
+	static JPanel createProgressBarSpace(int height)
+	{
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		// panel.setBackground(new Color(255,255,0,100));
 		panel.setBackground(new Color(0, 0, 0, 0));
@@ -43,7 +31,8 @@ public class UIHelper {
 		return panel;
 	}
 
-	static JProgressBar createProgressBar() {
+	static JProgressBar createProgressBar()
+	{
 		JProgressBar progressBar = new JProgressBar();
 		progressBar.setUI(new BasicProgressBarUI());
 		progressBar.setString("");
@@ -58,7 +47,8 @@ public class UIHelper {
 		return progressBar;
 	}
 
-	static JPanel createSmallBoldLabel(String text) {
+	static JPanel createSmallBoldLabel(String text)
+	{
 		JPanel lbl = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		lbl.setBackground(new Color(0, 0, 0, 0));
 		JLabel label = new JLabel(text, SwingConstants.LEFT);
@@ -68,20 +58,12 @@ public class UIHelper {
 		return lbl;
 	}
 
-	static JPanel wrapInBorderLayout(JPanel panel, String borderLayoutAlignment) {
+	static JPanel wrapInBorderLayout(JPanel panel, String borderLayoutAlignment)
+	{
 		JPanel wrapper = new JPanel(new BorderLayout());
 		wrapper.setBackground(Color.white);
 		wrapper.setBorder(BorderFactory.createLineBorder(Color.lightGray));
 		wrapper.add(panel, borderLayoutAlignment);
-		return wrapper;
-	}
-
-	static JPanel wrapInScrollAndBorderLayout(JPanel panel, String borderLayoutAlignment) {
-		JScrollPane scrollPane = new JScrollPane(panel);
-
-		JPanel wrapper = new JPanel(new BorderLayout());
-		wrapper.add(scrollPane, borderLayoutAlignment);
-
 		return wrapper;
 	}
 
@@ -98,7 +80,18 @@ public class UIHelper {
 	// return wrapper;
 	// }
 
-	static JPanel createParameterLabel(String text, Icon icon, int horizontalAlignment, Color color) {
+	static JPanel wrapInScrollAndBorderLayout(JPanel panel, String borderLayoutAlignment)
+	{
+		JScrollPane scrollPane = new JScrollPane(panel);
+
+		JPanel wrapper = new JPanel(new BorderLayout());
+		wrapper.add(scrollPane, borderLayoutAlignment);
+
+		return wrapper;
+	}
+
+	static JPanel createParameterLabel(String text, Icon icon, int horizontalAlignment, Color color)
+	{
 		JPanel lbl = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		lbl.setBackground(color);
 
@@ -112,7 +105,8 @@ public class UIHelper {
 		return lbl;
 	}
 
-	static <T extends Object> JPanel createJComboBox(T[] values, Dimension dimension) {
+	static <T extends Object> JPanel createJComboBox(T[] values, Dimension dimension)
+	{
 		UIManager.put("ComboBox.background", new ColorUIResource(Color.white));
 		UIManager.put("ComboBox.selectionBackground", UIConstants.SELECTION_COLOR);
 		UIManager.put("ComboBox.selectionForeground", new ColorUIResource(Color.gray));
@@ -137,7 +131,8 @@ public class UIHelper {
 		return wrapper;
 	}
 
-	static HintTextField createHintTextField(String hint, Dimension dimension) {
+	static HintTextField createHintTextField(String hint, Dimension dimension)
+	{
 
 		HintTextField tf = new HintTextField(hint, BorderFactory.createLineBorder(Color.lightGray));
 		tf.setHorizontalAlignment(JTextField.RIGHT);
@@ -148,7 +143,8 @@ public class UIHelper {
 		return tf;
 	}
 
-	static HintDialogTextField createTextArea(String hint, Dimension dimension) {
+	static HintDialogTextField createTextArea(String hint, Dimension dimension)
+	{
 
 		HintDialogTextField tf = new HintDialogTextField(hint, BorderFactory.createLineBorder(Color.lightGray));
 		tf.setHorizontalAlignment(JTextField.RIGHT);
@@ -159,17 +155,20 @@ public class UIHelper {
 		return tf;
 	}
 
-	static JCheckBox createJCheckBox(Color color) {
+	static JCheckBox createJCheckBox(Color color)
+	{
 
 		JCheckBox cb = new JCheckBox();
 		cb.setBackground(color);
-		cb.setUI(new BasicCheckBoxUI() {
+		cb.setUI(new BasicCheckBoxUI()
+		{
 		});
 
 		return cb;
 	}
 
-	static JPanel wrapInJPanel(Component component, Color color) {
+	static JPanel wrapInJPanel(Component component, Color color)
+	{
 		JPanel jp = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		jp.setBackground(color);
 		jp.add(component);
@@ -177,7 +176,8 @@ public class UIHelper {
 		return jp;
 	}
 
-	private static JPanel createButton(String text, int height, Font font, MouseListener listener) {
+	private static JPanel createButton(String text, int height, Font font, MouseListener listener)
+	{
 		JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
 		btnPanel.setBackground(Color.cyan);
 		btnPanel.setBackground(UIConstants.APP_CONTRAST_COLOR);
@@ -200,58 +200,66 @@ public class UIHelper {
 		return btnPanel;
 	}
 
-	static JPanel createButton(String text, int height, MouseListener listener) {
+	static JPanel createButton(String text, int height, MouseListener listener)
+	{
 		Font font = UIConstants.BUTTON_FONT;
 		return createButton(text, height, font, listener);
 	}
 
-	static JPanel createButton(String text, MouseListener listener) {
+	static JPanel createButton(String text, MouseListener listener)
+	{
 		int height = 35;
 		return createButton(text, height, listener);
 	}
 
-	static JPanel createAppColorLabel(String text, int height) {
+	static JPanel createAppColorLabel(String text, int height)
+	{
 		Font font = UIConstants.REGULAR_FONT;
 		return createButton(text, height, font, null);
 	}
 
-	private static final String ALPHA_NUMERIC_STRING = "abcdefghijklmnopqrstuvwxyz123456789       ";
-
-	static String randomAlphaNumeric(int count) {
+	static String randomAlphaNumeric(int count)
+	{
 		StringBuilder builder = new StringBuilder();
-		while (count-- != 0) {
+		while (count-- != 0)
+		{
 			int character = (int) (Math.random() * ALPHA_NUMERIC_STRING.length());
 			builder.append(ALPHA_NUMERIC_STRING.charAt(character));
 		}
 		return builder.toString();
 	}
 
-	private static void createRedBorder(final JTextField tf) {
+	private static void createRedBorder(final JTextField tf)
+	{
 		tf.setBorder(BorderFactory.createLineBorder(Color.red));
 		tf.requestFocusInWindow();
-		tf.addKeyListener(new KeyListener() {
-			@Override
-			public void keyTyped(KeyEvent keyEvent) {
+		tf.addKeyListener(new KeyListener()
+		{
+			@Override public void keyTyped(KeyEvent keyEvent)
+			{
 				tf.setBorder(BorderFactory.createLineBorder(Color.lightGray));
 				tf.removeKeyListener(this);
 			}
 
-			@Override
-			public void keyPressed(KeyEvent keyEvent) {
+			@Override public void keyPressed(KeyEvent keyEvent)
+			{
 			}
 
-			@Override
-			public void keyReleased(KeyEvent keyEvent) {
+			@Override public void keyReleased(KeyEvent keyEvent)
+			{
 			}
 		});
 	}
 
-	static boolean validateTF(HintTextField... textFields) {
-		for (final HintTextField tf : textFields) {
+	static boolean validateTF(HintTextField... textFields)
+	{
+		for (final HintTextField tf : textFields)
+		{
 			if (!tf.isValid())
 				continue;
 			String content = tf.getText();
-			if (content == null || content.equals("")) {
+			if (content == null || content.equals(""))
+			{
 				createRedBorder(tf);
 				return false;
 			}
@@ -259,27 +267,35 @@ public class UIHelper {
 		return true;
 	}
 
-	static boolean validateNumTF(HintTextField... textFields) {
-		for (final HintTextField tf : textFields) {
-			if (validateTF(tf)) {
+	static boolean validateNumTF(HintTextField... textFields)
+	{
+		for (final HintTextField tf : textFields)
+		{
+			if (validateTF(tf))
+			{
 				String content = tf.getText();
-				for (int i = 0; i < content.length(); i++) {
-					if (!Character.isDigit(content.charAt(i))) {
+				for (int i = 0; i < content.length(); i++)
+				{
+					if (!Character.isDigit(content.charAt(i)))
+					{
 						createRedBorder(tf);
 						return false;
 					}
 				}
-			} else
+			}
+			else
 				return false;
 		}
 		return true;
 	}
 
-	static boolean validateDialogTF(HintDialogTextField dialogTF) {
+	static boolean validateDialogTF(HintDialogTextField dialogTF)
+	{
 		if (!dialogTF.isValid())
 			return true;
 		String content = dialogTF.getText();
-		if (content == null || content.equals("")) {
+		if (content == null || content.equals(""))
+		{
 			dialogTF.setBorder(BorderFactory.createLineBorder(Color.red));
 			dialogTF.requestFocusInWindow();
 

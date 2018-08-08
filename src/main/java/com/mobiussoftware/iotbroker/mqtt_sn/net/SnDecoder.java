@@ -8,9 +8,12 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 
 import java.util.List;
 
-public class SnDecoder extends MessageToMessageDecoder<DatagramPacket> {
-	@Override
-	protected void decode(ChannelHandlerContext context, DatagramPacket message, List<Object> output) throws Exception {
+public class SnDecoder
+		extends MessageToMessageDecoder<DatagramPacket>
+{
+	@Override protected void decode(ChannelHandlerContext context, DatagramPacket message, List<Object> output)
+			throws Exception
+	{
 		SNMessage result = Parser.decode(message.content());
 		output.add(result);
 	}

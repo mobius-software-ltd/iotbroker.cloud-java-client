@@ -2,7 +2,8 @@ package com.mobiussoftware.iotbroker.network;
 
 import com.mobius.software.mqtt.parser.avps.Topic;
 
-public interface NetworkClient<T> {
+public interface NetworkClient<T>
+{
 	void setListener(ClientListener<T> listener);
 
 	Boolean createChannel();

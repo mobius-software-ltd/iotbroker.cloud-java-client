@@ -3,59 +3,65 @@ package com.mobiussoftware.iotbroker.db;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "topics")
-public class Topic {
+@DatabaseTable(tableName = "topics") public class Topic
+{
 
-	@DatabaseField(generatedId = true)
-	private int id;
+	@DatabaseField(generatedId = true) private int id;
 
-	@DatabaseField(canBeNull = false, foreign = true)
-	private Account account;
+	@DatabaseField(canBeNull = false, foreign = true) private Account account;
 
-	@DatabaseField
-	private String name;
+	@DatabaseField private String name;
 
-	@DatabaseField
-	private byte qos;
+	@DatabaseField private byte qos;
 
-	public Topic() {
+	public Topic()
+	{
 	}
 
-	public Topic(Account account, String name, byte qos) {
+	public Topic(Account account, String name, byte qos)
+	{
 		this.account = account;
 		this.name = name;
 		this.qos = qos;
 	}
 
-	public int getId() {
+	public int getId()
+	{
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(int id)
+	{
 		this.id = id;
 	}
 
-	public Account getAccount() {
+	public Account getAccount()
+	{
 		return account;
 	}
 
-	public void setAccount(Account account) {
+	public void setAccount(Account account)
+	{
 		this.account = account;
 	}
 
-	public String getName() {
+	public String getName()
+	{
 		return name;
 	}
 
-	public void setName(String name) {
+	public void setName(String name)
+	{
 		this.name = name;
 	}
 
-	public byte getQos() {
+	public byte getQos()
+	{
 		return qos;
 	}
 
-	public void setQos(byte qos) {
+	public void setQos(byte qos)
+	{
 		this.qos = qos;
 	}
 }

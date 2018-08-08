@@ -1,18 +1,17 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.*;
-
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.network.NetworkClient;
 
-public class Main {
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class Main
+{
 
 	static final Dimension SCREEN_DIMENSION = Toolkit.getDefaultToolkit().getScreenSize();
 
@@ -22,37 +21,47 @@ public class Main {
 	static JFrame logoPane;
 	static NetworkClient client;
 
-	public static void main(String[] args) {
+	public static void main(String[] args)
+	{
 		// Schedule a job for the event-dispatching thread:
 		// creating and showing this application's GUI.
 
 		UIDefaults def = UIManager.getLookAndFeelDefaults();
 		def.put("ProgressBar.repaintInterval", 10);
 
-		javax.swing.SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-//				for (Object key : UIManager.getLookAndFeelDefaults().keySet()) {
-//					boolean tbp = key.toString().startsWith("ProgressBar");
-//					if (tbp)
-//						System.out.println(key + " = " + UIManager.get(key));
-//				}
-				try {
+		javax.swing.SwingUtilities.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				//				for (Object key : UIManager.getLookAndFeelDefaults().keySet()) {
+				//					boolean tbp = key.toString().startsWith("ProgressBar");
+				//					if (tbp)
+				//						System.out.println(key + " = " + UIManager.get(key));
+				//				}
+				try
+				{
 					final DBInterface dbInterface = DBHelper.getInstance();
 					final Account defAccount = dbInterface.getDefaultAccount();
-					if (defAccount != null) {
+					if (defAccount != null)
+					{
 						int delay = 200;
-						Timer timer = new Timer(delay, new ActionListener() {
-							@Override
-							public void actionPerformed(ActionEvent e) {
+						Timer timer = new Timer(delay, new ActionListener()
+						{
+							@Override public void actionPerformed(ActionEvent e)
+							{
 								Main.createAndShowLoadingPane(defAccount);
 							}
 						});
 						timer.setRepeats(false);
 						timer.start();
-					} else {
+					}
+					else
+					{
 						createAndShowAccountMgmtPane();
 					}
-				} catch (Exception e) {
+				}
+				catch (Exception e)
+				{
 					e.printStackTrace();
 				}
 
@@ -60,12 +69,13 @@ public class Main {
 		});
 	}
 
-	static void setLocation(JFrame frame) {
-		frame.setLocation(SCREEN_DIMENSION.width / 2 - frame.getSize().width / 2,
-				SCREEN_DIMENSION.height / 2 - frame.getSize().height / 2);
+	static void setLocation(JFrame frame)
+	{
+		frame.setLocation(SCREEN_DIMENSION.width / 2 - frame.getSize().width / 2, SCREEN_DIMENSION.height / 2 - frame.getSize().height / 2);
 	}
 
-	static void createAndShowLogInPane() {
+	static void createAndShowLogInPane()
+	{
 
 		JFrame frame = new JFrame("Log In");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -83,13 +93,17 @@ public class Main {
 		logInPane = frame;
 	}
 
-	static void disposeLogInPane() {
-		if (logInPane != null) {
+	static void disposeLogInPane()
+	{
+		if (logInPane != null)
+		{
 			logInPane.dispose();
 		}
 	}
 
-	static void createAndShowMainPane(Account account) throws Exception {
+	static void createAndShowMainPane(Account account)
+			throws Exception
+	{
 		MainPane frame = new MainPane(account);
 		frame.setTitle(account.getProtocol().toString());
 		frame.pack();
@@ -102,13 +116,16 @@ public class Main {
 		mainPane = frame;
 	}
 
-	static void disposeMainPane() {
-		if (mainPane != null) {
+	static void disposeMainPane()
+	{
+		if (mainPane != null)
+		{
 			mainPane.dispose();
 		}
 	}
 
-	static void createAndShowAccountMgmtPane() {
+	static void createAndShowAccountMgmtPane()
+	{
 
 		// UIDefaults def = UIManager.getLookAndFeelDefaults();
 
@@ -126,33 +143,42 @@ public class Main {
 		accountMgmtPane = frame;
 	}
 
-	static void hideAccountMgmtPane() {
-		if (accountMgmtPane != null) {
+	static void hideAccountMgmtPane()
+	{
+		if (accountMgmtPane != null)
+		{
 			accountMgmtPane.setVisible(false);
 		}
 	}
 
-	static void showAccountMgmtPane() {
-		if (accountMgmtPane == null) {
+	static void showAccountMgmtPane()
+	{
+		if (accountMgmtPane == null)
+		{
 			createAndShowAccountMgmtPane();
-		} else if (!accountMgmtPane.isVisible()) {
+		}
+		else if (!accountMgmtPane.isVisible())
+		{
 			accountMgmtPane.setVisible(true);
 			System.out.println("showing hidden mgmt pane");
-//		} else {
-//			System.out.println("creating account mgmt pane again");
-//			createAndShowAccountMgmtPane();
+			//		} else {
+			//			System.out.println("creating account mgmt pane again");
+			//			createAndShowAccountMgmtPane();
 		}
 	}
 
-	static void disposeAccountMgmtPane() {
+	static void disposeAccountMgmtPane()
+	{
 		System.out.print("disposing accnt mgmt pane: ");
-		if (accountMgmtPane != null) {
+		if (accountMgmtPane != null)
+		{
 			accountMgmtPane.dispose();
 		}
 		System.out.println(accountMgmtPane);
 	}
 
-	public static void createAndShowLoadingPane(Account account) {
+	public static void createAndShowLoadingPane(Account account)
+	{
 
 		JFrame frame = new JFrame(account.getProtocol().toString());
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -169,17 +195,21 @@ public class Main {
 		logoPane = frame;
 	}
 
-	static void disposeLogoPane() {
-		if (logoPane != null) {
+	static void disposeLogoPane()
+	{
+		if (logoPane != null)
+		{
 			logoPane.dispose();
 		}
 	}
 
-	public static NetworkClient getCurrentClient() {
+	public static NetworkClient getCurrentClient()
+	{
 		return client;
 	}
 
-	public static void updateCurrentClient(NetworkClient client) {
+	public static void updateCurrentClient(NetworkClient client)
+	{
 		Main.client = client;
 	}
 }

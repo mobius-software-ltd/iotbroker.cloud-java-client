@@ -1,19 +1,5 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Insets;
-
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-import javax.swing.UIDefaults;
-import javax.swing.UIManager;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.plaf.basic.BasicTabbedPaneUI;
-
 import com.mobius.software.mqtt.parser.avps.SubackCode;
 import com.mobius.software.mqtt.parser.avps.Text;
 import com.mobius.software.mqtt.parser.avps.Topic;
@@ -28,7 +14,16 @@ import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
 
-public class MainPane<T> extends JFrame implements ClientListener<T> {
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.plaf.basic.BasicTabbedPaneUI;
+import java.awt.*;
+
+public class MainPane<T>
+		extends JFrame
+		implements ClientListener<T>
+{
 
 	private static final long serialVersionUID = -4038896950583862834L;
 
@@ -37,12 +32,15 @@ public class MainPane<T> extends JFrame implements ClientListener<T> {
 	private MessagesListPane msgListJP;
 	private TopicListPane topicListJP;
 
-	MainPane(Account account) throws Exception {
+	MainPane(Account account)
+			throws Exception
+	{
 		this.account = account;
 		drawUI();
 	}
 
-	private void drawUI() {
+	private void drawUI()
+	{
 		UIDefaults def = UIManager.getLookAndFeelDefaults();
 
 		Insets tabInsets = new Insets(20, 0, 20, 0);
@@ -67,25 +65,29 @@ public class MainPane<T> extends JFrame implements ClientListener<T> {
 
 		final JTabbedPane jtp = new JTabbedPane();
 		jtp.setBackground(UIConstants.APP_BG_COLOR);
-		jtp.setUI(new BasicTabbedPaneUI() {
+		jtp.setUI(new BasicTabbedPaneUI()
+		{
 			private final Insets borderInsets = new Insets(0, 0, 0, 0);
 
-			@Override
-			protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {
+			@Override protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex)
+			{
 			}
 
-			@Override
-			protected Insets getContentBorderInsets(int tabPlacement) {
+			@Override protected Insets getContentBorderInsets(int tabPlacement)
+			{
 				return borderInsets;
 			}
 
 		});
-		jtp.addChangeListener(new ChangeListener() {
+		jtp.addChangeListener(new ChangeListener()
+		{
 			int tabIndex = 0;
 
-			public void stateChanged(ChangeEvent e) {
+			public void stateChanged(ChangeEvent e)
+			{
 				ImageIcon icon = null;
-				switch (tabIndex) {
+				switch (tabIndex)
+				{
 				case 0:
 					icon = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.TOPIC_LIST_IMG);
 					break;
@@ -102,7 +104,8 @@ public class MainPane<T> extends JFrame implements ClientListener<T> {
 				jtp.setIconAt(tabIndex, icon);
 
 				tabIndex = jtp.getSelectedIndex();
-				switch (tabIndex) {
+				switch (tabIndex)
+				{
 				case 0:
 					icon = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.TOPIC_LIST_SELECTED_IMG);
 					break;
@@ -115,10 +118,13 @@ public class MainPane<T> extends JFrame implements ClientListener<T> {
 				case 3:
 					icon = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.LOGOUT_SELECTED_IMG);
 					Main.getCurrentClient().disconnect();
-					try {
+					try
+					{
 						final DBInterface dbInterface = DBHelper.getInstance();
 						dbInterface.unmarkAsDefault(account);
-					} catch (Exception ex) {
+					}
+					catch (Exception ex)
+					{
 						ex.printStackTrace();
 					}
 					Main.showAccountMgmtPane();
@@ -131,8 +137,7 @@ public class MainPane<T> extends JFrame implements ClientListener<T> {
 		jtp.setTabPlacement(JTabbedPane.BOTTOM);
 
 		this.topicListJP = new TopicListPane(account);
-		ImageIcon topicListIcon = UIConstants
-				.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.TOPIC_LIST_SELECTED_IMG);
+		ImageIcon topicListIcon = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.TOPIC_LIST_SELECTED_IMG);
 		jtp.addTab("", topicListIcon, topicListJP);
 
 		SendMessagePane sendMsgJP = new SendMessagePane(account);
@@ -153,14 +158,15 @@ public class MainPane<T> extends JFrame implements ClientListener<T> {
 		setBackground(Color.white);
 	}
 
-	@Override
-	public void messageSent(Message messageObj) {
+	@Override public void messageSent(Message messageObj)
+	{
 	}
 
-	@Override
-	public void messageReceived(T msg) {
+	@Override public void messageReceived(T msg)
+	{
 
-		if (msg instanceof MQMessage) {
+		if (msg instanceof MQMessage)
+		{
 			MQMessage message = (MQMessage) msg;
 			switch (message.getType())
 			{
@@ -191,18 +197,24 @@ public class MainPane<T> extends JFrame implements ClientListener<T> {
 			default:
 				break;
 			}
-		} else if (msg instanceof MQMessage) {
+		}
+		else if (msg instanceof MQMessage)
+		{
 		}
 	}
 
-	@Override
-	public void stateChanged(ConnectionState state) {
+	@Override public void stateChanged(ConnectionState state)
+	{
 		System.out.println("MainPane state changed state=" + state.toString());
-		switch (state) {
+		switch (state)
+		{
 		case CONNECTION_LOST:
-			try {
+			try
+			{
 				// dbInterface.unmarkAsDefault(account);
-			} catch (Exception e) {
+			}
+			catch (Exception e)
+			{
 			}
 			Main.showAccountMgmtPane();
 			break;

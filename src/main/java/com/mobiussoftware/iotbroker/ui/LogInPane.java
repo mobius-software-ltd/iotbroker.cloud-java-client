@@ -1,50 +1,30 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridLayout;
-import java.awt.Image;
-import java.awt.Rectangle;
-import java.awt.TexturePaint;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.image.BufferedImage;
-
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-
-import org.apache.log4j.Logger;
-
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
+import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
 
 public class LogInPane
 		extends JPanel
 {
 
-	private final Logger logger = Logger.getLogger(getClass());
-
 	private static final long serialVersionUID = 8294913343212905727L;
-
+	final Dimension tfDimension = new Dimension(150, 28);
+	final int parameterLabelAlignment = SwingConstants.LEFT;
+	private final Logger logger = Logger.getLogger(getClass());
 	private final int columns = 2;
-
+	int regInfoColorCount = 0;
 	private JPanel settingsPane;
 	private JPanel regInfoPane;
 	private JPanel settingsPaneWrapper;
-
 	private JComboBox<String> protocolCB;
 	private HintTextField usernameTF;
 	private HintTextField passwordTF;
@@ -57,13 +37,10 @@ public class LogInPane
 	private HintTextField willTopicTF;
 	private JCheckBox retainCB;
 	private JComboBox<Integer> qosCB;
-
 	private JPanel settingsBlockLabel;
-
 	private JPanel usernameLabel;
 	private JPanel passwordLabel;
 	private JPanel clientIdLabel;
-
 	@SuppressWarnings("unused") private Protocol previousProtocolChoice;
 
 	LogInPane()
@@ -134,10 +111,6 @@ public class LogInPane
 	{
 		return rowNumber % 2 == 0 ? UIConstants.ROW_EVEN_COLOR : UIConstants.ROW_ODD_COLOR;
 	}
-
-	final Dimension tfDimension = new Dimension(150, 28);
-	final int parameterLabelAlignment = SwingConstants.LEFT;
-	int regInfoColorCount = 0;
 
 	@SuppressWarnings("unchecked") private void addRegInfoBlock()
 	{

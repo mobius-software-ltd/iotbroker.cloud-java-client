@@ -1,32 +1,5 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridLayout;
-import java.awt.Image;
-import java.awt.Rectangle;
-import java.awt.TexturePaint;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
-import javax.swing.plaf.ColorUIResource;
-
 import com.mobius.software.mqtt.parser.avps.QoS;
 import com.mobius.software.mqtt.parser.avps.Text;
 import com.mobius.software.mqtt.parser.avps.Topic;
@@ -37,7 +10,19 @@ import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 
-public class SendMessagePane extends JPanel {
+import javax.swing.*;
+import javax.swing.plaf.ColorUIResource;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
+public class SendMessagePane
+		extends JPanel
+{
 
 	private static final long serialVersionUID = 7669118695637179029L;
 
@@ -58,17 +43,20 @@ public class SendMessagePane extends JPanel {
 	private MouseListener sendMsgBtnListener;
 	private JPanel sendMsgBtn;
 
-	SendMessagePane(Account account) {
+	SendMessagePane(Account account)
+	{
 		super();
 		this.account = account;
 		drawUI();
 	}
 
-	public void setListener(ClientListener listener) {
+	public void setListener(ClientListener listener)
+	{
 		this.listener = listener;
 	}
 
-	private void drawUI() {
+	private void drawUI()
+	{
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 		progressBarSpace = UIHelper.createProgressBarSpace(5);
@@ -77,9 +65,10 @@ public class SendMessagePane extends JPanel {
 		settingsPane = new JPanel();
 		settingsPane.setBackground(UIConstants.APP_BG_COLOR);
 
-		sendMsgBtnListener = new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent arg0) {
+		sendMsgBtnListener = new MouseAdapter()
+		{
+			@Override public void mouseClicked(MouseEvent arg0)
+			{
 				arg0.getComponent().removeMouseListener(this);
 				sendMessageAction();
 			}
@@ -93,12 +82,13 @@ public class SendMessagePane extends JPanel {
 		addSettingsPaneElements();
 	}
 
-	private Color rowColor(int rowNumber) {
+	private Color rowColor(int rowNumber)
+	{
 		return rowNumber % 2 == 0 ? UIConstants.ROW_EVEN_COLOR : UIConstants.ROW_ODD_COLOR;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void addSettingsPaneElements() {
+	@SuppressWarnings({ "unchecked", "rawtypes" }) private void addSettingsPaneElements()
+	{
 		UIManager.put("ComboBox.background", new ColorUIResource(Color.white));
 		UIManager.put("ComboBox.selectionBackground", UIConstants.SELECTION_COLOR);
 		UIManager.put("ComboBox.selectionForeground", new ColorUIResource(Color.gray));
@@ -136,24 +126,30 @@ public class SendMessagePane extends JPanel {
 		settingsPane.add(UIHelper.wrapInJPanel(duplicateCB, rowColor(i++)));
 	}
 
-	private void sendMessageAction() {
-		if (UIHelper.validateTF(topicTF) && UIHelper.validateDialogTF(contentTF)) {
+	private void sendMessageAction()
+	{
+		if (UIHelper.validateTF(topicTF) && UIHelper.validateDialogTF(contentTF))
+		{
 			addProgressBar();
 
-			SendTask task = new SendTask(contentTF.getText(), topicTF.getText(), qosCB.getSelectedIndex(),
-					retainCB.isSelected(), duplicateCB.isSelected());
+			SendTask task = new SendTask(contentTF.getText(), topicTF.getText(), qosCB.getSelectedIndex(), retainCB.isSelected(), duplicateCB.isSelected());
 			task.addPropertyChangeListener(propertyChangeListener());
 			task.execute();
-		} else {
+		}
+		else
+		{
 			sendMsgBtn.addMouseListener(sendMsgBtnListener);
 		}
 	}
 
-	private PropertyChangeListener propertyChangeListener() {
-		return new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				if (evt.getPropertyName() == "progress") {
+	private PropertyChangeListener propertyChangeListener()
+	{
+		return new PropertyChangeListener()
+		{
+			@Override public void propertyChange(PropertyChangeEvent evt)
+			{
+				if (evt.getPropertyName() == "progress")
+				{
 					int progress = (Integer) evt.getNewValue();
 					progressBar.setValue(progress);
 				}
@@ -161,10 +157,13 @@ public class SendMessagePane extends JPanel {
 		};
 	}
 
-	private void addProgressBar() {
+	private void addProgressBar()
+	{
 		progressBar = UIHelper.createProgressBar();
-		if (progressBarSpace.getComponents().length > 0) {
-			for (Component c : progressBarSpace.getComponents()) {
+		if (progressBarSpace.getComponents().length > 0)
+		{
+			for (Component c : progressBarSpace.getComponents())
+			{
 				progressBarSpace.remove(c);
 			}
 		}
@@ -172,33 +171,61 @@ public class SendMessagePane extends JPanel {
 		progressBar.revalidate();
 	}
 
-	private void removeProgressBar() {
+	private void removeProgressBar()
+	{
 		progressBarSpace.remove(progressBar);
 		SendMessagePane.this.revalidate();
 		SendMessagePane.this.repaint();
 	}
 
-	class SendTask extends NetworkTask<Void, Void> {
+	@Override protected void paintComponent(Graphics g)
+	{
+		Image bgImage = UIConstants.BG_IMAGE;
+		g.drawImage(bgImage, 0, 0, null);
+
+		BufferedImage bimage = new BufferedImage(bgImage.getWidth(null), bgImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+
+		// Draw the image on to the buffered image
+		Graphics2D bGr = bimage.createGraphics();
+		bGr.drawImage(bgImage, 0, 0, null);
+		bGr.dispose();
+
+		super.paintComponent(g);
+		Graphics2D g2d = (Graphics2D) g;
+
+		TexturePaint paint = new TexturePaint(bimage, new Rectangle(0, 0, bgImage.getWidth(null), bgImage.getHeight(null)));
+		g2d.setPaint(paint);
+		g2d.fillRect(0, 0, getWidth(), getHeight());
+	}
+
+	class SendTask
+			extends NetworkTask<Void, Void>
+	{
 
 		private Message messageObj;
 
-		public SendTask(String content, String topic, int qos, boolean retain, boolean duplicate) {
+		public SendTask(String content, String topic, int qos, boolean retain, boolean duplicate)
+		{
 			this.messageObj = new Message(account, topic, content, false, (byte) qos, retain, duplicate);
 		}
 
-		@Override
-		public Void doInBackground() {
-			try {
+		@Override public Void doInBackground()
+		{
+			try
+			{
 				if (!account.isCleanSession())
 					DBHelper.getInstance().saveMessage(messageObj);
 				sendMessage();
-			} catch (Exception e) {
+			}
+			catch (Exception e)
+			{
 				e.printStackTrace();
 			}
 			return super.doInBackground();
 		}
 
-		private void sendMessage() {
+		private void sendMessage()
+		{
 			byte[] content = contentTF.getText().getBytes();
 			String topicName = topicTF.getText();
 			QoS qos = QoS.valueOf(qosCB.getSelectedIndex());
@@ -211,8 +238,8 @@ public class SendMessagePane extends JPanel {
 			Main.getCurrentClient().publish(topic, content, retain, dup);
 		}
 
-		@Override
-		protected void done() {
+		@Override protected void done()
+		{
 
 			listener.messageSent(messageObj);
 
@@ -226,27 +253,5 @@ public class SendMessagePane extends JPanel {
 			retainCB.setSelected(false);
 			duplicateCB.setSelected(false);
 		}
-	}
-
-	@Override
-	protected void paintComponent(Graphics g) {
-		Image bgImage = UIConstants.BG_IMAGE;
-		g.drawImage(bgImage, 0, 0, null);
-
-		BufferedImage bimage = new BufferedImage(bgImage.getWidth(null), bgImage.getHeight(null),
-				BufferedImage.TYPE_INT_ARGB);
-
-		// Draw the image on to the buffered image
-		Graphics2D bGr = bimage.createGraphics();
-		bGr.drawImage(bgImage, 0, 0, null);
-		bGr.dispose();
-
-		super.paintComponent(g);
-		Graphics2D g2d = (Graphics2D) g;
-
-		TexturePaint paint = new TexturePaint(bimage,
-				new Rectangle(0, 0, bgImage.getWidth(null), bgImage.getHeight(null)));
-		g2d.setPaint(paint);
-		g2d.fillRect(0, 0, getWidth(), getHeight());
 	}
 }

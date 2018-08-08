@@ -1,28 +1,5 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Image;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.TexturePaint;
-import java.awt.image.BufferedImage;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.SwingConstants;
-
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.Publish;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
@@ -32,20 +9,21 @@ import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+
 public class MessagesListPane<T>
 		extends JPanel
 		implements ClientListener<T>
 {
 
-	private static final long serialVersionUID = -3181230353114636429L;
-
-	private Account account;
-
-	private JPanel messagesPane;
-
 	static final int COLORED_LABEL_WIDTH = 80;
 	static final int COLORED_LABEL_HEIGHT = 40;
+	private static final long serialVersionUID = -3181230353114636429L;
 	private final int msgCount = 50;
+	private Account account;
+	private JPanel messagesPane;
 
 	MessagesListPane(Account account)
 	{

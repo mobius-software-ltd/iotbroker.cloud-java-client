@@ -6,14 +6,18 @@ import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 
-public class HintTextField extends JTextField implements FocusListener {
+public class HintTextField
+		extends JTextField
+		implements FocusListener
+{
 
 	private static final long serialVersionUID = -1534516902639919627L;
 
 	private String hint;
 	private boolean showingHint;
 
-	public HintTextField(String hint, Border border) {
+	public HintTextField(String hint, Border border)
+	{
 		super(hint);
 		super.setForeground(Color.gray);
 		this.hint = hint;
@@ -22,18 +26,20 @@ public class HintTextField extends JTextField implements FocusListener {
 		this.setBorder(border);
 	}
 
-	@Override
-	public void focusGained(FocusEvent e) {
-		if (this.getText().isEmpty()) {
+	@Override public void focusGained(FocusEvent e)
+	{
+		if (this.getText().isEmpty())
+		{
 			super.setText("");
 			super.setForeground(Color.black);
 			this.showingHint = false;
 		}
 	}
 
-	@Override
-	public void focusLost(FocusEvent e) {
-		if (this.getText().isEmpty()) {
+	@Override public void focusLost(FocusEvent e)
+	{
+		if (this.getText().isEmpty())
+		{
 			super.setText(hint);
 			super.setForeground(Color.gray);
 			super.setBorder(BorderFactory.createLineBorder(Color.lightGray));
@@ -41,12 +47,13 @@ public class HintTextField extends JTextField implements FocusListener {
 		}
 	}
 
-	@Override
-	public String getText() {
+	@Override public String getText()
+	{
 		return showingHint ? "" : super.getText();
 	}
 
-	public void clearText() {
+	public void clearText()
+	{
 		super.setText(hint);
 		super.setForeground(Color.gray);
 		this.showingHint = true;
