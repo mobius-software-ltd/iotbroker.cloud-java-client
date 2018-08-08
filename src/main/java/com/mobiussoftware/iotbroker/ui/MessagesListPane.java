@@ -1,6 +1,5 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.Publish;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
@@ -13,9 +12,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class MessagesListPane<T>
+public class MessagesListPane
 		extends JPanel
-		implements ClientListener<T>
+		implements ClientListener
 {
 
 	static final int COLORED_LABEL_WIDTH = 80;
@@ -171,19 +170,11 @@ public class MessagesListPane<T>
 		messagesPane.revalidate();
 	}
 
-	@Override public void messageReceived(T msg)
+	@Override public void messageReceived(Message message)
 	{
-		if (msg instanceof MQMessage)
-		{
-			Publish publish = (Publish) msg;
-			Message message1 = new Message(account, publish.getTopic().getName().toString(), new String(publish.getContent().array()), true, (byte) publish.getTopic().getQos().getValue(), publish.isRetain(), publish.isDup());
-			addMessagesPaneElement(message1);
-			messagesPane.revalidate();
-		}
-		else if (msg instanceof MQMessage)
-		{
+		addMessagesPaneElement(message);
+		messagesPane.revalidate();
 
-		}
 	}
 
 	@Override public void stateChanged(ConnectionState state)

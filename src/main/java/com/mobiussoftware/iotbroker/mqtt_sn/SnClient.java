@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SnClient
-		implements ConnectionListener<SNMessage>, SNDevice, NetworkClient<SNMessage>
+		implements ConnectionListener<SNMessage>, SNDevice, NetworkClient
 {
 
 	public static String MESSAGETYPE_PARAM = "MESSAGETYPE";
@@ -39,7 +39,8 @@ public class SnClient
 
 	private Account account;
 
-	private ClientListener<SNMessage> listener;
+	private ClientListener clientListener;
+	private TopicListener topicListener;
 	private DBInterface dbInterface;
 
 	private ConcurrentHashMap<Integer, String> mappedTopics = new ConcurrentHashMap<>();
@@ -55,16 +56,21 @@ public class SnClient
 		this.client = new UDPClient(address, WORKER_THREADS);
 	}
 
-	@Override public void setListener(ClientListener<SNMessage> listener)
+	@Override public void setClientListener(ClientListener clientListener)
 	{
-		this.listener = listener;
+		this.clientListener = clientListener;
+	}
+
+	@Override public void setTopicListener(TopicListener topicListener)
+	{
+		this.topicListener = topicListener;
 	}
 
 	@Override public void setState(ConnectionState state)
 	{
 		connectionState = state;
-		if (listener != null)
-			listener.stateChanged(state);
+		if (clientListener != null)
+			clientListener.stateChanged(state);
 	}
 
 	@Override public Boolean createChannel()
@@ -338,10 +344,9 @@ public class SnClient
 		SNMessage message = timers.remove(packetID);
 		if (returnCode != ReturnCode.ACCEPTED)
 		{
-			logger.warn("received retuncode " + returnCode);
-
-			if (listener != null)
-				listener.messageReceived(message);
+			logger.warn("received suback failure");
+			if (topicListener != null)
+				topicListener.finishAddingTopicFailed();
 		}
 		else
 		{
@@ -388,8 +393,8 @@ public class SnClient
 				}
 			}
 
-			if (listener != null)
-				listener.messageReceived(message);
+			if (topicListener != null)
+				topicListener.finishAddingTopic(topic.getName().toString(), topic.getQos());
 		}
 	}
 
@@ -411,6 +416,8 @@ public class SnClient
 				{
 					logger.info("deleting  topic" + topicName + " from DB");
 					dbInterface.deleteTopic(topicName);
+					if (topicListener != null)
+						topicListener.finishDeletingTopic(topicName);
 				}
 				catch (SQLException e)
 				{
@@ -418,9 +425,6 @@ public class SnClient
 				}
 			}
 		}
-
-		if (listener != null)
-			listener.messageReceived(message);
 	}
 
 	@Override public void processRegister(int packetID, int topicID, String topicName)
@@ -506,10 +510,10 @@ public class SnClient
 				}
 			}
 
-			if (listener != null)
+			if (clientListener != null)
 			{
-				logger.info("notifying listener on publish received");
-				listener.messageReceived(new SNPublish(packetID, topic, content, retain, isDup));
+				logger.info("notifying clientListener on publish received");
+				clientListener.messageReceived(message);
 			}
 		}
 	}

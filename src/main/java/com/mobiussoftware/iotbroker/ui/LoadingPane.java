@@ -18,9 +18,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Random;
 
-public class LoadingPane<T>
+public class LoadingPane
 		extends JPanel
-		implements PropertyChangeListener, ClientListener<T>
+		implements PropertyChangeListener, ClientListener
 {
 
 	private static final long serialVersionUID = 3454494855396228813L;
@@ -87,8 +87,9 @@ public class LoadingPane<T>
 			throws Exception
 	{
 		client = new MqttClient(account);
-		client.setListener(this);
+		client.setClientListener(this);
 		Main.updateCurrentClient(client);
+
 		boolean channelCreated = client.createChannel();
 		if (!channelCreated)
 		{
@@ -103,13 +104,14 @@ public class LoadingPane<T>
 			throws Exception
 	{
 		client = new SnClient(account);
-		client.setListener(this);
+		client.setClientListener(this);
 		Main.updateCurrentClient(client);
+
 		boolean channelCreated = client.createChannel();
 		if (!channelCreated)
 		{
 			// TODO: dialog that error occurred
-			System.out.println("mqtt connection failed");
+			System.out.println("mqtt-sn connection failed");
 			progressBar.setValue(0);
 			return;
 		}
@@ -127,7 +129,7 @@ public class LoadingPane<T>
 
 	@Override public void propertyChange(PropertyChangeEvent evt)
 	{
-		if ("progress" == evt.getPropertyName())
+		if (evt.getPropertyName().equals("progress"))
 		{
 			int progress = (Integer) evt.getNewValue();
 			progressBar.setValue(progress);
@@ -146,7 +148,7 @@ public class LoadingPane<T>
 	{
 	}
 
-	@Override public void messageReceived(T message)
+	@Override public void messageReceived(Message message)
 	{
 		Main.mainPane.messageReceived(message);
 	}
@@ -172,13 +174,15 @@ public class LoadingPane<T>
 				Main.disposeLogoPane();
 				try
 				{
-					Main.createAndShowMainPane(account);
+					MainPane mainPane = Main.createAndShowMainPane(account);
+					client.setTopicListener(mainPane.getTopicListener());
 				}
 				catch (Exception e)
 				{
 					logger.error("Error occured while createAndShowMainPane from LoadingPanel");
 					System.out.println("Error occured while createAndShowMainPane from LoadingPanel");
 					e.printStackTrace();
+					Main.showAccountMgmtPane();
 				}
 				connectingTask.cancel(true);
 				break;
@@ -226,6 +230,9 @@ public class LoadingPane<T>
 				{
 				case MQTT:
 					initConnectMqtt();
+					break;
+				case MQTTSN:
+					initConnectSn();
 					break;
 				default:
 					break;

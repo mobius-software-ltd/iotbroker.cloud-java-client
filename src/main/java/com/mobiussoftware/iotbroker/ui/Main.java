@@ -101,7 +101,7 @@ public class Main
 		}
 	}
 
-	static void createAndShowMainPane(Account account)
+	static MainPane createAndShowMainPane(Account account)
 			throws Exception
 	{
 		MainPane frame = new MainPane(account);
@@ -114,6 +114,8 @@ public class Main
 		setLocation(frame);
 
 		mainPane = frame;
+
+		return mainPane;
 	}
 
 	static void disposeMainPane()

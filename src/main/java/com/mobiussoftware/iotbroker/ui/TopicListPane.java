@@ -6,6 +6,7 @@ import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Topic;
+import com.mobiussoftware.iotbroker.network.TopicListener;
 import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 
@@ -25,6 +26,7 @@ import java.util.Map;
 
 public class TopicListPane
 		extends JPanel
+		implements TopicListener
 {
 
 	private static final long serialVersionUID = -615880735007928743L;
@@ -375,17 +377,20 @@ public class TopicListPane
 		};
 	}
 
+	@Override
 	public void finishAddingTopic(String topicName, int qosVal)
 	{
 		addTopicBtn.addMouseListener(addTopicBtnListener);
 		addTopicListRow(topicName, qosVal);
 	}
 
+	@Override
 	public void finishAddingTopicFailed()
 	{
 		// TODO: show error message on UI
 	}
 
+	@Override
 	public void finishDeletingTopic(String id)
 	{
 		deleteListRow(id);

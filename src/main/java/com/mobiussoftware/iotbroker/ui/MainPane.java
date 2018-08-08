@@ -1,18 +1,12 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import com.mobius.software.mqtt.parser.avps.SubackCode;
-import com.mobius.software.mqtt.parser.avps.Text;
-import com.mobius.software.mqtt.parser.avps.Topic;
-import com.mobius.software.mqtt.parser.header.api.MQMessage;
-import com.mobius.software.mqtt.parser.header.impl.Suback;
-import com.mobius.software.mqtt.parser.header.impl.Subscribe;
-import com.mobius.software.mqtt.parser.header.impl.Unsubscribe;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
+import com.mobiussoftware.iotbroker.network.TopicListener;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -20,9 +14,9 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import java.awt.*;
 
-public class MainPane<T>
+public class MainPane
 		extends JFrame
-		implements ClientListener<T>
+		implements ClientListener
 {
 
 	private static final long serialVersionUID = -4038896950583862834L;
@@ -32,11 +26,18 @@ public class MainPane<T>
 	private MessagesListPane msgListJP;
 	private TopicListPane topicListJP;
 
+	private TopicListener topicListener;
+
 	MainPane(Account account)
 			throws Exception
 	{
 		this.account = account;
 		drawUI();
+	}
+
+	public TopicListener getTopicListener()
+	{
+		return topicListener;
 	}
 
 	private void drawUI()
@@ -139,6 +140,7 @@ public class MainPane<T>
 		this.topicListJP = new TopicListPane(account);
 		ImageIcon topicListIcon = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.TOPIC_LIST_SELECTED_IMG);
 		jtp.addTab("", topicListIcon, topicListJP);
+		topicListener = topicListJP;
 
 		SendMessagePane sendMsgJP = new SendMessagePane(account);
 
@@ -162,45 +164,11 @@ public class MainPane<T>
 	{
 	}
 
-	@Override public void messageReceived(T msg)
+	@Override public void messageReceived(Message message)
 	{
 
-		if (msg instanceof MQMessage)
-		{
-			MQMessage message = (MQMessage) msg;
-			switch (message.getType())
-			{
-			case SUBACK:
-				Suback suback = (Suback) message;
-				if (suback.getReturnCodes().contains(SubackCode.FAILURE))
-					topicListJP.finishAddingTopicFailed();
-				break;
-			case SUBSCRIBE:
-				Subscribe subscribe = (Subscribe) message;
-				for (Topic subscribeTopic : subscribe.getTopics())
-					topicListJP.finishAddingTopic(subscribeTopic.getName().toString(), subscribeTopic.getQos().getValue());
-				break;
-			case UNSUBSCRIBE:
-				/*
-				 * try { Main.createAndShowMainPane(account); } catch (Exception e)
-				 * { System.out.
-				 * println("Error occured while createAndShowMainPane from MainPanel"
-				 * ); e.printStackTrace(); }
-				 */
-				Unsubscribe unsubscribe = (Unsubscribe) message;
-				for (Text unsubscribeTopic : unsubscribe.getTopics())
-					topicListJP.finishDeletingTopic(unsubscribeTopic.toString());
-				break;
-			case PUBLISH:
-				msgListJP.messageReceived(message);
-				break;
-			default:
-				break;
-			}
-		}
-		else if (msg instanceof MQMessage)
-		{
-		}
+		msgListJP.messageReceived(message);
+
 	}
 
 	@Override public void stateChanged(ConnectionState state)

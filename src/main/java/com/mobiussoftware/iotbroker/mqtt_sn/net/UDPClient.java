@@ -7,6 +7,7 @@ import com.mobiussoftware.iotbroker.network.NetworkChannel;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.apache.log4j.Logger;
@@ -67,9 +68,9 @@ public class UDPClient
 			bootstrap.group(loopGroup);
 			bootstrap.channel(NioDatagramChannel.class);
 
-			bootstrap.handler(new ChannelInitializer<SocketChannel>()
+			bootstrap.handler(new ChannelInitializer<DatagramChannel>()
 			{
-				@Override public void initChannel(SocketChannel ch)
+				@Override public void initChannel(DatagramChannel ch)
 						throws InterruptedException
 				{
 					ChannelPipeline pipeline = ch.pipeline();

@@ -16,7 +16,6 @@ import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 
 public class MqttClient
@@ -36,7 +35,8 @@ public class MqttClient
 
 	private Account account;
 
-	private ClientListener<MQMessage> listener;
+	private ClientListener clientListener;
+	private TopicListener topicListener;
 	private DBInterface dbInterface;
 
 	public MqttClient(Account account)
@@ -48,16 +48,21 @@ public class MqttClient
 		this.client = new TCPClient(address, WORKER_THREADS);
 	}
 
-	@Override public void setListener(ClientListener listener)
+	@Override public void setClientListener(ClientListener clientListener)
 	{
-		this.listener = listener;
+		this.clientListener = clientListener;
+	}
+
+	@Override public void setTopicListener(TopicListener topicListener)
+	{
+		this.topicListener = topicListener;
 	}
 
 	@Override public void setState(ConnectionState state)
 	{
 		connectionState = state;
-		if (listener != null)
-			listener.stateChanged(state);
+		if (clientListener != null)
+			clientListener.stateChanged(state);
 	}
 
 	@Override public Boolean createChannel()
@@ -267,14 +272,14 @@ public class MqttClient
 						e.printStackTrace();
 					}
 				}
-				if (listener != null)
-					listener.messageReceived(new Subscribe(packetID, new Topic[] { topic }));
+				if (topicListener != null)
+					topicListener.finishAddingTopic(topic.getName().toString(), topic.getQos().getValue());
 			}
 			else
 			{
 				logger.warn("received suback failure");
-				if (listener != null)
-					listener.messageReceived(new Suback(packetID, Arrays.asList(SubackCode.FAILURE)));
+				if (topicListener != null)
+					topicListener.finishAddingTopicFailed();
 			}
 		}
 	}
@@ -298,7 +303,11 @@ public class MqttClient
 			try
 			{
 				for (Text topic : topics)
+				{
 					dbInterface.deleteTopic(topic.toString());
+					if (topicListener != null)
+						topicListener.finishDeletingTopic(topic.toString());
+				}
 			}
 			catch (Exception e)
 			{
@@ -306,8 +315,6 @@ public class MqttClient
 			}
 		}
 
-		if (listener != null)
-			listener.messageReceived(unsubscribe);
 	}
 
 	@Override public void processPublish(Integer packetID, Topic topic, ByteBuf content, boolean retain, boolean isDup)
@@ -350,10 +357,10 @@ public class MqttClient
 				}
 			}
 
-			if (listener != null)
+			if (clientListener != null)
 			{
-				logger.info("notifying listener on publish received");
-				listener.messageReceived(new Publish(topic, content, retain, isDup));
+				logger.info("notifying clientListener on publish received");
+				clientListener.messageReceived(message);
 			}
 		}
 	}
