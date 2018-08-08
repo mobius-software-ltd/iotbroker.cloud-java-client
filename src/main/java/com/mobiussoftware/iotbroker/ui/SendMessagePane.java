@@ -118,7 +118,7 @@ public class SendMessagePane extends JPanel {
 		settingsPane.add(UIHelper.wrapInJPanel(topicTF, rowColor(i++)));
 
 		settingsPane.add(UIHelper.createParameterLabel("Content", settingsIcon, parameterAlignment, rowColor(i)));
-		contentTF = UIHelper.createTextArea("Message", "content", new Dimension(150, 28));
+		contentTF = UIHelper.createTextArea("content", new Dimension(150, 28));
 		settingsPane.add(UIHelper.wrapInJPanel(contentTF, rowColor(i++)));
 
 		settingsPane.add(UIHelper.createParameterLabel("QoS", settingsIcon, parameterAlignment, rowColor(i)));

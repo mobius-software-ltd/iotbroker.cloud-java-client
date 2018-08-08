@@ -319,7 +319,7 @@ public class LogInPane extends JPanel {
 		settingsPane.add(UIHelper.wrapInJPanel(willTopicTF, rowColor(i++)));
 
 		settingsPane.add(UIHelper.createParameterLabel("Will:", settingsIcn, parameterAlignment, rowColor(i)));
-		willTF = UIHelper.createTextArea("Will", "will", tfDimension);
+		willTF = UIHelper.createTextArea("will", tfDimension);
 		settingsPane.add(UIHelper.wrapInJPanel(willTF, rowColor(i++)));
 
 		settingsPane.add(UIHelper.createParameterLabel("Retain:", settingsIcn, parameterAlignment, rowColor(i)));
@@ -377,7 +377,7 @@ public class LogInPane extends JPanel {
 		int qos = qosCB.getSelectedIndex();
 
 		Account account = new Account(protocol, username, password, clientId, hostName, port, cleanSesssion, keepAlive,
-				will, willTopic, retain, qos/* ,false */);
+				will, willTopic, retain, qos,true);
 
 		return account;
 	}

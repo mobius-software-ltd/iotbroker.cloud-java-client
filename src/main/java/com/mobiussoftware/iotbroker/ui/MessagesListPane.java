@@ -32,7 +32,10 @@ import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
 
-public class MessagesListPane extends JPanel implements ClientListener {
+public class MessagesListPane<T>
+		extends JPanel
+		implements ClientListener<T>
+{
 
 	private static final long serialVersionUID = -3181230353114636429L;
 
@@ -44,14 +47,16 @@ public class MessagesListPane extends JPanel implements ClientListener {
 	static final int COLORED_LABEL_HEIGHT = 40;
 	private final int msgCount = 50;
 
-	MessagesListPane(Account account) {
+	MessagesListPane(Account account)
+	{
 		super();
 
 		this.account = account;
 		drawUI();
 	}
 
-	private void drawUI() {
+	private void drawUI()
+	{
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 		JPanel txtLbl1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -81,15 +86,20 @@ public class MessagesListPane extends JPanel implements ClientListener {
 		addMessagesPaneElements();
 	}
 
-	private void addMessagesPaneElements() {
+	private void addMessagesPaneElements()
+	{
 		messagesPane.setLayout(new GridBagLayout());
-		try {
+		try
+		{
 			final DBInterface dbInterface = DBHelper.getInstance();
 
-			for (Message msg : dbInterface.getMessages(account)) {
+			for (Message msg : dbInterface.getMessages(account))
+			{
 				addMessagesPaneElement(msg);
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 		}
 
@@ -108,7 +118,8 @@ public class MessagesListPane extends JPanel implements ClientListener {
 		messagesPane.add(emptySpace, c);
 	}
 
-	public void addMessagesPaneElement(Message msg) {
+	public void addMessagesPaneElement(Message msg)
+	{
 		Color bgColor = messagesPane.getComponentCount() % 2 == 0 ? Color.white : UIConstants.ROW_ODD_COLOR;
 
 		JPanel messageData = new JPanel();
@@ -176,34 +187,38 @@ public class MessagesListPane extends JPanel implements ClientListener {
 		messagesPane.add(Box.createRigidArea(new Dimension(5, 5)), c);
 	}
 
-	@Override
-	public void messageSent(Message messageObj) {
+	@Override public void messageSent(Message messageObj)
+	{
 		addMessagesPaneElement(messageObj);
 		messagesPane.revalidate();
 	}
 
-	@Override
-	public void messageReceived(MQMessage message) {
-		Publish publish = (Publish) message;
-		Message msg = new Message(account, publish.getTopic().getName().toString(),
-				new String(publish.getContent().array()), true, (byte) publish.getTopic().getQos().getValue(),
-				publish.isRetain(), publish.isDup());
-		addMessagesPaneElement(msg);
-		messagesPane.revalidate();
+	@Override public void messageReceived(T msg)
+	{
+		if (msg instanceof MQMessage)
+		{
+			Publish publish = (Publish) msg;
+			Message message1 = new Message(account, publish.getTopic().getName().toString(), new String(publish.getContent().array()), true, (byte) publish.getTopic().getQos().getValue(), publish.isRetain(), publish.isDup());
+			addMessagesPaneElement(message1);
+			messagesPane.revalidate();
+		}
+		else if (msg instanceof MQMessage)
+		{
+
+		}
 	}
 
-	@Override
-	public void stateChanged(ConnectionState state) {
+	@Override public void stateChanged(ConnectionState state)
+	{
 
 	}
 
-	@Override
-	protected void paintComponent(Graphics g) {
+	@Override protected void paintComponent(Graphics g)
+	{
 		Image bgImage = UIConstants.BG_IMAGE;
 		g.drawImage(bgImage, 0, 0, null);
 
-		BufferedImage bimage = new BufferedImage(bgImage.getWidth(null), bgImage.getHeight(null),
-				BufferedImage.TYPE_INT_ARGB);
+		BufferedImage bimage = new BufferedImage(bgImage.getWidth(null), bgImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
 
 		// Draw the image on to the buffered image
 		Graphics2D bGr = bimage.createGraphics();
@@ -213,13 +228,14 @@ public class MessagesListPane extends JPanel implements ClientListener {
 		super.paintComponent(g);
 		Graphics2D g2d = (Graphics2D) g;
 
-		TexturePaint paint = new TexturePaint(bimage,
-				new Rectangle(0, 0, bgImage.getWidth(null), bgImage.getHeight(null)));
+		TexturePaint paint = new TexturePaint(bimage, new Rectangle(0, 0, bgImage.getWidth(null), bgImage.getHeight(null)));
 		g2d.setPaint(paint);
 		g2d.fillRect(0, 0, getWidth(), getHeight());
 	}
 
-	private class TwoColorRoundedRect extends JPanel {
+	private class TwoColorRoundedRect
+			extends JPanel
+	{
 
 		private static final long serialVersionUID = 5629986014016100634L;
 
@@ -229,12 +245,13 @@ public class MessagesListPane extends JPanel implements ClientListener {
 		private final int width = MessagesListPane.COLORED_LABEL_WIDTH;
 		private final int height = MessagesListPane.COLORED_LABEL_HEIGHT;
 
-		public TwoColorRoundedRect() {
+		public TwoColorRoundedRect()
+		{
 			super.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
 		}
 
-		@Override
-		protected void paintComponent(Graphics g) {
+		@Override protected void paintComponent(Graphics g)
+		{
 			int areaWidth = getWidth();
 			// System.out.println("area width is " + areaWidth);
 			int areaHeight = getHeight();
@@ -255,10 +272,8 @@ public class MessagesListPane extends JPanel implements ClientListener {
 			g2d.fillRoundRect(horizontalOffset, areaHeight / 2, width, rectangularZoneHeight, 0, 0);
 			g2d.fillRoundRect(horizontalOffset, areaHeight / 2, width, height / 2, cornerRadius, cornerRadius);
 
-			((JLabel) this.getComponents()[0])
-					.setBorder(BorderFactory.createEmptyBorder(areaHeight / 2 - height / 2, 0, 0, 0));
-			((JLabel) this.getComponents()[1]).setBorder(
-					BorderFactory.createEmptyBorder(height / 4 - UIConstants.REGULAR_FONT.getSize() / 2, 0, 0, 0));
+			((JLabel) this.getComponents()[0]).setBorder(BorderFactory.createEmptyBorder(areaHeight / 2 - height / 2, 0, 0, 0));
+			((JLabel) this.getComponents()[1]).setBorder(BorderFactory.createEmptyBorder(height / 4 - UIConstants.REGULAR_FONT.getSize() / 2, 0, 0, 0));
 		}
 	}
 }

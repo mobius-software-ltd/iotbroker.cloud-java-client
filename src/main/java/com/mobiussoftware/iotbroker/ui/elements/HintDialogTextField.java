@@ -13,15 +13,14 @@ import javax.swing.border.Border;
 public class HintDialogTextField extends HintTextField {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = -7413423837551286778L;
 	private boolean textAreaIsShown = false;
 	private String text = "";
-	private String title;
-	public HintDialogTextField(String title, String hint, Border border) {
+
+	public HintDialogTextField(String hint, Border border) {
 		super(hint, border);
-		this.title = title;
 	}
 
 	@Override
@@ -37,7 +36,7 @@ public class HintDialogTextField extends HintTextField {
 		// shown"
 		super.setText("");
 
-		JOptionPane.showMessageDialog(null, new JScrollPane(textArea), title, JOptionPane.PLAIN_MESSAGE);
+		JOptionPane.showMessageDialog(null, new JScrollPane(textArea), "Will", JOptionPane.PLAIN_MESSAGE);
 
 		text = textArea.getText().trim();
 

@@ -148,9 +148,9 @@ public class UIHelper {
 		return tf;
 	}
 
-	static HintDialogTextField createTextArea(String title, String hint, Dimension dimension) {
+	static HintDialogTextField createTextArea(String hint, Dimension dimension) {
 
-		HintDialogTextField tf = new HintDialogTextField(title, hint, BorderFactory.createLineBorder(Color.lightGray));
+		HintDialogTextField tf = new HintDialogTextField(hint, BorderFactory.createLineBorder(Color.lightGray));
 		tf.setHorizontalAlignment(JTextField.RIGHT);
 		tf.setFont(UIConstants.REGULAR_FONT);
 		tf.setMinimumSize(dimension);

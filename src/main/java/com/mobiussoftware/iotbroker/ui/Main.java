@@ -2,12 +2,13 @@ package com.mobiussoftware.iotbroker.ui;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-import javax.swing.JFrame;
-import javax.swing.UIDefaults;
-import javax.swing.UIManager;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 
+import com.mobiussoftware.iotbroker.dal.api.DBInterface;
+import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.network.NetworkClient;
 
@@ -30,12 +31,31 @@ public class Main {
 
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				for (Object key : UIManager.getLookAndFeelDefaults().keySet()) {
-					boolean tbp = key.toString().startsWith("ProgressBar");
-					if (tbp)
-						System.out.println(key + " = " + UIManager.get(key));
+//				for (Object key : UIManager.getLookAndFeelDefaults().keySet()) {
+//					boolean tbp = key.toString().startsWith("ProgressBar");
+//					if (tbp)
+//						System.out.println(key + " = " + UIManager.get(key));
+//				}
+				try {
+					final DBInterface dbInterface = DBHelper.getInstance();
+					final Account defAccount = dbInterface.getDefaultAccount();
+					if (defAccount != null) {
+						int delay = 200;
+						Timer timer = new Timer(delay, new ActionListener() {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								Main.createAndShowLogoPane(defAccount);
+							}
+						});
+						timer.setRepeats(false);
+						timer.start();
+					} else {
+						createAndShowAccountMgmtPane();
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-				createAndShowAccountMgmtPane();
+
 			}
 		});
 	}
@@ -113,12 +133,14 @@ public class Main {
 	}
 
 	static void showAccountMgmtPane() {
-		if (accountMgmtPane.isDisplayable() && !accountMgmtPane.isVisible()) {
+		if (accountMgmtPane == null) {
+			createAndShowAccountMgmtPane();
+		} else if (!accountMgmtPane.isVisible()) {
 			accountMgmtPane.setVisible(true);
 			System.out.println("showing hidden mgmt pane");
-		} else {
-			System.out.println("creating account mgmt pane again");
-			createAndShowAccountMgmtPane();
+//		} else {
+//			System.out.println("creating account mgmt pane again");
+//			createAndShowAccountMgmtPane();
 		}
 	}
 

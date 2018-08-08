@@ -9,17 +9,12 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Random;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.SwingConstants;
-import javax.swing.SwingWorker;
+import javax.swing.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
+import com.mobiussoftware.iotbroker.dal.api.DBInterface;
+import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
+import com.mobiussoftware.iotbroker.mqtt_sn.SnClient;
 import org.apache.log4j.Logger;
 
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
@@ -30,7 +25,7 @@ import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
 import com.mobiussoftware.iotbroker.network.NetworkClient;
 
-public class LoadingPane extends JPanel implements PropertyChangeListener, ClientListener {
+public class LoadingPane<T> extends JPanel implements PropertyChangeListener, ClientListener<T> {
 
 	private static final long serialVersionUID = 3454494855396228813L;
 
@@ -52,7 +47,7 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 		this.add(Box.createRigidArea(new Dimension(1, 15)));
 
 		ImageIcon icon = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.LOGO_FILE_PATH);
-		Image tmp = icon.getImage().getScaledInstance(180, 180, java.awt.Image.SCALE_SMOOTH);
+		Image tmp = icon.getImage().getScaledInstance(160	, 160, java.awt.Image.SCALE_SMOOTH);
 		final ImageIcon logoIcn = new ImageIcon(tmp);
 
 		icon = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.IC_LOADING_FILE_PATH);
@@ -133,6 +128,12 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 		public void done() {
 			if (!isCancelled()) {
 				System.out.println("done");
+				try {
+					final DBInterface dbInterface = DBHelper.getInstance();
+					dbInterface.unmarkAsDefault(account);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 				Main.disposeLogoPane();
 				Main.showAccountMgmtPane();
 			}
@@ -141,6 +142,19 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 
 	private void initConnectMqtt() throws Exception {
 		client = new MqttClient(account);
+		client.setListener(this);
+		Main.updateCurrentClient(client);
+		boolean channelCreated = client.createChannel();
+		if (!channelCreated) {
+			// TODO: dialog that error occurred
+			System.out.println("mqtt connection failed");
+			progressBar.setValue(0);
+			return;
+		}
+	}
+
+	private void initConnectSn() throws Exception {
+		client = new SnClient(account);
 		client.setListener(this);
 		Main.updateCurrentClient(client);
 		boolean channelCreated = client.createChannel();
@@ -181,13 +195,16 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 	}
 
 	@Override
-	public void messageReceived(MQMessage message) {
+	public void messageReceived(T message) {
 		Main.mainPane.messageReceived(message);
 	}
 
 	@Override
 	public void stateChanged(ConnectionState state) {
 		System.out.println("LoadingPane state changed state=" + state.toString());
+		try {
+			final DBInterface dbInterface = DBHelper.getInstance();
+
 		switch (state) {
 		case CHANNEL_ESTABLISHED:
 			client.connect();
@@ -212,10 +229,14 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 			// TODO: show "Connection closed by server" dialog
 			Main.disposeMainPane();
 			Main.showAccountMgmtPane();
+
+			JOptionPane.showMessageDialog(this.getParent(), "Connection closed by the server.");
+
 			closeConnection();
 			break;
 		case CONNECTION_FAILED:
 			// TODO: show "Connection failed" dialog
+			JOptionPane.showMessageDialog(this.getParent(), "Connection failed.");
 			closeConnection();
 			break;
 
@@ -226,5 +247,8 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 			break;
 		}
 
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 }

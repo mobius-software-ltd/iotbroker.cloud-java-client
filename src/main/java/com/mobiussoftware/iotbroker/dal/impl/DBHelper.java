@@ -68,56 +68,51 @@ public class DBHelper implements DBInterface {
 		TableUtils.createTableIfNotExists(connectionSource, Message.class);
 	}
 
-	@Override
-	public CloseableWrappedIterable<Account> accountIterator() {
+	@Override public CloseableWrappedIterable<Account> accountIterator() {
 		return accountDao.getWrappedIterable();
 	}
 
-	@Override
-	public void storeAccount(Account account) throws SQLException {
+	@Override public void storeAccount(Account account) throws SQLException {
 		accountDao.create(account);
 	}
 
-	@Override
-	public void deleteAccount(String id) throws SQLException {
+	@Override public void deleteAccount(String id) throws SQLException {
 		accountDao.deleteById(id);
 	}
 
-	@Override
-	public List<Topic> getTopics(Account account) throws SQLException {
+	@Override public List<Topic> getTopics(Account account) throws SQLException {
 		List<Topic> topics = topicDao.queryBuilder().where().eq("account_id", account).query();
 		return topics;
 	}
 
-	@Override
-	public Topic getTopic(String id) throws SQLException {
+	@Override public Topic getTopic(String id) throws SQLException {
 		return topicDao.queryForId(id);
 	}
 
-	@Override
-	public void saveTopic(Topic topic) throws SQLException {
+	@Override public void saveTopic(Topic topic) throws SQLException {
 		topicDao.create(topic);
 	}
 
-	@Override
-	public void deleteTopic(String id) throws SQLException {
+	@Override public void deleteTopic(String id) throws SQLException {
 		topicDao.deleteById(id);
 	}
 
-	@Override
-	public List<Message> getMessages(Account account) throws SQLException {
+	@Override public List<Message> getMessages(Account account) throws SQLException {
 		List<Message> messages = messageDao.queryBuilder().where().eq("account_id", account).query();
 		return messages;
 	}
 
-	@Override
-	public void saveMessage(Message message) throws SQLException {
+	@Override public void saveMessage(Message message) throws SQLException {
 		messageDao.create(message);
 	}
 
-	@Override
-	public void deleteAllTopics() {
+	@Override public void deleteAllTopics() {
 
+	}
+
+	@Override public Account getDefaultAccount() throws SQLException {
+		Account account = accountDao.queryBuilder().where().eq("is_default", true).queryForFirst();
+		return account;
 	}
 
 	/*@Override
@@ -127,11 +122,14 @@ public class DBHelper implements DBInterface {
 			return true;
 		return false;
 	}*/
-	/*
-	 * public void markAsDefault(Account account)throws SQLException {
-	 * account.setDefault(true); accountDao.update(account); }
-	 * 
-	 * @Override public void unmarkAsDefault(Account account)throws SQLException
-	 * { account.setDefault(false); accountDao.update(account); }
-	 */
+
+	@Override public void markAsDefault(Account account) throws SQLException {
+		account.setDefault(true);
+		accountDao.update(account);
+	}
+
+	@Override public void unmarkAsDefault(Account account) throws SQLException {
+		account.setDefault(false);
+		accountDao.update(account);
+	}
 }

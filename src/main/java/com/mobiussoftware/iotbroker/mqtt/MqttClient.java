@@ -56,7 +56,7 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 
 	private Account account;
 
-	private ClientListener listener;
+	private ClientListener<MQMessage> listener;
 	private DBInterface dbInterface;
 
 	public MqttClient(Account account) throws Exception {
@@ -344,65 +344,53 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 		}
 	}
 
-	@Override
-	public void processPuback(Integer packetID) {
+	@Override public void processPuback(Integer packetID) {
 		timers.remove(packetID);
 	}
 
-	@Override
-	public void processPubrec(Integer packetID) {
+	@Override public void processPubrec(Integer packetID) {
 		timers.remove(packetID);
 		MQMessage message = new Pubrel(packetID);
 		timers.store(message);
 		client.send(message);
 	}
 
-	@Override
-	public void processPubrel(Integer packetID) {
+	@Override public void processPubrel(Integer packetID) {
 		client.send(new Pubcomp(packetID));
 	}
 
-	@Override
-	public void processPubcomp(Integer packetID) {
+	@Override public void processPubcomp(Integer packetID) {
 		timers.remove(packetID);
 	}
 
-	@Override
-	public void processPingresp() {
+	@Override public void processPingresp() {
 	}
 
-	@Override
-	public void processSubscribe(Integer packetID, Topic[] topics) {
+	@Override public void processSubscribe(Integer packetID, Topic[] topics) {
 		logger.error("received invalid message subscribe");
 	}
 
-	@Override
-	public void processConnect(boolean cleanSession, int keepalive, Will will) {
+	@Override public void processConnect(boolean cleanSession, int keepalive, Will will) {
 		logger.error("received invalid message connect");
 	}
 
-	@Override
-	public void processPingreq() {
+	@Override public void processPingreq() {
 		logger.error("received invalid message pingreq");
 	}
 
-	@Override
-	public void processDisconnect() {
+	@Override public void processDisconnect() {
 		logger.error("received invalid message disconnect");
 	}
 
-	@Override
-	public void processUnsubscribe(Integer packetID, Text[] topics) {
+	@Override public void processUnsubscribe(Integer packetID, Text[] topics) {
 		logger.error("received invalid message unsubscribe");
 	}
 
-	@Override
-	public void connected() {
+	@Override public void connected() {
 		setState(ConnectionState.CHANNEL_ESTABLISHED);
 	}
 
-	@Override
-	public void connectFailed() {
+	@Override public void connectFailed() {
 		setState(ConnectionState.CHANNEL_FAILED);
 	}
 }

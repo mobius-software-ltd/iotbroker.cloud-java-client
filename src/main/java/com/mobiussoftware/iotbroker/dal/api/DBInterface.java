@@ -9,24 +9,30 @@ import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.db.Topic;
 
 public interface DBInterface {
-	
-	CloseableWrappedIterable<Account> accountIterator();
 
-	void storeAccount(Account account) throws SQLException;
+    CloseableWrappedIterable<Account> accountIterator();
 
-	void deleteAccount(String id) throws SQLException;
+    void storeAccount(Account account) throws SQLException;
 
-	List<Topic> getTopics(Account account) throws SQLException;
+    void deleteAccount(String id) throws SQLException;
 
-	Topic getTopic(String id) throws SQLException;
+    List<Topic> getTopics(Account account) throws SQLException;
 
-	void saveTopic(Topic topic) throws SQLException;
+    Topic getTopic(String id) throws SQLException;
 
-	void deleteTopic(String id) throws SQLException;
+    void saveTopic(Topic topic) throws SQLException;
 
-	List<Message> getMessages(Account account) throws SQLException;
+    void deleteTopic(String id) throws SQLException;
 
-	void saveMessage(Message message) throws SQLException;
+    List<Message> getMessages(Account account) throws SQLException;
 
-	void deleteAllTopics();
+    void saveMessage(Message message) throws SQLException;
+
+    void deleteAllTopics();
+
+    Account getDefaultAccount() throws SQLException;
+
+    void markAsDefault(Account account) throws SQLException;
+
+    void unmarkAsDefault(Account account) throws SQLException;
 }

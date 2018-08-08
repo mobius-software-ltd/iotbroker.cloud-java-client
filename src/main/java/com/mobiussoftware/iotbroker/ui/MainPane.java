@@ -21,12 +21,14 @@ import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.Suback;
 import com.mobius.software.mqtt.parser.header.impl.Subscribe;
 import com.mobius.software.mqtt.parser.header.impl.Unsubscribe;
+import com.mobiussoftware.iotbroker.dal.api.DBInterface;
+import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
 
-public class MainPane extends JFrame implements ClientListener {
+public class MainPane<T> extends JFrame implements ClientListener<T> {
 
 	private static final long serialVersionUID = -4038896950583862834L;
 
@@ -113,6 +115,12 @@ public class MainPane extends JFrame implements ClientListener {
 				case 3:
 					icon = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.LOGOUT_SELECTED_IMG);
 					Main.getCurrentClient().disconnect();
+					try {
+						final DBInterface dbInterface = DBHelper.getInstance();
+						dbInterface.unmarkAsDefault(account);
+					} catch (Exception ex) {
+						ex.printStackTrace();
+					}
 					Main.showAccountMgmtPane();
 					Main.disposeMainPane();
 					break;
@@ -150,34 +158,40 @@ public class MainPane extends JFrame implements ClientListener {
 	}
 
 	@Override
-	public void messageReceived(MQMessage message) {
-		switch (message.getType()) {
-		case SUBACK:
-			Suback suback = (Suback) message;
-			if (suback.getReturnCodes().contains(SubackCode.FAILURE))
-				topicListJP.finishAddingTopicFailed();
-			break;
-		case SUBSCRIBE:
-			Subscribe subscribe = (Subscribe) message;
-			for (Topic subscribeTopic : subscribe.getTopics())
-				topicListJP.finishAddingTopic(subscribeTopic.getName().toString(), subscribeTopic.getQos().getValue());
-			break;
-		case UNSUBSCRIBE:
-			/*
-			 * try { Main.createAndShowMainPane(account); } catch (Exception e)
-			 * { System.out.
-			 * println("Error occured while createAndShowMainPane from MainPanel"
-			 * ); e.printStackTrace(); }
-			 */
-			Unsubscribe unsubscribe = (Unsubscribe) message;
-			for (Text unsubscribeTopic : unsubscribe.getTopics())
-				topicListJP.finishDeletingTopic(unsubscribeTopic.toString());
-			break;
-		case PUBLISH:
-			msgListJP.messageReceived(message);
-			break;
-		default:
-			break;
+	public void messageReceived(T msg) {
+
+		if (msg instanceof MQMessage) {
+			MQMessage message = (MQMessage) msg;
+			switch (message.getType())
+			{
+			case SUBACK:
+				Suback suback = (Suback) message;
+				if (suback.getReturnCodes().contains(SubackCode.FAILURE))
+					topicListJP.finishAddingTopicFailed();
+				break;
+			case SUBSCRIBE:
+				Subscribe subscribe = (Subscribe) message;
+				for (Topic subscribeTopic : subscribe.getTopics())
+					topicListJP.finishAddingTopic(subscribeTopic.getName().toString(), subscribeTopic.getQos().getValue());
+				break;
+			case UNSUBSCRIBE:
+				/*
+				 * try { Main.createAndShowMainPane(account); } catch (Exception e)
+				 * { System.out.
+				 * println("Error occured while createAndShowMainPane from MainPanel"
+				 * ); e.printStackTrace(); }
+				 */
+				Unsubscribe unsubscribe = (Unsubscribe) message;
+				for (Text unsubscribeTopic : unsubscribe.getTopics())
+					topicListJP.finishDeletingTopic(unsubscribeTopic.toString());
+				break;
+			case PUBLISH:
+				msgListJP.messageReceived(message);
+				break;
+			default:
+				break;
+			}
+		} else if (msg instanceof MQMessage) {
 		}
 	}
 

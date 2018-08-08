@@ -123,6 +123,14 @@ public class AccountMgmtPane extends JPanel {
 						if (accountChosen)
 							return;
 						accountChosen = true;
+
+						try {
+							final DBInterface dbInterface = DBHelper.getInstance();
+							dbInterface.markAsDefault(account);
+						} catch (Exception ex) {
+							ex.printStackTrace();
+						}
+
 						String tag = ((Component) mouseEvent.getSource()).getName();
 						final Component[] row = componentList.get(Integer.valueOf(tag));
 						row[0].setBackground(UIConstants.SELECTION_COLOR);

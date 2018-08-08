@@ -48,7 +48,6 @@ import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Topic;
 import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
-import com.sun.javafx.stage.FocusUngrabEvent;
 
 public class TopicListPane extends JPanel {
 
