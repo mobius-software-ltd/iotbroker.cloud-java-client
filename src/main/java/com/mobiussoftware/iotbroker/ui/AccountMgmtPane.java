@@ -140,7 +140,7 @@ public class AccountMgmtPane extends JPanel {
 						Timer timer = new Timer(delay, new ActionListener() {
 							@Override
 							public void actionPerformed(ActionEvent e) {
-								Main.createAndShowLogoPane(account);
+								Main.createAndShowLoadingPane(account);
 								row[0].setBackground(UIConstants.APP_BG_COLOR);
 								row[1].setBackground(UIConstants.APP_BG_COLOR);
 								accountChosen = false;

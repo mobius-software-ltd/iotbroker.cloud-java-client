@@ -31,10 +31,12 @@ import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 
-public class LogInPane extends JPanel {
+public class LogInPane
+		extends JPanel
+{
 
 	private final Logger logger = Logger.getLogger(getClass());
-	
+
 	private static final long serialVersionUID = 8294913343212905727L;
 
 	private final int columns = 2;
@@ -62,10 +64,10 @@ public class LogInPane extends JPanel {
 	private JPanel passwordLabel;
 	private JPanel clientIdLabel;
 
-	@SuppressWarnings("unused")
-	private Protocol previousProtocolChoice;
+	@SuppressWarnings("unused") private Protocol previousProtocolChoice;
 
-	LogInPane() {
+	LogInPane()
+	{
 		super();
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -87,9 +89,10 @@ public class LogInPane extends JPanel {
 		this.add(settingsPaneWrapper);
 		addSettingsPaneElements();
 
-		MouseListener listener = new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent arg0) {
+		MouseListener listener = new MouseAdapter()
+		{
+			@Override public void mouseClicked(MouseEvent arg0)
+			{
 				loginBtnClicked(arg0);
 			}
 		};
@@ -97,26 +100,38 @@ public class LogInPane extends JPanel {
 
 	}
 
-	private void loginBtnClicked(MouseEvent event) {
+	private void loginBtnClicked(MouseEvent event)
+	{
 		logger.info("LogIn button clicked!");
 
-		if (!UIHelper.validateTF(usernameTF, passwordTF, clientIdTF, hostNameTF, willTopicTF)
-				|| !UIHelper.validateNumTF(portTF, keepAliveTF) || !UIHelper.validateDialogTF(willTF))
+		if (!UIHelper.validateTF(usernameTF, passwordTF, clientIdTF, hostNameTF, willTopicTF) || !UIHelper.validateNumTF(portTF, keepAliveTF) || !UIHelper.validateDialogTF(willTF))
 			return;
 
 		Account account = getAccountObject();
-		try {
+		try
+		{
 			DBInterface dbInterface = DBHelper.getInstance();
 			dbInterface.storeAccount(account);
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			// should not happen
 			e.printStackTrace();
 		}
-		Main.showAccountMgmtPane();
+		try
+		{
+			Main.createAndShowLoadingPane(account);
+		}
+		catch (Exception e)
+		{
+			System.out.println("Error occured while createAndShowMainPane from LoginPanel");
+			e.printStackTrace();
+		}
 		Main.disposeLogInPane();
 	}
 
-	private Color rowColor(int rowNumber) {
+	private Color rowColor(int rowNumber)
+	{
 		return rowNumber % 2 == 0 ? UIConstants.ROW_EVEN_COLOR : UIConstants.ROW_ODD_COLOR;
 	}
 
@@ -124,8 +139,8 @@ public class LogInPane extends JPanel {
 	final int parameterLabelAlignment = SwingConstants.LEFT;
 	int regInfoColorCount = 0;
 
-	@SuppressWarnings("unchecked")
-	private void addRegInfoBlock() {
+	@SuppressWarnings("unchecked") private void addRegInfoBlock()
+	{
 		Image tmp = UIConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
 		final ImageIcon settingsIcn = new ImageIcon(tmp);
 
@@ -135,17 +150,20 @@ public class LogInPane extends JPanel {
 		regInfoPane.add(UIHelper.createParameterLabel("Protocol:", settingsIcn, parameterLabelAlignment, rowColor(0)));
 		JPanel panel = UIHelper.createJComboBox(Protocol.values(), new Dimension(90, 24));
 		protocolCB = (JComboBox<String>) (panel.getComponent(0));
-		protocolCB.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent itemEvent) {
+		protocolCB.addItemListener(new ItemListener()
+		{
+			@Override public void itemStateChanged(ItemEvent itemEvent)
+			{
 
-				if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
+				if (itemEvent.getStateChange() == ItemEvent.SELECTED)
+				{
 					// System.out.println("item " + itemEvent.getItem() + "
 					// changed from " + previousProtocolChoice + ", class " +
 					// itemEvent.getItem().getClass());
 
 					Protocol currentProtocol = (Protocol) itemEvent.getItem();
-					switch (currentProtocol) {
+					switch (currentProtocol)
+					{
 					case MQTT:
 						removeRegInfoPaneElements();
 						addMqRegInfo();
@@ -171,7 +189,8 @@ public class LogInPane extends JPanel {
 						removeSettingsBlock();
 						break;
 					}
-				} else if (itemEvent.getStateChange() == ItemEvent.DESELECTED)
+				}
+				else if (itemEvent.getStateChange() == ItemEvent.DESELECTED)
 					previousProtocolChoice = (Protocol) itemEvent.getItem();
 			}
 		});
@@ -180,101 +199,109 @@ public class LogInPane extends JPanel {
 		addMqRegInfo();
 	}
 
-	private void addMqRegInfo() {
+	private void addMqRegInfo()
+	{
 		regInfoPane.setLayout(new GridLayout(6, columns));
 		addUserPasswordFields();
 		addClientIdField();
 		addServerPortFields();
 	}
 
-	private void addSnRegInfo() {
+	private void addSnRegInfo()
+	{
 		regInfoPane.setLayout(new GridLayout(4, columns));
 		addClientIdField();
 		addServerPortFields();
 	}
 
-	private void addCoapRegInfo() {
+	private void addCoapRegInfo()
+	{
 		regInfoPane.setLayout(new GridLayout(3, columns));
 		addServerPortFields();
 	}
 
-	private void addAmqpRegInfo() {
+	private void addAmqpRegInfo()
+	{
 		addSnRegInfo();
 	}
 
-	private void removeRegInfoPaneElements() {
+	private void removeRegInfoPaneElements()
+	{
 		// System.out.println("regInfo componentCount is " +
 		// regInfoPane.getComponentCount());
-		for (int j = regInfoPane.getComponentCount() - 1; j >= 2; j--) {
+		for (int j = regInfoPane.getComponentCount() - 1; j >= 2; j--)
+		{
 			// System.out.println("removed " + regInfoPane.getComponent(j));
 			regInfoPane.remove(2);
 		}
 		regInfoColorCount = 1;
 	}
 
-	private void addSettingsBlock() {
-		if (this.getComponent(2) != settingsBlockLabel) {
+	private void addSettingsBlock()
+	{
+		if (this.getComponent(2) != settingsBlockLabel)
+		{
 			this.add(settingsBlockLabel, 2);
 			this.add(settingsPaneWrapper, 3);
 			this.revalidate();
 		}
 	}
 
-	private void removeSettingsBlock() {
-		if (this.getComponentCount() > 3 && this.getComponent(3) == settingsPaneWrapper) {
+	private void removeSettingsBlock()
+	{
+		if (this.getComponentCount() > 3 && this.getComponent(3) == settingsPaneWrapper)
+		{
 			this.remove(settingsPaneWrapper);
 			this.remove(settingsBlockLabel);
 			this.revalidate();
 		}
 	}
 
-	private void addUserPasswordFields() {
+	private void addUserPasswordFields()
+	{
 		Image tmp = UIConstants.IC_USERNAME.getImage().getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
 		final ImageIcon usernameIcn = new ImageIcon(tmp);
 		tmp = UIConstants.IC_PASSWORD.getImage().getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
 		final ImageIcon passwordIcn = new ImageIcon(tmp);
 
-		usernameLabel = UIHelper.createParameterLabel("Username:", usernameIcn, parameterLabelAlignment,
-				rowColor(regInfoColorCount));
+		usernameLabel = UIHelper.createParameterLabel("Username:", usernameIcn, parameterLabelAlignment, rowColor(regInfoColorCount));
 		regInfoPane.add(usernameLabel);
 		usernameTF = UIHelper.createHintTextField("username", tfDimension);
 		regInfoPane.add(UIHelper.wrapInJPanel(usernameTF, rowColor(regInfoColorCount++)));
 
-		passwordLabel = UIHelper.createParameterLabel("Password:", passwordIcn, parameterLabelAlignment,
-				rowColor(regInfoColorCount));
+		passwordLabel = UIHelper.createParameterLabel("Password:", passwordIcn, parameterLabelAlignment, rowColor(regInfoColorCount));
 		regInfoPane.add(passwordLabel);
 		passwordTF = UIHelper.createHintTextField("password", tfDimension);
 		regInfoPane.add(UIHelper.wrapInJPanel(passwordTF, rowColor(regInfoColorCount++)));
 	}
 
-	private void addClientIdField() {
+	private void addClientIdField()
+	{
 		Image tmp = UIConstants.IC_CLIENT_ID.getImage().getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
 		final ImageIcon clientIdIcn = new ImageIcon(tmp);
 
-		clientIdLabel = UIHelper.createParameterLabel("Client ID:", clientIdIcn, parameterLabelAlignment,
-				rowColor(regInfoColorCount));
+		clientIdLabel = UIHelper.createParameterLabel("Client ID:", clientIdIcn, parameterLabelAlignment, rowColor(regInfoColorCount));
 		regInfoPane.add(clientIdLabel);
 		clientIdTF = UIHelper.createHintTextField("client id", tfDimension);
 		regInfoPane.add(UIHelper.wrapInJPanel(clientIdTF, rowColor(regInfoColorCount++)));
 	}
 
-	private void addServerPortFields() {
+	private void addServerPortFields()
+	{
 		Image tmp = UIConstants.IC_HOST_PORT.getImage().getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
 		final ImageIcon hostPortIcn = new ImageIcon(tmp);
 
-		regInfoPane.add(UIHelper.createParameterLabel("Server Host:", hostPortIcn, parameterLabelAlignment,
-				rowColor(regInfoColorCount)));
+		regInfoPane.add(UIHelper.createParameterLabel("Server Host:", hostPortIcn, parameterLabelAlignment, rowColor(regInfoColorCount)));
 		hostNameTF = UIHelper.createHintTextField("server host", tfDimension);
 		regInfoPane.add(UIHelper.wrapInJPanel(hostNameTF, rowColor(regInfoColorCount++)));
 
-		regInfoPane.add(UIHelper.createParameterLabel("Port:", hostPortIcn, parameterLabelAlignment,
-				rowColor(regInfoColorCount)));
+		regInfoPane.add(UIHelper.createParameterLabel("Port:", hostPortIcn, parameterLabelAlignment, rowColor(regInfoColorCount)));
 		portTF = UIHelper.createHintTextField("port", tfDimension);
 		regInfoPane.add(UIHelper.wrapInJPanel(portTF, rowColor(regInfoColorCount++)));
 	}
 
-	@SuppressWarnings("unchecked")
-	private void addSettingsPaneElements() {
+	@SuppressWarnings("unchecked") private void addSettingsPaneElements()
+	{
 		Image tmp = UIConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
 		final ImageIcon settingsIcn = new ImageIcon(tmp);
 		tmp = UIConstants.IC_CLEAN_SESSION.getImage().getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
@@ -305,8 +332,7 @@ public class LogInPane extends JPanel {
 		final int parameterAlignment = SwingConstants.LEFT;
 		int i = 0;
 
-		settingsPane
-				.add(UIHelper.createParameterLabel("Clean Session:", cleanSessionIcn, parameterAlignment, rowColor(i)));
+		settingsPane.add(UIHelper.createParameterLabel("Clean Session:", cleanSessionIcn, parameterAlignment, rowColor(i)));
 		cleanSessionCB = UIHelper.createJCheckBox(rowColor(i));
 		settingsPane.add(UIHelper.wrapInJPanel(cleanSessionCB, rowColor(i++)));
 
@@ -362,7 +388,9 @@ public class LogInPane extends JPanel {
 		// }
 	}
 
-	private Account getAccountObject() throws NumberFormatException {
+	private Account getAccountObject()
+			throws NumberFormatException
+	{
 		Protocol protocol = (Protocol) protocolCB.getSelectedItem();
 		String username = usernameTF.getText();
 		String password = passwordTF.getText();
@@ -376,19 +404,17 @@ public class LogInPane extends JPanel {
 		boolean retain = retainCB.isSelected();
 		int qos = qosCB.getSelectedIndex();
 
-		Account account = new Account(protocol, username, password, clientId, hostName, port, cleanSesssion, keepAlive,
-				will, willTopic, retain, qos,true);
+		Account account = new Account(protocol, username, password, clientId, hostName, port, cleanSesssion, keepAlive, will, willTopic, retain, qos, true);
 
 		return account;
 	}
 
-	@Override
-	protected void paintComponent(Graphics g) {
+	@Override protected void paintComponent(Graphics g)
+	{
 		Image bgImage = UIConstants.BG_IMAGE;
 		g.drawImage(bgImage, 0, 0, null);
 
-		BufferedImage bimage = new BufferedImage(bgImage.getWidth(null), bgImage.getHeight(null),
-				BufferedImage.TYPE_INT_ARGB);
+		BufferedImage bimage = new BufferedImage(bgImage.getWidth(null), bgImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
 
 		// Draw the image on to the buffered image
 		Graphics2D bGr = bimage.createGraphics();
@@ -398,8 +424,7 @@ public class LogInPane extends JPanel {
 		super.paintComponent(g);
 		Graphics2D g2d = (Graphics2D) g;
 
-		TexturePaint paint = new TexturePaint(bimage,
-				new Rectangle(0, 0, bgImage.getWidth(null), bgImage.getHeight(null)));
+		TexturePaint paint = new TexturePaint(bimage, new Rectangle(0, 0, bgImage.getWidth(null), bgImage.getHeight(null)));
 		g2d.setPaint(paint);
 		g2d.fillRect(0, 0, getWidth(), getHeight());
 	}

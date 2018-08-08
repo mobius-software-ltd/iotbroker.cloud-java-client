@@ -44,7 +44,7 @@ public class Main {
 						Timer timer = new Timer(delay, new ActionListener() {
 							@Override
 							public void actionPerformed(ActionEvent e) {
-								Main.createAndShowLogoPane(defAccount);
+								Main.createAndShowLoadingPane(defAccount);
 							}
 						});
 						timer.setRepeats(false);
@@ -152,7 +152,7 @@ public class Main {
 		System.out.println(accountMgmtPane);
 	}
 
-	public static void createAndShowLogoPane(Account account) {
+	public static void createAndShowLoadingPane(Account account) {
 
 		JFrame frame = new JFrame(account.getProtocol().toString());
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
