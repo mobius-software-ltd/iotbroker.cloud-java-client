@@ -1,4 +1,4 @@
-package com.mobiussoftware.iotbroker.network;
+package com.mobiussoftware.iotbroker.coap.net;
 
 /**
 * Mobius Software LTD
@@ -19,17 +19,38 @@ package com.mobiussoftware.iotbroker.network;
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-
-import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 
-public class ExceptionHandler
-		extends ChannelDuplexHandler
+import com.mobius.software.coap.parser.tlv.CoapMessage;
+import com.mobiussoftware.iotbroker.network.ConnectionListener;
+
+public class CoapHandler extends SimpleChannelInboundHandler<CoapMessage>
 {
-	@Override public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
-			throws Exception
+
+	private ConnectionListener<CoapMessage> listener;
+
+	public CoapHandler(ConnectionListener<CoapMessage> listener)
 	{
-		if (ctx.channel().isOpen())
-			ctx.channel().closeFuture();
+		this.listener = listener;
+	}
+
+	@Override 
+	protected void channelRead0(ChannelHandlerContext channelHandlerContext, CoapMessage message) throws Exception
+	{
+		if (this.listener != null)
+			this.listener.packetReceived(message);
+	}
+
+	@Override 
+	public void channelInactive(ChannelHandlerContext ctx) throws Exception
+	{
+		listener.connectionLost();
+	}
+
+	@Override 
+	public void channelReadComplete(ChannelHandlerContext ctx) throws Exception
+	{
+		ctx.flush();
 	}
 }

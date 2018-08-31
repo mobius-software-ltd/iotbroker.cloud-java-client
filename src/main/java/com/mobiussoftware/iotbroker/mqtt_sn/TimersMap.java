@@ -1,7 +1,24 @@
 package com.mobiussoftware.iotbroker.mqtt_sn;
 
-//!!!!!!!
-
+/**
+* Mobius Software LTD
+* Copyright 2015-2018, Mobius Software LTD
+*
+* This is free software; you can redistribute it and/or modify it
+* under the terms of the GNU Lesser General Public License as
+* published by the Free Software Foundation; either version 2.1 of
+* the License, or (at your option) any later version.
+*
+* This software is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+* Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public
+* License along with this software; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+* 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+*/
 import com.mobius.software.mqttsn.parser.avps.SNType;
 import com.mobius.software.mqttsn.parser.packet.api.CountableMessage;
 import com.mobius.software.mqttsn.parser.packet.api.SNMessage;
@@ -14,8 +31,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
 
-public class TimersMap
-		implements TimersMapInterface<SNMessage>
+public class TimersMap implements TimersMapInterface<SNMessage>
 {
 	private static int MAX_VALUE = 65535;
 	private static int MIN_VALUE = 1;
@@ -82,17 +98,18 @@ public class TimersMap
 		}
 	}
 
-	@Override public void refreshTimer(MessageResendTimer<SNMessage> timer)
+	@Override 
+	public void refreshTimer(MessageResendTimer<SNMessage> timer)
 	{
 		ScheduledFuture<?> future = null;
 		switch (timer.getMessage().getType())
 		{
-		case PINGREQ:
-			future = scheduledservice.schedule(timer, keepalivePeriod, TimeUnit.MILLISECONDS);
-			break;
-		default:
-			future = scheduledservice.schedule(timer, resendPeriod, TimeUnit.MILLISECONDS);
-			break;
+			case PINGREQ:
+				future = scheduledservice.schedule(timer, keepalivePeriod, TimeUnit.MILLISECONDS);
+				break;
+			default:
+				future = scheduledservice.schedule(timer, resendPeriod, TimeUnit.MILLISECONDS);
+				break;
 		}
 
 		timer.setFuture(future);
@@ -126,7 +143,8 @@ public class TimersMap
 		connectTimer.setFuture(future);
 	}
 
-	@Override public void cancelConnectTimer()
+	@Override 
+	public void cancelConnectTimer()
 	{
 		cancelTimer(connectTimer);
 	}

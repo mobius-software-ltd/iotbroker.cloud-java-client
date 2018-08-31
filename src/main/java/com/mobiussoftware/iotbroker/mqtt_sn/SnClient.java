@@ -1,5 +1,24 @@
 package com.mobiussoftware.iotbroker.mqtt_sn;
 
+/**
+* Mobius Software LTD
+* Copyright 2015-2018, Mobius Software LTD
+*
+* This is free software; you can redistribute it and/or modify it
+* under the terms of the GNU Lesser General Public License as
+* published by the Free Software Foundation; either version 2.1 of
+* the License, or (at your option) any later version.
+*
+* This software is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+* Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public
+* License along with this software; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+* 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+*/
 import com.mobius.software.mqtt.parser.avps.QoS;
 import com.mobius.software.mqtt.parser.avps.Text;
 import com.mobius.software.mqtt.parser.avps.Topic;
@@ -23,10 +42,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class SnClient
-		implements ConnectionListener<SNMessage>, SNDevice, NetworkClient
+public class SnClient implements ConnectionListener<SNMessage>, SNDevice, NetworkClient
 {
-
 	public static String MESSAGETYPE_PARAM = "MESSAGETYPE";
 	private final Logger logger = Logger.getLogger(getClass());
 	private int RESEND_PERIOND = 3000;
@@ -47,8 +64,7 @@ public class SnClient
 	private ConcurrentHashMap<String, Integer> reverseMappedTopics = new ConcurrentHashMap<>();
 	private List<SNPublish> pendingMessages = new ArrayList<>();
 
-	public SnClient(Account account)
-			throws Exception
+	public SnClient(Account account) throws Exception
 	{
 		this.dbInterface = DBHelper.getInstance();
 		this.account = account;
@@ -56,24 +72,28 @@ public class SnClient
 		this.client = new UDPClient(address, WORKER_THREADS);
 	}
 
-	@Override public void setClientListener(ClientListener clientListener)
+	@Override 
+	public void setClientListener(ClientListener clientListener)
 	{
 		this.clientListener = clientListener;
 	}
 
-	@Override public void setTopicListener(TopicListener topicListener)
+	@Override 
+	public void setTopicListener(TopicListener topicListener)
 	{
 		this.topicListener = topicListener;
 	}
 
-	@Override public void setState(ConnectionState state)
+	@Override 
+	public void setState(ConnectionState state)
 	{
 		connectionState = state;
 		if (clientListener != null)
 			clientListener.stateChanged(state);
 	}
 
-	@Override public Boolean createChannel()
+	@Override 
+	public Boolean createChannel()
 	{
 		setState(ConnectionState.CHANNEL_CREATING);
 		Boolean isSuccess = client.init(this);
@@ -97,13 +117,15 @@ public class SnClient
 		return address;
 	}
 
-	@Override public void closeChannel()
+	@Override 
+	public void closeChannel()
 	{
 		if (client != null)
 			client.shutdown();
 	}
 
-	@Override public void connect()
+	@Override 
+	public void connect()
 	{
 		setState(ConnectionState.CONNECTING);
 		Boolean willPresent = false;
@@ -123,7 +145,8 @@ public class SnClient
 			client.send(connect);
 	}
 
-	@Override public void disconnect()
+	@Override 
+	public void disconnect()
 	{
 		if (client.isConnected())
 		{
@@ -134,7 +157,8 @@ public class SnClient
 		setState(ConnectionState.NONE);
 	}
 
-	@Override public void subscribe(Topic[] topics)
+	@Override 
+	public void subscribe(Topic[] topics)
 	{
 		for (Topic topic1 : topics)
 		{
@@ -164,7 +188,8 @@ public class SnClient
 		}
 	}
 
-	@Override public void unsubscribe(String[] topics)
+	@Override 
+	public void unsubscribe(String[] topics)
 	{
 		for (String topic1 : topics)
 		{
@@ -182,7 +207,8 @@ public class SnClient
 		}
 	}
 
-	@Override public void publish(Topic topic, byte[] content, Boolean retain, Boolean dup)
+	@Override 
+	public void publish(Topic topic, byte[] content, Boolean retain, Boolean dup)
 	{
 		SNQoS realQos = SNQoS.AT_LEAST_ONCE;
 		switch (topic.getQos())
@@ -227,7 +253,8 @@ public class SnClient
 		client = new UDPClient(address, WORKER_THREADS);
 	}
 
-	@Override public void closeConnection()
+	@Override 
+	public void closeConnection()
 	{
 		if (timers != null)
 			timers.stopAllTimers();
@@ -240,7 +267,8 @@ public class SnClient
 		}
 	}
 
-	@Override public void packetReceived(SNMessage message)
+	@Override 
+	public void packetReceived(SNMessage message)
 	{
 		try
 		{
@@ -253,12 +281,14 @@ public class SnClient
 		}
 	}
 
-	@Override public void cancelConnection()
+	@Override 
+	public void cancelConnection()
 	{
 		client.shutdown();
 	}
 
-	@Override public void connectionLost()
+	@Override 
+	public void connectionLost()
 	{
 
 		if (timers != null)
@@ -271,7 +301,8 @@ public class SnClient
 		}
 	}
 
-	@Override public void processWillTopicRequest()
+	@Override 
+	public void processWillTopicRequest()
 	{
 		Boolean retain = false;
 		SNQoS topicQos = SNQoS.EXACTLY_ONCE;
@@ -300,7 +331,8 @@ public class SnClient
 		client.send(willTopic);
 	}
 
-	@Override public void processWillMessageRequest()
+	@Override 
+	public void processWillMessageRequest()
 	{
 		byte[] content;
 		if (account.getWill() != null)
@@ -312,7 +344,8 @@ public class SnClient
 		}
 	}
 
-	@Override public void processConnack(ReturnCode code)
+	@Override 
+	public void processConnack(ReturnCode code)
 	{
 		// CANCEL CONNECT TIMER
 		MessageResendTimer<SNMessage> timer = timers.getConnectTimer();
@@ -338,7 +371,8 @@ public class SnClient
 		}
 	}
 
-	@Override public void processSuback(int packetID, int topicID, ReturnCode returnCode, SNQoS allowedQos)
+	@Override 
+	public void processSuback(int packetID, int topicID, ReturnCode returnCode, SNQoS allowedQos)
 	{
 
 		SNMessage message = timers.remove(packetID);
@@ -367,15 +401,18 @@ public class SnClient
 
 			switch (allowedQos)
 			{
-			case AT_MOST_ONCE:
-				realQos = QoS.AT_MOST_ONCE;
-				break;
-			case EXACTLY_ONCE:
-				realQos = QoS.EXACTLY_ONCE;
-				break;
-			case LEVEL_ONE:
-				realQos = QoS.AT_MOST_ONCE;
-				break;
+				case AT_MOST_ONCE:
+					realQos = QoS.AT_MOST_ONCE;
+					break;
+				case EXACTLY_ONCE:
+					realQos = QoS.EXACTLY_ONCE;
+					break;
+				case LEVEL_ONE:
+					realQos = QoS.AT_MOST_ONCE;
+					break;
+				case AT_LEAST_ONCE:
+					realQos = QoS.AT_LEAST_ONCE;
+					break;
 			}
 
 			com.mobiussoftware.iotbroker.db.Topic topic = new com.mobiussoftware.iotbroker.db.Topic(account, topicName, (byte) realQos.getValue());
@@ -398,7 +435,8 @@ public class SnClient
 		}
 	}
 
-	@Override public void processUnsuback(int packetID)
+	@Override 
+	public void processUnsuback(int packetID)
 	{
 		SNMessage message = timers.remove(packetID);
 		if (message != null)
@@ -427,7 +465,8 @@ public class SnClient
 		}
 	}
 
-	@Override public void processRegister(int packetID, int topicID, String topicName)
+	@Override 
+	public void processRegister(int packetID, int topicID, String topicName)
 	{
 		mappedTopics.put(topicID, topicName);
 
@@ -437,7 +476,8 @@ public class SnClient
 		client.send(message);
 	}
 
-	@Override public void processRegack(int packetID, int topicID, ReturnCode returnCode)
+	@Override 
+	public void processRegack(int packetID, int topicID, ReturnCode returnCode)
 	{
 		SNMessage message = timers.remove(packetID);
 		if (message != null)
@@ -463,25 +503,26 @@ public class SnClient
 		}
 	}
 
-	@Override public void processPublish(int packetID, SNTopic topic, ByteBuf content, Boolean retain, Boolean isDup)
+	@Override 
+	public void processPublish(int packetID, SNTopic topic, ByteBuf content, Boolean retain, Boolean isDup)
 	{
 		SNQoS publisherQos = topic.getQos();
 		QoS realQos = QoS.AT_MOST_ONCE;
 		switch (publisherQos)
 		{
-		case AT_LEAST_ONCE:
-			SNPuback puback = new SNPuback();
-			puback.setMessageID(packetID);
-			client.send(puback);
-			realQos = QoS.AT_LEAST_ONCE;
-			break;
-		case EXACTLY_ONCE:
-			realQos = QoS.EXACTLY_ONCE;
-			SNPubrec pubrec = new SNPubrec(packetID);
-			client.send(pubrec);
-			break;
-		default:
-			break;
+			case AT_LEAST_ONCE:
+				SNPuback puback = new SNPuback();
+				puback.setMessageID(packetID);
+				client.send(puback);
+				realQos = QoS.AT_LEAST_ONCE;
+				break;
+			case EXACTLY_ONCE:
+				realQos = QoS.EXACTLY_ONCE;
+				SNPubrec pubrec = new SNPubrec(packetID);
+				client.send(pubrec);
+				break;
+			default:
+				break;
 		}
 
 		String topicName = null;
@@ -518,12 +559,14 @@ public class SnClient
 		}
 	}
 
-	@Override public void processPuback(int packetID)
+	@Override 
+	public void processPuback(int packetID)
 	{
 		timers.remove(packetID);
 	}
 
-	@Override public void processPubrec(int packetID)
+	@Override 
+	public void processPubrec(int packetID)
 	{
 		timers.remove(packetID);
 		SNMessage message = new SNPubrel(packetID);
@@ -531,98 +574,116 @@ public class SnClient
 		client.send(message);
 	}
 
-	@Override public void processPubrel(int packetID)
+	@Override 
+	public void processPubrel(int packetID)
 	{
 		client.send(new SNPubcomp(packetID));
 	}
 
-	@Override public void processPubcomp(int packetID)
+	@Override 
+	public void processPubcomp(int packetID)
 	{
 		timers.remove(packetID);
 	}
 
-	@Override public void processPingresp()
+	@Override 
+	public void processPingresp()
 	{
 	}
 
-	@Override public void processSubscribe(int packetID, SNTopic topic)
+	@Override 
+	public void processSubscribe(int packetID, SNTopic topic)
 	{
 		logger.error("received invalid message subscribe");
 	}
 
-	@Override public void processConnect(boolean cleanSession, int keepalive)
+	@Override 
+	public void processConnect(boolean cleanSession, int keepalive)
 	{
 		logger.error("received invalid message connect");
 	}
 
-	@Override public void processPingreq()
+	@Override 
+	public void processPingreq()
 	{
 		logger.error("received invalid message pingreq");
 	}
 
-	@Override public void processDisconnect()
+	@Override 
+	public void processDisconnect()
 	{
 		logger.error("received invalid message disconnect");
 	}
 
-	@Override public void processUnsubscribe(int packetID, SNTopic topic)
+	@Override 
+	public void processUnsubscribe(int packetID, SNTopic topic)
 	{
 		logger.error("received invalid message unsubscribe");
 	}
 
-	@Override public void processWillTopicUpdate(FullTopic willTopic)
+	@Override 
+	public void processWillTopicUpdate(FullTopic willTopic)
 	{
 		logger.warn("received invalid message will topic update");
 	}
 
-	@Override public void processWillMessageUpdate(ByteBuf content)
+	@Override 
+	public void processWillMessageUpdate(ByteBuf content)
 	{
 		logger.warn("received invalid message will message update");
 	}
 
-	@Override public void processWillTopic(FullTopic topic)
+	@Override 
+	public void processWillTopic(FullTopic topic)
 	{
 		logger.warn("received invalid message will topic");
 	}
 
-	@Override public void processWillMessage(ByteBuf content)
+	@Override 
+	public void processWillMessage(ByteBuf content)
 	{
 		logger.warn("received invalid message will message");
 	}
 
-	@Override public void processAdvertise(int gatewayID, int duration)
+	@Override 
+	public void processAdvertise(int gatewayID, int duration)
 	{
 		logger.warn("received invalid message advertise");
 	}
 
-	@Override public void processGwInfo(int gatewayID, String gatewayAddress)
+	@Override 
+	public void processGwInfo(int gatewayID, String gatewayAddress)
 	{
 		logger.warn("received invalid message gw info");
 	}
 
-	@Override public void processSearchGw(Radius radius)
+	@Override 
+	public void processSearchGw(Radius radius)
 	{
 		logger.warn("received invalid message search gw");
 	}
 
-	@Override public void processWillTopicResponse()
+	@Override 
+	public void processWillTopicResponse()
 	{
 		logger.warn("received invalid message will topic response");
 	}
 
-	@Override public void processWillMessageResponse()
+	@Override 
+	public void processWillMessageResponse()
 	{
 		logger.warn("received invalid message will message response");
 	}
 
-	@Override public void connected()
+	@Override 
+	public void connected()
 	{
 		setState(ConnectionState.CHANNEL_ESTABLISHED);
 	}
 
-	@Override public void connectFailed()
+	@Override 
+	public void connectFailed()
 	{
 		setState(ConnectionState.CHANNEL_FAILED);
 	}
-
 }

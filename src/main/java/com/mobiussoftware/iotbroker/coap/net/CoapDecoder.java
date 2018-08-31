@@ -1,4 +1,4 @@
-package com.mobiussoftware.iotbroker.ui;
+package com.mobiussoftware.iotbroker.coap.net;
 
 /**
 * Mobius Software LTD
@@ -19,8 +19,21 @@ package com.mobiussoftware.iotbroker.ui;
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.socket.DatagramPacket;
+import io.netty.handler.codec.MessageToMessageDecoder;
 
-public class AppConstants
+import java.util.List;
+
+import com.mobius.software.coap.parser.CoapParser;
+import com.mobius.software.coap.parser.tlv.CoapMessage;
+
+public class CoapDecoder extends MessageToMessageDecoder<DatagramPacket>
 {
-	static Integer[] QOS_VALUES = new Integer[] { 0, 1, 2 };
+	@Override 
+	protected void decode(ChannelHandlerContext context, DatagramPacket message, List<Object> output) throws Exception
+	{
+		CoapMessage result = CoapParser.decode(message.content());
+		output.add(result);
+	}
 }

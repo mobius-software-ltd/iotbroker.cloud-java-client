@@ -1,5 +1,26 @@
 package com.mobiussoftware.iotbroker.ui;
 
+/**
+* Mobius Software LTD
+* Copyright 2015-2018, Mobius Software LTD
+*
+* This is free software; you can redistribute it and/or modify it
+* under the terms of the GNU Lesser General Public License as
+* published by the Free Software Foundation; either version 2.1 of
+* the License, or (at your option) any later version.
+*
+* This software is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+* Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public
+* License along with this software; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+* 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+*/
+
+import com.mobiussoftware.iotbroker.coap.CoapClient;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
@@ -9,10 +30,12 @@ import com.mobiussoftware.iotbroker.mqtt_sn.SnClient;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
 import com.mobiussoftware.iotbroker.network.NetworkClient;
+
 import org.apache.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
+
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -64,7 +87,7 @@ public class LoadingPane
 
 		this.add(Box.createRigidArea(new Dimension(1, 25)));
 
-		connectingTask = new ConnectingTask();
+		connectingTask = new ConnectingTask(this);
 		connectingTask.addPropertyChangeListener(this);
 		connectingTask.execute();
 
@@ -81,47 +104,13 @@ public class LoadingPane
 		progressBar.setMaximumSize(progressBar.getMinimumSize());
 
 		this.add(progressBar);
-	}
-
-	private void initConnectMqtt()
-			throws Exception
-	{
-		client = new MqttClient(account);
-		client.setClientListener(this);
-		Main.updateCurrentClient(client);
-
-		boolean channelCreated = client.createChannel();
-		if (!channelCreated)
-		{
-			// TODO: dialog that error occurred
-			System.out.println("mqtt connection failed");
-			progressBar.setValue(0);
-			return;
-		}
-	}
-
-	private void initConnectSn()
-			throws Exception
-	{
-		client = new SnClient(account);
-		client.setClientListener(this);
-		Main.updateCurrentClient(client);
-
-		boolean channelCreated = client.createChannel();
-		if (!channelCreated)
-		{
-			// TODO: dialog that error occurred
-			System.out.println("mqtt-sn connection failed");
-			progressBar.setValue(0);
-			return;
-		}
-	}
+	}	
 
 	private void closeConnection()
 	{
 		if (client != null)
 		{
-			System.out.println("closing connection...");
+			logger.info("closing connection...");
 			client.closeChannel();
 			client = null;
 		}
@@ -155,57 +144,52 @@ public class LoadingPane
 
 	@Override public void stateChanged(ConnectionState state)
 	{
-		System.out.println("LoadingPane state changed state=" + state.toString());
+		logger.info("LoadingPane state changed state=" + state.toString());
 		try
 		{
-			final DBInterface dbInterface = DBHelper.getInstance();
-
 			switch (state)
 			{
-			case CHANNEL_ESTABLISHED:
-				client.connect();
-				break;
-			case CHANNEL_FAILED:
-				Main.disposeLogoPane();
-				Main.showAccountMgmtPane();
-				connectingTask.cancel(true);
-				break;
-			case CONNECTION_ESTABLISHED:
-				Main.disposeLogoPane();
-				try
-				{
-					MainPane mainPane = Main.createAndShowMainPane(account);
-					client.setTopicListener(mainPane.getTopicListener());
-				}
-				catch (Exception e)
-				{
-					logger.error("Error occured while createAndShowMainPane from LoadingPanel");
-					System.out.println("Error occured while createAndShowMainPane from LoadingPanel");
-					e.printStackTrace();
+				case CHANNEL_ESTABLISHED:
+					client.connect();
+					break;
+				case CHANNEL_FAILED:
+					Main.disposeLogoPane();
 					Main.showAccountMgmtPane();
-				}
-				connectingTask.cancel(true);
-				break;
-			case CONNECTION_LOST:
-				// TODO: show "Connection closed by server" dialog
-				Main.disposeMainPane();
-				Main.showAccountMgmtPane();
-
-				JOptionPane.showMessageDialog(this.getParent(), "Connection closed by the server.");
-
-				closeConnection();
-				break;
-			case CONNECTION_FAILED:
-				// TODO: show "Connection failed" dialog
-				JOptionPane.showMessageDialog(this.getParent(), "Connection failed.");
-				closeConnection();
-				break;
-
-			case CHANNEL_CREATING:
-			case CONNECTING:
-			case NONE:
-			default:
-				break;
+					connectingTask.cancel(true);
+					break;
+				case CONNECTION_ESTABLISHED:
+					Main.disposeLogoPane();
+					try
+					{
+						MainPane mainPane = Main.createAndShowMainPane(account);
+						client.setTopicListener(mainPane.getTopicListener());
+					}
+					catch (Exception e)
+					{
+						logger.error("Error occured while createAndShowMainPane from LoadingPanel");
+						e.printStackTrace();
+						Main.showAccountMgmtPane();
+					}
+					connectingTask.cancel(true);
+					break;
+				case CONNECTION_LOST:
+					Main.disposeMainPane();
+					Main.showAccountMgmtPane();
+	
+					JOptionPane.showMessageDialog(this.getParent(), "Connection closed by the server.");
+	
+					closeConnection();
+					break;
+				case CONNECTION_FAILED:
+					JOptionPane.showMessageDialog(this.getParent(), "Connection failed.");
+					closeConnection();
+					break;
+	
+				case CHANNEL_CREATING:
+				case CONNECTING:
+				case NONE:
+				default:
+					break;
 			}
 
 		}
@@ -215,27 +199,46 @@ public class LoadingPane
 		}
 	}
 
-	class ConnectingTask
-			extends SwingWorker<Void, Void>
+	class ConnectingTask extends SwingWorker<Void, Void>
 	{
+		private LoadingPane loadingPane;
+		
+		public ConnectingTask(LoadingPane loadingPane)
+		{
+			this.loadingPane=loadingPane;					
+		}
+		
 		/*
 		 * Main task. Executed in background thread.
 		 */
-		@Override public Void doInBackground()
+		@Override 
+		public Void doInBackground()
 		{
 
 			try
 			{
 				switch (account.getProtocol())
 				{
-				case MQTT:
-					initConnectMqtt();
-					break;
-				case MQTTSN:
-					initConnectSn();
-					break;
-				default:
-					break;
+					case MQTT:
+						client = new MqttClient(account);;
+						break;
+					case MQTTSN:
+						client = new SnClient(account);					
+						break;
+					case CoAP:
+						client=new CoapClient(account);
+					default:
+						break;
+				}
+				
+				client.setClientListener(loadingPane);
+				Main.updateCurrentClient(client);
+
+				boolean channelCreated = client.createChannel();
+				if (!channelCreated)
+				{
+					JOptionPane.showMessageDialog(loadingPane.getParent(), "Connection failed.");
+					progressBar.setValue(0);
 				}
 			}
 			catch (Exception e)
@@ -267,11 +270,12 @@ public class LoadingPane
 		/*
 		 * Executed in event dispatching thread
 		 */
-		@Override public void done()
+		@Override 
+		public void done()
 		{
 			if (!isCancelled())
 			{
-				System.out.println("done");
+				logger.info("done");
 				try
 				{
 					final DBInterface dbInterface = DBHelper.getInstance();
