@@ -31,10 +31,10 @@ public class UIConstants
 	public static final Color APP_CONTRAST_COLOR = new Color(25, 163, 219);
 	static final int ACCNT_MGMT_FRAME_WIDTH = 347;
 	static final int ACCNT_MGMT_FRAME_HEIGHT = 458;
-	static final int MAIN_FRAME_WIDTH = 428;
+	static final int MAIN_FRAME_WIDTH = 445;
 	static final int MAIN_FRAME_HEIGHT = 533;
 	static final int LOGIN_FRAME_WIDTH = 418;
-	static final int LOGIN_FRAME_HEIGHT = 548;
+	static final int LOGIN_FRAME_HEIGHT = 583;
 	static final int LOGO_FRAME_WIDTH = 299;
 	static final int LOGO_FRAME_HEIGHT = 287;
 	static final Color APP_BG_COLOR = Color.white;

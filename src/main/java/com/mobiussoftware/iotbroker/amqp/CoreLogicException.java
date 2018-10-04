@@ -1,4 +1,4 @@
-package com.mobiussoftware.iotbroker.network;
+package com.mobiussoftware.iotbroker.amqp;
 
 /**
 * Mobius Software LTD
@@ -19,16 +19,13 @@ package com.mobiussoftware.iotbroker.network;
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-
-public interface NetworkChannel<T>
+public class CoreLogicException extends Exception
 {
-	void send(T message);
-	
-	boolean isConnected();
-	
-	void shutdown();
-	
-	void close();
-	
-	boolean init(final ConnectionListener<T> listener);
+
+	private static final long serialVersionUID = 5383658694692015049L;
+
+	public CoreLogicException(String message)
+	{
+		super(message);
+	}
 }

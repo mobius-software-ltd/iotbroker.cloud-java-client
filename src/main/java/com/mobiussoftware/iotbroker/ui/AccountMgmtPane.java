@@ -24,6 +24,7 @@ import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.SQLException;
@@ -40,7 +41,7 @@ public class AccountMgmtPane
 	private boolean accountChosen = false;
 	private Map<Integer, Component[]> componentList = new HashMap<>();
 
-	AccountMgmtPane()
+	AccountMgmtPane(JFrame frame)
 	{
 		setBackground(UIConstants.APP_BG_COLOR);
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -51,7 +52,6 @@ public class AccountMgmtPane
 		accountsPane.setBackground(UIConstants.APP_BG_COLOR);
 
 		this.add(UIHelper.wrapInScrollAndBorderLayout(accountsPane, BorderLayout.CENTER));
-		addAccounts();
 		// JScrollPane scrollPane = new JScrollPane(accountsPane);
 		// JPanel wrapper = new JPanel(new BorderLayout());
 		// wrapper.add(scrollPane, BorderLayout.CENTER);
@@ -64,11 +64,29 @@ public class AccountMgmtPane
 				addAccountBtnClicked(arg0);
 			}
 		};
+		
 		this.add(UIHelper.createButton("Add new account", 40, listener));
+		final JFrame parent=frame;
+		frame.addComponentListener(new ComponentAdapter() 
+		{
+			public void componentHidden(ComponentEvent e) 
+			{
+			}
+			
+			public void componentShown(ComponentEvent e) 
+			{			
+				accountsPane.removeAll();
+				addAccounts();
+				parent.revalidate();
+				parent.repaint();
+			}
+		});
 	}
 
 	private void addAccounts()
 	{
+		componentList.clear();
+		
 		// final int accountCount = 3;
 		final int parameterAlignment = SwingConstants.LEFT;
 
@@ -101,16 +119,13 @@ public class AccountMgmtPane
 				// CompoundBorder(BorderFactory.createLineBorder(Color.blue),(BorderFactory.createEmptyBorder(5,5,2,5))));
 				accountData.add(protocol);
 
-				if (account.getProtocol() != Protocol.CoAP)
-				{
-					JLabel clientId = new JLabel("<html>" + clientIdStr + "</html>", parameterAlignment);
-					clientId.setFont(UIConstants.REGULAR_FONT);
-					clientId.setBorder(BorderFactory.createEmptyBorder(1, 5, 3, 5));
-					// clientId.setBorder(new
-					// CompoundBorder(BorderFactory.createLineBorder(Color.blue),BorderFactory.createEmptyBorder(1,
-					// 5, 3, 5)));
-					accountData.add(clientId);
-				}
+				JLabel clientId = new JLabel("<html>" + clientIdStr + "</html>", parameterAlignment);
+				clientId.setFont(UIConstants.REGULAR_FONT);
+				clientId.setBorder(BorderFactory.createEmptyBorder(1, 5, 3, 5));
+				// clientId.setBorder(new
+				// CompoundBorder(BorderFactory.createLineBorder(Color.blue),BorderFactory.createEmptyBorder(1,
+				// 5, 3, 5)));
+				accountData.add(clientId);
 
 				JLabel hostPort = new JLabel("<html>" + hostPortStr + "</html>", parameterAlignment);
 				hostPort.setFont(UIConstants.REGULAR_FONT);
@@ -173,6 +188,8 @@ public class AccountMgmtPane
 						final Component[] row = componentList.get(Integer.valueOf(tag));
 						row[0].setBackground(UIConstants.HOVER_COLOR);
 						row[1].setBackground(UIConstants.HOVER_COLOR);
+						accountsPane.revalidate();
+						accountsPane.repaint();
 					}
 
 					@Override public void mouseExited(MouseEvent mouseEvent)
@@ -182,6 +199,8 @@ public class AccountMgmtPane
 						final Component[] row = componentList.get(Integer.valueOf(tag));
 						row[0].setBackground(UIConstants.APP_BG_COLOR);
 						row[1].setBackground(UIConstants.APP_BG_COLOR);
+						accountsPane.revalidate();
+						accountsPane.repaint();
 					}
 				});
 

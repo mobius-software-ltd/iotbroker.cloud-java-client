@@ -1,4 +1,4 @@
-package com.mobiussoftware.iotbroker.network;
+package com.mobiussoftware.iotbroker.amqp.net;
 
 /**
 * Mobius Software LTD
@@ -19,16 +19,23 @@ package com.mobiussoftware.iotbroker.network;
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
+import com.mobius.software.amqp.parser.AMQPParser;
+import com.mobius.software.amqp.parser.header.api.AMQPHeader;
 
-public interface NetworkChannel<T>
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler.Sharable;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToByteEncoder;
+
+@Sharable 
+public class AMQPEncoder extends MessageToByteEncoder<AMQPHeader>
 {
-	void send(T message);
-	
-	boolean isConnected();
-	
-	void shutdown();
-	
-	void close();
-	
-	boolean init(final ConnectionListener<T> listener);
+
+	@Override 
+	protected void encode(ChannelHandlerContext ctx, AMQPHeader message, ByteBuf out) throws Exception
+	{
+		ByteBuf buf = AMQPParser.encode(message);
+		out.writeBytes(buf);
+	}
+
 }

@@ -22,7 +22,7 @@ package com.mobiussoftware.iotbroker.ui;
 
 public enum Protocol
 {
-	MQTT("MQTT"), MQTTSN("MQTT-SN"), CoAP("CoAP"), AMQP("AMQP");
+	MQTT("MQTT"), MQTTSN("MQTT-SN"), CoAP("CoAP"), AMQP("AMQP"),WEBSOCKETS("WS");
 
 	private final String value;
 

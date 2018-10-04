@@ -183,7 +183,7 @@ public class TopicListPane extends JPanel implements TopicListener
 				JLabel deleteBtn = new JLabel(UIConstants.IC_TRASH, SwingConstants.CENTER);
 				deleteBtn.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 				deleteBtn.addMouseListener(deleteTopicAction());
-				deleteBtn.setName(String.valueOf(id));
+				deleteBtn.setName(topicName);
 
 				c.gridx = 2;
 				c.weightx = 0.1;
@@ -213,7 +213,7 @@ public class TopicListPane extends JPanel implements TopicListener
 		parent.add(emptySpace, c);
 	}
 
-	private void addTopicListRow(String topicText, int qosValue)
+	private void addTopicListRow(String id,String topicText, int qosValue)
 	{
 		int rowNumber = ((GridBagLayout) topics.getLayout()).getLayoutDimensions()[1].length - 1;
 
@@ -249,7 +249,7 @@ public class TopicListPane extends JPanel implements TopicListener
 		deleteBtn.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		deleteBtn.addMouseListener(deleteTopicAction());
 
-		deleteBtn.setName(String.valueOf(rowNumber));
+		deleteBtn.setName(topicText);
 
 		c.gridx = 2;
 		c.weightx = 0.1;
@@ -265,7 +265,7 @@ public class TopicListPane extends JPanel implements TopicListener
 		row[1] = qos;
 		row[2] = deleteBtn;
 
-		componentList.put(rowNumber, row);
+		componentList.put(Integer.valueOf(id), row);
 
 		c.weighty = 1;
 		c.gridy = rowNumber + 1;
@@ -397,10 +397,10 @@ public class TopicListPane extends JPanel implements TopicListener
 	}
 
 	@Override
-	public void finishAddingTopic(String topicName, int qosVal)
+	public void finishAddingTopic(String id,String topicName, int qosVal)
 	{
 		addTopicBtn.addMouseListener(addTopicBtnListener);
-		addTopicListRow(topicName, qosVal);
+		addTopicListRow(id, topicName, qosVal);
 	}
 
 	@Override

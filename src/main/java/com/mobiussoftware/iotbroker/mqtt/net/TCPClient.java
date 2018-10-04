@@ -78,7 +78,7 @@ public class TCPClient implements NetworkChannel<MQMessage>
 		}
 	}
 
-	public Boolean init(final ConnectionListener<MQMessage> listener)
+	public boolean init(final ConnectionListener<MQMessage> listener)
 	{
 		if (channel == null)
 		{
@@ -141,7 +141,7 @@ public class TCPClient implements NetworkChannel<MQMessage>
 		return true;
 	}
 
-	public Boolean isConnected()
+	public boolean isConnected()
 	{
 		return channel != null && channel.isOpen();
 	}

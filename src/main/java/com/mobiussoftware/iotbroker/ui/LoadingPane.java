@@ -20,6 +20,7 @@ package com.mobiussoftware.iotbroker.ui;
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
 
+import com.mobiussoftware.iotbroker.amqp.AmqpClient;
 import com.mobiussoftware.iotbroker.coap.CoapClient;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
@@ -222,11 +223,17 @@ public class LoadingPane
 					case MQTT:
 						client = new MqttClient(account);;
 						break;
+					case WEBSOCKETS:
+						client = new MqttClient(account);;
+						break;
 					case MQTTSN:
 						client = new SnClient(account);					
 						break;
 					case CoAP:
 						client=new CoapClient(account);
+						 break;
+					case AMQP:
+						client = new AmqpClient(account);
 					default:
 						break;
 				}

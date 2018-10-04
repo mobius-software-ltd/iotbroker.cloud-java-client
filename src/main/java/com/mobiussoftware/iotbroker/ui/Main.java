@@ -154,7 +154,7 @@ public class Main
 		JFrame frame = new JFrame("Accounts");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		frame.getContentPane().add(new AccountMgmtPane());
+		frame.getContentPane().add(new AccountMgmtPane(frame));
 
 		frame.pack();
 		frame.setVisible(true);
@@ -168,35 +168,21 @@ public class Main
 	static void hideAccountMgmtPane()
 	{
 		if (accountMgmtPane != null)
-		{
-			accountMgmtPane.setVisible(false);
-		}
+			accountMgmtPane.setVisible(false);		
 	}
 
 	static void showAccountMgmtPane()
 	{
 		if (accountMgmtPane == null)
-		{
 			createAndShowAccountMgmtPane();
-		}
 		else if (!accountMgmtPane.isVisible())
-		{
-			accountMgmtPane.setVisible(true);
-			System.out.println("showing hidden mgmt pane");
-			//		} else {
-			//			System.out.println("creating account mgmt pane again");
-			//			createAndShowAccountMgmtPane();
-		}
+			accountMgmtPane.setVisible(true);				
 	}
 
 	static void disposeAccountMgmtPane()
 	{
-		System.out.print("disposing accnt mgmt pane: ");
 		if (accountMgmtPane != null)
-		{
-			accountMgmtPane.dispose();
-		}
-		System.out.println(accountMgmtPane);
+			accountMgmtPane.dispose();		
 	}
 
 	public static void createAndShowLoadingPane(Account account)

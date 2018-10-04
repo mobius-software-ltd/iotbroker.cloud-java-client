@@ -70,13 +70,18 @@
         <dependency>
             <groupId>com.mobius-software.mqttsn</groupId>
             <artifactId>mqtt-sn-parser</artifactId>
-            <version>1.0.2</version>
+            <version>1.0.3</version>
         </dependency>
         <dependency>
             <groupId>com.mobius-software.coap</groupId>
             <artifactId>coap-parser</artifactId>
             <version>1.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.mobius-software.amqp</groupId>
+            <artifactId>amqp-parser</artifactId>
+            <version>1.0.1</version>
+        </dependency>        
         <dependency>
 		    <groupId>log4j</groupId>
 		    <artifactId>log4j</artifactId>

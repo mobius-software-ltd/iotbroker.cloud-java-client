@@ -20,7 +20,6 @@ package com.mobiussoftware.iotbroker.mqtt_sn;
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
 import com.mobius.software.mqtt.parser.avps.QoS;
-import com.mobius.software.mqtt.parser.avps.Text;
 import com.mobius.software.mqtt.parser.avps.Topic;
 import com.mobius.software.mqttsn.parser.avps.*;
 import com.mobius.software.mqttsn.parser.packet.api.SNDevice;
@@ -32,8 +31,10 @@ import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.mqtt_sn.net.UDPClient;
 import com.mobiussoftware.iotbroker.network.*;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
@@ -130,7 +131,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		setState(ConnectionState.CONNECTING);
 		Boolean willPresent = false;
 
-		if (account.getWill() != null)
+		if (account.getWillTopic() != null && account.getWillTopic().length()>0)
 			willPresent = true;
 
 		SNConnect connect = new SNConnect(account.isCleanSession(), account.getKeepAlive(), account.getClientId(), willPresent);
@@ -195,9 +196,8 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		{
 			SNQoS realQos = SNQoS.AT_LEAST_ONCE;
 			SNTopic topic;
-			Text topicName = new Text(topic1);
-			if (reverseMappedTopics.containsKey(topicName.toString()))
-				topic = new IdentifierTopic(reverseMappedTopics.get(topicName.toString()), realQos);
+			if (reverseMappedTopics.containsKey(topic1))
+				topic = new IdentifierTopic(reverseMappedTopics.get(topic1), realQos);
 			else
 				topic = new FullTopic(topic1, realQos);
 
@@ -228,7 +228,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		if (reverseMappedTopics.containsKey(topic.getName().toString()))
 		{
 			IdentifierTopic idTopic = new IdentifierTopic(reverseMappedTopics.get(topic.getName().toString()), realQos);
-			SNPublish publish = new SNPublish(null, idTopic, Unpooled.wrappedBuffer(content), dup, retain);
+			SNPublish publish = new SNPublish(0, idTopic, Unpooled.wrappedBuffer(content), dup, retain);
 			if (topic.getQos() != QoS.AT_MOST_ONCE)
 				timers.store(publish);
 
@@ -290,7 +290,6 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 	@Override 
 	public void connectionLost()
 	{
-
 		if (timers != null)
 			timers.stopAllTimers();
 
@@ -389,11 +388,13 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 
 			if (subscribe.getTopic() instanceof IdentifierTopic)
 			{
-				topicName = mappedTopics.get(((IdentifierTopic) subscribe.getTopic()).getValue());
+				topicName = mappedTopics.get(((IdentifierTopic) subscribe.getTopic()).getValue());				
 			}
 			else
 			{
 				topicName = ((FullTopic) subscribe.getTopic()).getValue();
+				mappedTopics.put(topicID, topicName);
+				reverseMappedTopics.put(topicName, topicID);				
 			}
 
 			//			SNQoS actualQos = allowedQos;
@@ -431,7 +432,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 			}
 
 			if (topicListener != null)
-				topicListener.finishAddingTopic(topic.getName().toString(), topic.getQos());
+				topicListener.finishAddingTopic(String.valueOf(topic.getId()), topic.getName().toString(), topic.getQos());
 		}
 	}
 
@@ -452,10 +453,17 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 			{
 				try
 				{
-					logger.info("deleting  topic" + topicName + " from DB");
-					dbInterface.deleteTopic(topicName);
-					if (topicListener != null)
-						topicListener.finishDeletingTopic(topicName);
+					logger.info("deleting  topic" + topicName + " from DB");					
+					List<com.mobiussoftware.iotbroker.db.Topic> topics=dbInterface.getTopics(account);
+					for(com.mobiussoftware.iotbroker.db.Topic topic:topics)
+					{
+						if(topic.getName().equals(topicName))
+						{
+							dbInterface.deleteTopic(String.valueOf(topic.getId()));
+							if (topicListener != null)
+								topicListener.finishDeletingTopic(String.valueOf(topic.getId()));
+						}
+					}
 				}
 				catch (SQLException e)
 				{
@@ -472,7 +480,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 
 		reverseMappedTopics.put(topicName, topicID);
 
-		SNMessage message = new SNPuback(topicID, packetID, ReturnCode.ACCEPTED);
+		SNMessage message = new Regack(topicID, packetID, ReturnCode.ACCEPTED);
 		client.send(message);
 	}
 
@@ -508,17 +516,27 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 	{
 		SNQoS publisherQos = topic.getQos();
 		QoS realQos = QoS.AT_MOST_ONCE;
+
 		switch (publisherQos)
 		{
 			case AT_LEAST_ONCE:
 				SNPuback puback = new SNPuback();
 				puback.setMessageID(packetID);
+
+				int topicID=0;
+				if(topic instanceof IdentifierTopic)
+					topicID=((IdentifierTopic)topic).getValue();
+				else if(topic instanceof ShortTopic)
+					topicID=Integer.valueOf(((ShortTopic)topic).getValue());
+				
+				puback.setTopicID(topicID);
+				puback.setCode(ReturnCode.ACCEPTED);
 				client.send(puback);
 				realQos = QoS.AT_LEAST_ONCE;
 				break;
 			case EXACTLY_ONCE:
 				realQos = QoS.EXACTLY_ONCE;
-				SNPubrec pubrec = new SNPubrec(packetID);
+				SNPubrec pubrec = new SNPubrec(packetID);				
 				client.send(pubrec);
 				break;
 			default:
@@ -612,7 +630,8 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 	@Override 
 	public void processDisconnect()
 	{
-		logger.error("received invalid message disconnect");
+		closeConnection();
+		setState(ConnectionState.CONNECTION_LOST);
 	}
 
 	@Override 

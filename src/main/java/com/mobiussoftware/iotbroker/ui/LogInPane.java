@@ -72,18 +72,21 @@ public class LogInPane extends JPanel
 		regInfoPane = new JPanel();
 		regInfoPane.setBackground(UIConstants.APP_BG_COLOR);
 		this.add(UIHelper.wrapInBorderLayout(regInfoPane, BorderLayout.PAGE_START));
-		addRegInfoBlock();
-
+		
 		// settings:
-		settingsPane = new JPanel();
-		settingsPane.setBackground(UIConstants.APP_BG_COLOR);
-
 		settingsBlockLabel = UIHelper.createSmallBoldLabel("settings:");
+		settingsBlockLabel.setAlignmentY(Component.TOP_ALIGNMENT);
 		this.add(settingsBlockLabel);
 
+		settingsPane = new JPanel();
+		settingsPane.setBackground(UIConstants.APP_BG_COLOR);
+		
 		settingsPaneWrapper = UIHelper.wrapInBorderLayout(settingsPane, BorderLayout.PAGE_START);
 		this.add(settingsPaneWrapper);
-		addSettingsPaneElements();
+		
+		addRegInfoBlock();
+
+		addSettingsPaneElements(true);
 
 		MouseListener listener = new MouseAdapter()
 		{
@@ -100,7 +103,7 @@ public class LogInPane extends JPanel
 	{
 		logger.info("LogIn button clicked!");
 
-		if (!UIHelper.validateTF(usernameTF, passwordTF, clientIdTF, hostNameTF, willTopicTF) || !UIHelper.validateNumTF(portTF, keepAliveTF) || !UIHelper.validateDialogTF(willTF))
+		if (!UIHelper.validateTF(usernameTF, passwordTF, clientIdTF, hostNameTF) || !UIHelper.validateNumTF(portTF) || !UIHelper.validateNumTF(keepAliveTF))
 			return;
 
 		Account account = getAccountObject();
@@ -172,13 +175,21 @@ public class LogInPane extends JPanel
 						removeRegInfoPaneElements();
 						addCoapRegInfo();
 						regInfoPane.revalidate();
-						removeSettingsBlock();
+						addSettingsBlock();
 						break;
 					case AMQP:
 						removeRegInfoPaneElements();
 						addAmqpRegInfo();
 						regInfoPane.revalidate();
-						removeSettingsBlock();
+						addSettingsBlock();
+						break;
+					case WEBSOCKETS:
+						removeRegInfoPaneElements();
+						addMqRegInfo();
+						regInfoPane.revalidate();
+						addSettingsBlock();
+						break;
+					default:
 						break;
 					}
 				}
@@ -193,28 +204,29 @@ public class LogInPane extends JPanel
 
 	private void addMqRegInfo()
 	{
-		regInfoPane.setLayout(new GridLayout(6, columns));
 		addUserPasswordFields();
 		addClientIdField();
 		addServerPortFields();
+		addSettingsPaneElements(true);
 	}
 
 	private void addSnRegInfo()
 	{
-		regInfoPane.setLayout(new GridLayout(4, columns));
 		addClientIdField();
 		addServerPortFields();
+		addSettingsPaneElements(true);
 	}
 
 	private void addCoapRegInfo()
 	{
-		regInfoPane.setLayout(new GridLayout(3, columns));
-		addServerPortFields();
+		addSnRegInfo();
+		addSettingsPaneElements(false);
 	}
 
 	private void addAmqpRegInfo()
 	{
-		addSnRegInfo();
+		addMqRegInfo();
+		addSettingsPaneElements(false);
 	}
 
 	private void removeRegInfoPaneElements()
@@ -234,19 +246,11 @@ public class LogInPane extends JPanel
 		if (this.getComponent(2) != settingsBlockLabel)
 		{
 			this.add(settingsBlockLabel, 2);
-			this.add(settingsPaneWrapper, 3);
-			this.revalidate();
+			this.add(settingsPaneWrapper, 3);			
 		}
-	}
-
-	private void removeSettingsBlock()
-	{
-		if (this.getComponentCount() > 3 && this.getComponent(3) == settingsPaneWrapper)
-		{
-			this.remove(settingsPaneWrapper);
-			this.remove(settingsBlockLabel);
-			this.revalidate();
-		}
+		
+		this.revalidate();
+		this.repaint();
 	}
 
 	private void addUserPasswordFields()
@@ -292,7 +296,7 @@ public class LogInPane extends JPanel
 		regInfoPane.add(UIHelper.wrapInJPanel(portTF, rowColor(regInfoColorCount++)));
 	}
 
-	@SuppressWarnings("unchecked") private void addSettingsPaneElements()
+	@SuppressWarnings("unchecked") private void addSettingsPaneElements(Boolean showWill)
 	{
 		Image tmp = UIConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
 		final ImageIcon settingsIcn = new ImageIcon(tmp);
@@ -317,38 +321,54 @@ public class LogInPane extends JPanel
 		// settingsPane.setLayout(new GridLayout(rows.length, columns));
 		// final Dimension tfDimension = new Dimension(150, 28);
 
-		final int rows = 6;
+		int rows = 6;
+		//if(!showWill)
+		//	rows=1;
+			
+		settingsPane.removeAll();
 		settingsPane.setLayout(new GridLayout(rows, columns));
 
 		final Dimension tfDimension = new Dimension(150, 28);
 		final int parameterAlignment = SwingConstants.LEFT;
 		int i = 0;
 
-		settingsPane.add(UIHelper.createParameterLabel("Clean Session:", cleanSessionIcn, parameterAlignment, rowColor(i)));
-		cleanSessionCB = UIHelper.createJCheckBox(rowColor(i));
-		settingsPane.add(UIHelper.wrapInJPanel(cleanSessionCB, rowColor(i++)));
-
+		if(showWill)
+		{
+			settingsPane.add(UIHelper.createParameterLabel("Clean Session:", cleanSessionIcn, parameterAlignment, rowColor(i)));
+			cleanSessionCB = UIHelper.createJCheckBox(rowColor(i));
+			settingsPane.add(UIHelper.wrapInJPanel(cleanSessionCB, rowColor(i++)));
+		}		
+		
 		settingsPane.add(UIHelper.createParameterLabel("Keepalive:", keepAliveIcn, parameterAlignment, rowColor(i)));
 		keepAliveTF = UIHelper.createHintTextField("keepalive", tfDimension);
 		settingsPane.add(UIHelper.wrapInJPanel(keepAliveTF, rowColor(i++)));
 
-		settingsPane.add(UIHelper.createParameterLabel("Will topic:", settingsIcn, parameterAlignment, rowColor(i)));
-		willTopicTF = UIHelper.createHintTextField("will topic", tfDimension);
-		settingsPane.add(UIHelper.wrapInJPanel(willTopicTF, rowColor(i++)));
+		if(showWill)
+		{
+			settingsPane.add(UIHelper.createParameterLabel("Will topic:", settingsIcn, parameterAlignment, rowColor(i)));
+			willTopicTF = UIHelper.createHintTextField("will topic", tfDimension);
+			settingsPane.add(UIHelper.wrapInJPanel(willTopicTF, rowColor(i++)));
+		
+			settingsPane.add(UIHelper.createParameterLabel("Will:", settingsIcn, parameterAlignment, rowColor(i)));
+			willTF = UIHelper.createTextArea("will", tfDimension);
+			settingsPane.add(UIHelper.wrapInJPanel(willTF, rowColor(i++)));
 
-		settingsPane.add(UIHelper.createParameterLabel("Will:", settingsIcn, parameterAlignment, rowColor(i)));
-		willTF = UIHelper.createTextArea("will", tfDimension);
-		settingsPane.add(UIHelper.wrapInJPanel(willTF, rowColor(i++)));
+			settingsPane.add(UIHelper.createParameterLabel("Retain:", settingsIcn, parameterAlignment, rowColor(i)));
+			retainCB = UIHelper.createJCheckBox(rowColor(i));
+			settingsPane.add(UIHelper.wrapInJPanel(retainCB, rowColor(i++)));
 
-		settingsPane.add(UIHelper.createParameterLabel("Retain:", settingsIcn, parameterAlignment, rowColor(i)));
-		retainCB = UIHelper.createJCheckBox(rowColor(i));
-		settingsPane.add(UIHelper.wrapInJPanel(retainCB, rowColor(i++)));
-
-		settingsPane.add(UIHelper.createParameterLabel("QoS:", settingsIcn, parameterAlignment, rowColor(i)));
-		JPanel panel = UIHelper.createJComboBox(AppConstants.QOS_VALUES, new Dimension(72, 24));
-		qosCB = (JComboBox<Integer>) (panel.getComponent(0));
-		settingsPane.add(UIHelper.wrapInJPanel(panel, rowColor(i++)));
-
+			settingsPane.add(UIHelper.createParameterLabel("QoS:", settingsIcn, parameterAlignment, rowColor(i)));
+			JPanel panel = UIHelper.createJComboBox(AppConstants.QOS_VALUES, new Dimension(72, 24));
+			qosCB = (JComboBox<Integer>) (panel.getComponent(0));
+			settingsPane.add(UIHelper.wrapInJPanel(panel, rowColor(i++)));
+		}
+		else
+		{
+			for(int j=0;j<10;j++)
+			{
+				settingsPane.add(UIHelper.createParameterLabel("", null, parameterAlignment, rowColor(0)));				
+			}
+		}
 		// for (int i = 0; i < rows.length; i++) {
 		// Row row = rows[i];
 		// String text = row.getLabel();

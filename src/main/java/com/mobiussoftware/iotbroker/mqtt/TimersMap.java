@@ -23,32 +23,33 @@ import com.mobius.software.mqtt.parser.avps.MessageType;
 import com.mobius.software.mqtt.parser.header.api.CountableMessage;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.Pingreq;
-import com.mobiussoftware.iotbroker.mqtt.net.TCPClient;
 import com.mobiussoftware.iotbroker.network.MessageResendTimer;
+import com.mobiussoftware.iotbroker.network.NetworkChannel;
 import com.mobiussoftware.iotbroker.network.TimersMapInterface;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TimersMap implements TimersMapInterface<MQMessage>
 {
 	private static int MAX_VALUE = 65535;
 	private static int MIN_VALUE = 1;
 
-	private TCPClient listener;
+	private NetworkChannel<MQMessage> listener;
 	private long resendPeriod;
 	private long keepalivePeriod;
 
 	private ConcurrentHashMap<Integer, MessageResendTimer<MQMessage>> timersMap = new ConcurrentHashMap<>();
-	private int packetIDCounter = MIN_VALUE;
+	private AtomicInteger packetIDCounter = new AtomicInteger(MIN_VALUE);
 
 	private MessageResendTimer<MQMessage> pingTimer;
 	private MessageResendTimer<MQMessage> connectTimer;
 
 	private ScheduledExecutorService scheduledservice = Executors.newScheduledThreadPool(5);
 
-	public TimersMap(TCPClient listener, long resendPeriod, long keepalivePeriod)
+	public TimersMap(NetworkChannel<MQMessage> listener, long resendPeriod, long keepalivePeriod)
 	{
 		this.listener = listener;
 		this.resendPeriod = resendPeriod;
@@ -67,19 +68,14 @@ public class TimersMap implements TimersMapInterface<MQMessage>
 		{
 			if (((CountableMessage) message).getPacketID() == null)
 			{
-				packetID = packetIDCounter;
 				while (!added)
 				{
-
-					packetID = (packetID + 1) % MAX_VALUE;
-					try
+					packetID = packetIDCounter.incrementAndGet() % MAX_VALUE;
+					if(packetID>=MIN_VALUE)
 					{
-						timersMap.put(packetID, timer);
-						added = true;
-					}
-					catch (Exception ex)
-					{
-						// already exists
+						MessageResendTimer<MQMessage> previous=timersMap.putIfAbsent(packetID, timer);
+						if(previous==null)
+							added = true;
 					}
 				}
 

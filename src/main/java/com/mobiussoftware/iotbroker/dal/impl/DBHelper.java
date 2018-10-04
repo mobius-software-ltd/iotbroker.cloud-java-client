@@ -29,6 +29,7 @@ import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.db.Topic;
+
 import org.apache.log4j.Logger;
 
 import java.sql.SQLException;

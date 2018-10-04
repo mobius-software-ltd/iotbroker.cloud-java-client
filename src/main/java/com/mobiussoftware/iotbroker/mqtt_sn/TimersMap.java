@@ -30,6 +30,7 @@ import com.mobiussoftware.iotbroker.network.TimersMapInterface;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TimersMap implements TimersMapInterface<SNMessage>
 {
@@ -41,7 +42,7 @@ public class TimersMap implements TimersMapInterface<SNMessage>
 	private long keepalivePeriod;
 
 	private ConcurrentHashMap<Integer, MessageResendTimer<SNMessage>> timersMap = new ConcurrentHashMap<>();
-	private int packetIDCounter = MIN_VALUE;
+	private AtomicInteger packetIDCounter = new AtomicInteger(MIN_VALUE);
 
 	private MessageResendTimer<SNMessage> pingTimer;
 	private MessageResendTimer<SNMessage> connectTimer;
@@ -67,25 +68,19 @@ public class TimersMap implements TimersMapInterface<SNMessage>
 		{
 			if (((CountableMessage) message).getMessageID() == 0)
 			{
-				packetID = packetIDCounter;
 				while (!added)
 				{
-
-					packetID = (packetID + 1) % MAX_VALUE;
-					try
+					packetID = packetIDCounter.incrementAndGet() % MAX_VALUE;
+					if(packetID>=MIN_VALUE)
 					{
-						timersMap.put(packetID, timer);
-						added = true;
-					}
-					catch (Exception ex)
-					{
-						// already exists
+						MessageResendTimer<SNMessage> previous=timersMap.putIfAbsent(packetID, timer);
+						if(previous==null)
+							added = true;
 					}
 				}
 
 				CountableMessage countable = (CountableMessage) message;
 				countable.setMessageID(packetID);
-
 			}
 			else
 			{

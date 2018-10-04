@@ -28,9 +28,12 @@ import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.mqtt.net.TCPClient;
+import com.mobiussoftware.iotbroker.mqtt.net.WSClient;
 import com.mobiussoftware.iotbroker.network.*;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
@@ -50,7 +53,7 @@ public class MqttClient
 	private ConnectionState connectionState;
 
 	private TimersMap timers;
-	private TCPClient client;
+	private NetworkChannel<MQMessage> client;
 
 	private Account account;
 
@@ -58,13 +61,21 @@ public class MqttClient
 	private TopicListener topicListener;
 	private DBInterface dbInterface;
 
-	public MqttClient(Account account)
-			throws Exception
+	public MqttClient(Account account) throws Exception
 	{
 		this.dbInterface = DBHelper.getInstance();
 		this.account = account;
 		this.address = new InetSocketAddress(account.getServerHost(), account.getServerPort());
-		this.client = new TCPClient(address, WORKER_THREADS);
+		
+		switch(account.getProtocol())
+		{
+			case WEBSOCKETS:
+				this.client=new WSClient(address, WORKER_THREADS);
+				break;
+			default:
+				this.client = new TCPClient(address, WORKER_THREADS);
+				break;
+		}
 	}
 
 	@Override public void setClientListener(ClientListener clientListener)
@@ -119,10 +130,16 @@ public class MqttClient
 
 		setState(ConnectionState.CONNECTING);
 
-		Text topicName = new Text(account.getWillTopic());
-		QoS qos = QoS.valueOf(account.getQos());
-		Topic topic = new Topic(topicName, qos);
-		Will will = new Will(topic, account.getWill().getBytes(), account.isRetain());
+		Will will = null;
+		if (account.getWillTopic() != null && account.getWillTopic().length()>0)
+		{
+			Text topicName = new Text(account.getWillTopic());
+			QoS qos = QoS.valueOf(account.getQos());
+			Topic topic = new Topic(topicName, qos);
+			
+			will = new Will(topic, account.getWill().getBytes(), account.isRetain());
+		}
+		
 		Connect connect = new Connect(account.getUsername(), account.getPassword(), account.getClientId(), account.isCleanSession(), account.getKeepAlive(), will);
 
 		if (timers != null)
@@ -192,7 +209,7 @@ public class MqttClient
 
 		if (client != null)
 		{
-			TCPClient currClient = client;
+			NetworkChannel<MQMessage> currClient = client;
 			client = null;
 			currClient.shutdown();
 		}
@@ -218,7 +235,6 @@ public class MqttClient
 
 	@Override public void connectionLost()
 	{
-
 		if (timers != null)
 			timers.stopAllTimers();
 
@@ -277,22 +293,23 @@ public class MqttClient
 				Topic topic = subscribe.getTopics()[i];
 				QoS expectedQos = topic.getQos();
 				QoS actualQos = QoS.valueOf(code.getNum());
-				if (!account.isCleanSession())
+				com.mobiussoftware.iotbroker.db.Topic dbTopic;
+				if (expectedQos == actualQos)
+					dbTopic = new com.mobiussoftware.iotbroker.db.Topic(account, topic.getName().toString(), (byte) expectedQos.getValue());
+				else
+					dbTopic = new com.mobiussoftware.iotbroker.db.Topic(account, topic.getName().toString(), (byte) actualQos.getValue());
+			
+				try
 				{
-					try
-					{
-						if (expectedQos == actualQos)
-							dbInterface.saveTopic(new com.mobiussoftware.iotbroker.db.Topic(account, topic.getName().toString(), (byte) expectedQos.getValue()));
-						else
-							dbInterface.saveTopic(new com.mobiussoftware.iotbroker.db.Topic(account, topic.getName().toString(), (byte) actualQos.getValue()));
-					}
-					catch (SQLException e)
-					{
-						e.printStackTrace();
-					}
+					dbInterface.saveTopic(dbTopic);
 				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
+				
 				if (topicListener != null)
-					topicListener.finishAddingTopic(topic.getName().toString(), topic.getQos().getValue());
+					topicListener.finishAddingTopic(String.valueOf(dbTopic.getId()), topic.getName().toString(), topic.getQos().getValue());
 			}
 			else
 			{
@@ -317,21 +334,25 @@ public class MqttClient
 
 		Unsubscribe unsubscribe = (Unsubscribe) message;
 		Text[] topics = unsubscribe.getTopics();
-		if (!account.isCleanSession())
+		try
 		{
-			try
+			for (Text topic : topics)
 			{
-				for (Text topic : topics)
+				List<com.mobiussoftware.iotbroker.db.Topic> dbTopics=dbInterface.getTopics(account);
+				for(com.mobiussoftware.iotbroker.db.Topic dbTopic:dbTopics)
 				{
-					dbInterface.deleteTopic(topic.toString());
-					if (topicListener != null)
-						topicListener.finishDeletingTopic(topic.toString());
+					if(dbTopic.getName().equals(topic.toString()))
+					{
+						dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
+						if (topicListener != null)
+							topicListener.finishDeletingTopic(String.valueOf(dbTopic.getId()));
+					}
 				}
 			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
 		}
 
 	}
@@ -350,6 +371,7 @@ public class MqttClient
 			break;
 		case EXACTLY_ONCE:
 			Pubrec pubrec = new Pubrec(packetID.intValue());
+			timers.store(pubrec);
 			client.send(pubrec);
 			break;
 		default:
@@ -428,7 +450,8 @@ public class MqttClient
 
 	@Override public void processDisconnect()
 	{
-		logger.error("received invalid message disconnect");
+		closeConnection();
+		setState(ConnectionState.CONNECTION_LOST);
 	}
 
 	@Override public void processUnsubscribe(Integer packetID, Text[] topics)

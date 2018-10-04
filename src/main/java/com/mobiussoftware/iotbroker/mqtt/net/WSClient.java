@@ -1,4 +1,4 @@
-package com.mobiussoftware.iotbroker.coap.net;
+package com.mobiussoftware.iotbroker.mqtt.net;
 
 /**
 * Mobius Software LTD
@@ -19,30 +19,40 @@ package com.mobiussoftware.iotbroker.coap.net;
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.DefaultAddressedEnvelope;
 import io.netty.channel.MultithreadEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.DatagramChannel;
-import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
+import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory;
+import io.netty.handler.codec.http.websocketx.WebSocketVersion;
 
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.log4j.Logger;
 
-import com.mobius.software.coap.parser.tlv.CoapMessage;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.mobius.software.mqtt.parser.MQJsonParser;
+import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobiussoftware.iotbroker.network.ConnectionListener;
 import com.mobiussoftware.iotbroker.network.ExceptionHandler;
 import com.mobiussoftware.iotbroker.network.NetworkChannel;
 
-public class UDPClient implements NetworkChannel<CoapMessage>
+public class WSClient implements NetworkChannel<MQMessage>
 {
-
 	private final Logger logger = Logger.getLogger(getClass());
 
 	private InetSocketAddress address;
@@ -52,7 +62,9 @@ public class UDPClient implements NetworkChannel<CoapMessage>
 	private MultithreadEventLoopGroup loopGroup;
 	private Channel channel;
 
-	public UDPClient(InetSocketAddress address, int workerThreads)
+	private ConcurrentLinkedQueue<MQJsonParser> parsers=new ConcurrentLinkedQueue<>();
+	// handlers for client connections
+	public WSClient(InetSocketAddress address, int workerThreads)
 	{
 		this.address = address;
 		this.workerThreads = workerThreads;
@@ -60,6 +72,7 @@ public class UDPClient implements NetworkChannel<CoapMessage>
 
 	public void shutdown()
 	{
+
 		if (channel != null)
 		{
 			channel.closeFuture();
@@ -84,24 +97,29 @@ public class UDPClient implements NetworkChannel<CoapMessage>
 		}
 	}
 
-	public boolean init(final ConnectionListener<CoapMessage> listener)
+	public boolean init(final ConnectionListener<MQMessage> listener)
 	{
 		if (channel == null)
 		{
 			bootstrap = new Bootstrap();
 			loopGroup = new NioEventLoopGroup(workerThreads);
 			bootstrap.group(loopGroup);
-			bootstrap.channel(NioDatagramChannel.class);
-
-			bootstrap.handler(new ChannelInitializer<DatagramChannel>()
+			bootstrap.channel(NioSocketChannel.class);
+			bootstrap.option(ChannelOption.TCP_NODELAY, true);
+			bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
+			
+			WebSocketClientHandshaker handshaker = WebSocketClientHandshakerFactory.newHandshaker(this.getUri(), WebSocketVersion.V13, null, false,EmptyHttpHeaders.INSTANCE, 1280000);			
+	        final WebSocketClientHandler handler = new WebSocketClientHandler(this, handshaker, listener);
+	        
+			bootstrap.handler(new ChannelInitializer<SocketChannel>()
 			{
-				@Override 
-				public void initChannel(DatagramChannel ch) throws InterruptedException
+				@Override public void initChannel(SocketChannel ch)
+						throws InterruptedException
 				{
 					ChannelPipeline pipeline = ch.pipeline();
-					pipeline.addLast(new CoapDecoder());
-					pipeline.addLast("handler", new CoapHandler(listener));
-					pipeline.addLast(new CoapEncoder());
+					pipeline.addLast("http-codec", new HttpClientCodec());
+					pipeline.addLast("aggregator", new HttpObjectAggregator(65536));
+					pipeline.addLast("ws-handler", handler);
 					pipeline.addLast(new ExceptionHandler());
 				}
 			});
@@ -111,8 +129,8 @@ public class UDPClient implements NetworkChannel<CoapMessage>
 				final ChannelFuture future = bootstrap.connect();
 				future.addListener(new ChannelFutureListener()
 				{
-					@Override 
-					public void operationComplete(ChannelFuture channelFuture) throws Exception
+					@Override public void operationComplete(ChannelFuture channelFuture)
+							throws Exception
 					{
 						try
 						{
@@ -151,13 +169,51 @@ public class UDPClient implements NetworkChannel<CoapMessage>
 		return channel != null && channel.isOpen();
 	}
 
-	@Override
-	public void send(CoapMessage message)
+	@Override public void send(MQMessage message)
 	{
 		if (isConnected())
 		{
 			logger.info("message " + message + " is being sent");
-			channel.writeAndFlush(new DefaultAddressedEnvelope<CoapMessage,InetSocketAddress>(message, address));
+			String string = null;
+			MQJsonParser parser=getParser();
+            try 
+            {            	
+                string = parser.jsonString(message);
+            } 
+            catch (JsonProcessingException e) 
+            {
+                e.printStackTrace();
+            }
+            
+            releaseParser(parser);
+            channel.writeAndFlush(new TextWebSocketFrame(string));
 		}
 	}
+
+	protected MQJsonParser getParser()
+	{
+		MQJsonParser parser=parsers.poll();
+		if(parser==null)
+			parser=new MQJsonParser();
+		
+		return parser;
+	}
+	
+	public void releaseParser(MQJsonParser parser)
+	{
+		this.parsers.offer(parser);
+	}
+	
+	private URI getUri() 
+	{
+        String type = "ws";
+        String url = type + "//:" + this.address.getHostName() + ":" + String.valueOf(this.address.getPort());
+        URI uri;
+        try {
+            uri = new URI(url);
+        } catch (Exception e) {
+            return null;
+        }
+        return uri;
+    }
 }

@@ -19,7 +19,6 @@ package com.mobiussoftware.iotbroker.coap;
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,7 +47,7 @@ public class TimersMap implements TimersMapInterface<CoapMessage>
      private Long keepalivePeriod;
      private CoapClient _client;
 
-     private ConcurrentHashMap<byte[], MessageResendTimer<CoapMessage>> timersMap = new ConcurrentHashMap<>();
+     private ConcurrentHashMap<ByteArrayWrapper, MessageResendTimer<CoapMessage>> timersMap = new ConcurrentHashMap<>();
  	 private AtomicInteger packetIDCounter = new AtomicInteger(MIN_VALUE);
 
      private MessageResendTimer<CoapMessage> pingTimer;
@@ -69,20 +68,24 @@ public class TimersMap implements TimersMapInterface<CoapMessage>
          Boolean added = false;
          if (message.getToken()==null)
          {
-             Integer packetID = packetIDCounter.get();             
-             byte[] token=ByteBuffer.allocate(4).putInt(packetID).array();
+             Integer packetID = packetIDCounter.getAndIncrement() % MAX_VALUE;               
+             byte[] token=String.valueOf(packetID).getBytes();
              while (!added)
              {
-                 packetID = packetIDCounter.incrementAndGet() % MAX_VALUE;
-            	 MessageResendTimer<CoapMessage> old=timersMap.putIfAbsent(token, timer);
+                 MessageResendTimer<CoapMessage> old=timersMap.putIfAbsent(new ByteArrayWrapper(token), timer);
             	 if(old==null)
             		 added = true;
+            	 else
+            	 {
+            		 packetID = packetIDCounter.getAndIncrement() % MAX_VALUE;               
+                     token=String.valueOf(packetID).getBytes();                     
+            	 }
              }
 
              message.setToken(token);
          }
          else
-             timersMap.put(message.getToken(), timer);
+             timersMap.put(new ByteArrayWrapper(message.getToken()), timer);
 
          ScheduledFuture<?> timer_future = scheduledservice.schedule(timer, resendPeriod, TimeUnit.MILLISECONDS);
 		 timer.setFuture(timer_future);
@@ -91,7 +94,7 @@ public class TimersMap implements TimersMapInterface<CoapMessage>
      public void store(byte[] token, CoapMessage message)
      {
          MessageResendTimer<CoapMessage> timer = new MessageResendTimer<CoapMessage>(message, _listener, this, false);
-         timersMap.put(token, timer);
+         timersMap.put(new ByteArrayWrapper(token), timer);
          ScheduledFuture<?> timer_future = scheduledservice.schedule(timer, resendPeriod, TimeUnit.MILLISECONDS);
 		 timer.setFuture(timer_future);
      }
@@ -99,24 +102,18 @@ public class TimersMap implements TimersMapInterface<CoapMessage>
 	 @Override
 	 public void refreshTimer(MessageResendTimer<CoapMessage> timer) 
 	 {
-		 Integer token = ByteBuffer.wrap(timer.getMessage().getToken()).getInt();
 		 ScheduledFuture<?> future = null;
-		 switch (token)
-         {
-             case 0:
-            	future = scheduledservice.schedule(timer, keepalivePeriod, TimeUnit.MILLISECONDS);
- 				break;
-             default:
-            	future = scheduledservice.schedule(timer, resendPeriod, TimeUnit.MILLISECONDS);
- 				break;        
-         }
-		 
+		 if(timer.getMessage().getToken()==null)
+			 future = scheduledservice.schedule(timer, keepalivePeriod, TimeUnit.MILLISECONDS);
+		 else
+			 future = scheduledservice.schedule(timer, resendPeriod, TimeUnit.MILLISECONDS);
+ 			
 		 timer.setFuture(future);
 	 }
 	 
 	 public CoapMessage remove(byte[] token)
      {
-         MessageResendTimer<CoapMessage> timer = timersMap.remove(token);
+         MessageResendTimer<CoapMessage> timer = timersMap.remove(new ByteArrayWrapper(token));
          if (timer != null)
          {
         	 if (timer != null && timer.getFuture()!=null)
@@ -136,7 +133,7 @@ public class TimersMap implements TimersMapInterface<CoapMessage>
          if (pingTimer != null && pingTimer.getFuture()!=null)
              pingTimer.getFuture().cancel(true);
 
-         Iterator<Entry<byte[], MessageResendTimer<CoapMessage>>> iterator = timersMap.entrySet().iterator();
+         Iterator<Entry<ByteArrayWrapper, MessageResendTimer<CoapMessage>>> iterator = timersMap.entrySet().iterator();
  		 while (iterator.hasNext())
  		 {
  			MessageResendTimer<CoapMessage> curr=iterator.next().getValue();
@@ -184,9 +181,8 @@ public class TimersMap implements TimersMapInterface<CoapMessage>
 
      private CoapMessage getPingreqMessage()
      {
-         byte[] token = ByteBuffer.allocate(4).putInt(0).array();
          byte[] nodeIdBytes = _client.getClientID().getBytes();
-         CoapMessage coapMessage = CoapMessage.builder().version(CoapClient.VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.PUT).messageID(0).token(token).payload(new byte[0]).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
+         CoapMessage coapMessage = CoapMessage.builder().version(CoapClient.VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.PUT).messageID(0).payload(new byte[0]).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
          return coapMessage;
      }
 }
