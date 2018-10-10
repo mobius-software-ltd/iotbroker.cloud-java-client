@@ -170,7 +170,7 @@ public class WSClient implements NetworkChannel<MQMessage>
 	}
 
 	@Override public void send(MQMessage message)
-	{
+	{		
 		if (isConnected())
 		{
 			logger.info("message " + message + " is being sent");
@@ -207,7 +207,7 @@ public class WSClient implements NetworkChannel<MQMessage>
 	private URI getUri() 
 	{
         String type = "ws";
-        String url = type + "//:" + this.address.getHostName() + ":" + String.valueOf(this.address.getPort());
+        String url = type + "://" + this.address.getHostName() + ":" + String.valueOf(this.address.getPort()) + "/" + type;
         URI uri;
         try {
             uri = new URI(url);

@@ -80,7 +80,9 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object>
         	MQJsonParser parser=client.getParser();
         	try
         	{
-        		MQMessage message=parser.decode(frame.content().array());
+        		byte[] bytes = new byte[frame.content().readableBytes()];
+        		frame.content().readBytes(bytes);
+        		MQMessage message=parser.decode(bytes);
         		this.listener.packetReceived(message);
         	}
         	catch(Exception ex)
