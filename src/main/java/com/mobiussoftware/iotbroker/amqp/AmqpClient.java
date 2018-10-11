@@ -91,7 +91,6 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 	
     private DBInterface dbInterface;
 
-    private Boolean isSASLÑonfirm = false;
     private int channel;
     private Integer nextHandle = 0;
     private ConcurrentHashMap<String, Long> usedIncomingMappings = new ConcurrentHashMap<String, Long>();
@@ -445,18 +444,8 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 
     public void processProto(Integer channel, Integer protocolId)
     {
-        if (isSASLÑonfirm && protocolId == 0)
-        {
-            this.channel = channel;            
-            AMQPOpen open = AMQPOpen.builder().channel(channel).containerId(account.getClientId()).build();
-            client.send(open);
-        }
-        else
-        {
-            timers.stopAllTimers();
-            client.shutdown();
-            setState(ConnectionState.CONNECTION_FAILED);
-        }
+        if (protocolId == 0)
+        	this.channel = channel;                        
     }
 
     public void processOpen(Long idleTimeout)
@@ -651,9 +640,8 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
         if (outcomeCode!=null)
             if(outcomeCode == OutcomeCode.OK)
             {
-                isSASLÑonfirm = true;
-                AMQPProtoHeader header = new AMQPProtoHeader(0);
-                client.send(header);
+            	AMQPOpen open = AMQPOpen.builder().channel(channel).containerId(account.getClientId()).build();
+                client.send(open);
             }
         }
 
