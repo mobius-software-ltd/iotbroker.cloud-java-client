@@ -35,7 +35,7 @@ public interface AMQPDevice
 
     void processBegin();
 
-    void processAttach(RoleCode role,Long handle);
+    void processAttach(String name,RoleCode role,Long handle);
 
     void processFlow(Integer channel);
 

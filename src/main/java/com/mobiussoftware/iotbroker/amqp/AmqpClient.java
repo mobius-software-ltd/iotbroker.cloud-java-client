@@ -91,8 +91,10 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 	
     private DBInterface dbInterface;
 
+    private Boolean isSaslConfirm=false;
+    
     private int channel;
-    private Integer nextHandle = 0;
+    private Integer nextHandle = 1;
     private ConcurrentHashMap<String, Long> usedIncomingMappings = new ConcurrentHashMap<String, Long>();
     private ConcurrentHashMap<String, Long> usedOutgoingMappings = new ConcurrentHashMap<String, Long>();
     private ConcurrentHashMap<Long, String> usedMappings = new ConcurrentHashMap<Long, String>();
@@ -263,8 +265,11 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
     {
         AMQPTransfer transfer = new AMQPTransfer();
         transfer.setChannel(channel);
-        transfer.setDeliveryId(0L);
-        transfer.setSettled(false);
+        if(topic.getQos()==QoS.AT_MOST_ONCE)
+        	transfer.setSettled(true);
+        else
+        	transfer.setSettled(false);
+        
         transfer.setMore(false);
         transfer.setMessageFormat(new AMQPMessageFormat(0));
 
@@ -285,6 +290,9 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
             Long handle = usedOutgoingMappings.get(topic.getName().toString());
             transfer.setHandle(handle);
             timers.store(transfer);
+            if(transfer.getSettled())
+            	timers.remove(transfer.getDeliveryId().intValue());
+            
             client.send(transfer);
         }
         else
@@ -303,9 +311,10 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
             attach.setHandle(currentHandler);
             attach.setRole(RoleCode.SENDER);
             attach.setSndSettleMode(SendCode.MIXED);
+            attach.setInitialDeliveryCount(0L);
             AMQPSource source = new AMQPSource();
             source.setAddress(topic.getName().toString());
-            source.setDurable(TerminusDurability.NONE);
+            source.setDurable(TerminusDurability.NONE);            
             source.setTimeout(0L);
             source.setDynamic(false);
             attach.setSource(source);
@@ -343,8 +352,8 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 	    	switch(message.getCode())
 	    	{
 				case ATTACH:
-					AMQPAttach attach=(AMQPAttach)message;
-					processAttach(attach.getRole(),attach.getHandle());
+					AMQPAttach attach=(AMQPAttach)message;					
+					processAttach(attach.getName(),attach.getRole(),attach.getHandle());
 					break;
 				case BEGIN:
 					processBegin();
@@ -376,7 +385,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 					processSASLMechanism(mechanisms.getMechanisms(), mechanisms.getChannel(), mechanisms.getType());
 					break;
 				case OPEN:
-					processOpen(((AMQPOpen)message).getIdleTimeout());
+					processOpen(((AMQPOpen)message).getIdleTimeout());					
 					break;
 				case OUTCOME:
 					SASLOutcome outcome = ((SASLOutcome)message);
@@ -444,13 +453,21 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 
     public void processProto(Integer channel, Integer protocolId)
     {
-        if (protocolId == 0)
-        	this.channel = channel;                        
+        if (isSaslConfirm && protocolId == 0)
+        {
+        	this.channel = channel;
+        	AMQPOpen open = AMQPOpen.builder().channel(channel).containerId(account.getClientId()).idleTimeout(account.getKeepAlive()*1000).build();
+        	client.send(open);
+        }
     }
 
     public void processOpen(Long idleTimeout)
     {
-        timers = new TimersMap(this, client, RESEND_PERIOND, idleTimeout*1000);
+    	if(idleTimeout!=null)
+    		timers = new TimersMap(this, client, RESEND_PERIOND, idleTimeout*1000);
+    	else
+    		timers = new TimersMap(this, client, RESEND_PERIOND, account.getKeepAlive()*1000);
+    	
         timers.startPingTimer();
         
         AMQPBegin begin = AMQPBegin.builder().channel(channel).nextOutgoingId(0L).incomingWindow(2147483647L).outgoingWindow(0L).build();
@@ -465,11 +482,12 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
             clearAccountTopics();                   
     }
 
-    public void processAttach(RoleCode role,Long handle)
+    public void processAttach(String name,RoleCode role,Long handle)
     {
         if (role!=null)
         {
-            if (role == RoleCode.SENDER)
+        	//its opposite here
+            if (role == RoleCode.RECEIVER)
             {
                 //publish
                 if (handle!=null)
@@ -483,6 +501,9 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
                             i--;
 
                             timers.store(currMessage);
+                            if(currMessage.getSettled())
+                            	timers.remove(currMessage.getDeliveryId().intValue());
+                            
                             client.send(currMessage);
                         }
                     }
@@ -490,7 +511,23 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
             }
             else
             {
+            	usedIncomingMappings.put(name.toString(),handle);
+                usedMappings.put(handle,name);
+                
                 //subscribe
+            	com.mobiussoftware.iotbroker.db.Topic dbTopic = new com.mobiussoftware.iotbroker.db.Topic(account, name, (byte) QoS.AT_LEAST_ONCE.getValue());
+				
+				try
+				{
+					dbInterface.saveTopic(dbTopic);
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
+				
+				if (topicListener != null)
+					topicListener.finishAddingTopic(String.valueOf(dbTopic.getId()), name, QoS.AT_LEAST_ONCE.getValue());
             }
         }
     }
@@ -522,19 +559,6 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
             return;
 
         topicName  = usedMappings.get(handle);  
-        com.mobiussoftware.iotbroker.db.Topic topic=null;
-        try
-        {
-        	topic=dbInterface.getTopic(topicName);
-        }
-        catch(Exception ex)
-        {
-        	
-        }
-        
-        if (topic==null)
-            return;
-
         Message message=new Message(account, topicName, new String(data.getData()), true, (byte)qos.getValue(), false, false);
         try
 		{
@@ -552,10 +576,15 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 
     public void processDisposition(Long first, Long last)
     {
-        if(first!=null && last!=null)
+        if(first!=null)
         {
-            for (Long i = first; i < last; i++)
-                timers.remove(i.intValue());                
+        	if(last!=null)
+        	{
+        		for (Long i = first; i < last; i++)
+        			timers.remove(i.intValue());
+        	}
+        	else
+        		timers.remove(first.intValue());
         }
     }
 
@@ -567,6 +596,25 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
             usedMappings.remove(handle);
             if (usedOutgoingMappings.containsKey(topicName))
                 usedOutgoingMappings.remove(topicName);
+            
+            try
+			{
+				logger.info("deleting  topic" + topicName + " from DB");
+				List<com.mobiussoftware.iotbroker.db.Topic> dbTopics=dbInterface.getTopics(account);
+				for(com.mobiussoftware.iotbroker.db.Topic dbTopic:dbTopics)
+				{
+					if(dbTopic.getName().equals(topicName))
+					{
+						dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
+						if (topicListener != null)
+							topicListener.finishDeletingTopic(String.valueOf(dbTopic.getId()));
+					}
+				}
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
         }
     }
 
@@ -640,8 +688,9 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
         if (outcomeCode!=null)
             if(outcomeCode == OutcomeCode.OK)
             {
-            	AMQPOpen open = AMQPOpen.builder().channel(channel).containerId(account.getClientId()).build();
-                client.send(open);
+            	isSaslConfirm=true;
+            	AMQPProtoHeader header = new AMQPProtoHeader(0);
+                client.send(header);
             }
         }
 
