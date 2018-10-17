@@ -172,7 +172,6 @@ public class TimersMap implements TimersMapInterface<AMQPHeader>
 	public void startPingTimer()
 	{
 		cancelTimer(pingTimer);
-		System.out.println("KEEPALIVE:" + client.getKeepalivePeriod());
 		pingTimer = new MessageResendTimer<AMQPHeader>(new AMQPPing(), listener, this, false);
 		ScheduledFuture<?> pingTimer_future = (ScheduledFuture<?>) scheduledservice.schedule(pingTimer, client.getKeepalivePeriod(), TimeUnit.MILLISECONDS);
 		pingTimer.setFuture(pingTimer_future);
