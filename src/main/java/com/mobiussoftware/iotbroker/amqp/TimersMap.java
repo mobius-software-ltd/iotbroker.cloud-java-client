@@ -38,7 +38,6 @@ public class TimersMap implements TimersMapInterface<AMQPHeader>
 
 	private TCPClient listener;
 	private long resendPeriod;
-	private long keepalivePeriod;
 	private AmqpClient client;
 
 	private ConcurrentHashMap<Integer, MessageResendTimer<AMQPHeader>> timersMap = new ConcurrentHashMap<>();
@@ -49,12 +48,11 @@ public class TimersMap implements TimersMapInterface<AMQPHeader>
 
 	private ScheduledExecutorService scheduledservice = Executors.newScheduledThreadPool(5);
 
-	public TimersMap(AmqpClient client, TCPClient listener, long resendPeriod, long keepalivePeriod)
+	public TimersMap(AmqpClient client, TCPClient listener, long resendPeriod)
 	{
 		this.client = client;
 		this.listener = listener;
 		this.resendPeriod = resendPeriod;
-		this.keepalivePeriod = keepalivePeriod;
 	}
 
 	public void store(AMQPHeader message)
@@ -107,7 +105,7 @@ public class TimersMap implements TimersMapInterface<AMQPHeader>
 		switch (timer.getMessage().getCode())
 		{
 			case PING:
-				timer_future = (ScheduledFuture<?>) scheduledservice.schedule(timer, keepalivePeriod, TimeUnit.MILLISECONDS);
+				timer_future = (ScheduledFuture<?>) scheduledservice.schedule(timer, client.getKeepalivePeriod(), TimeUnit.MILLISECONDS);
 				break;
 			default:
 				timer_future = (ScheduledFuture<?>) scheduledservice.schedule(timer, resendPeriod, TimeUnit.MILLISECONDS);
@@ -141,7 +139,7 @@ public class TimersMap implements TimersMapInterface<AMQPHeader>
         if (connectTimer != null)
             connectTimer.stop();
 
-        connectTimer = new ServerConnectTimer<AMQPHeader>(this,scheduledservice);
+        connectTimer = new ServerConnectTimer<AMQPHeader>(client,this,scheduledservice);
         connectTimer.execute(resendPeriod);
     }
 
@@ -149,11 +147,8 @@ public class TimersMap implements TimersMapInterface<AMQPHeader>
 	public void cancelConnectTimer()
 	{
 		if (connectTimer != null)
-		{
-            connectTimer.stop();
-            client.cancelConnection();
-		}
-		
+		    connectTimer.stop();
+        
 		connectTimer=null;
 	}
 
@@ -177,9 +172,9 @@ public class TimersMap implements TimersMapInterface<AMQPHeader>
 	public void startPingTimer()
 	{
 		cancelTimer(pingTimer);
-
+		System.out.println("KEEPALIVE:" + client.getKeepalivePeriod());
 		pingTimer = new MessageResendTimer<AMQPHeader>(new AMQPPing(), listener, this, false);
-		ScheduledFuture<?> pingTimer_future = (ScheduledFuture<?>) scheduledservice.schedule(pingTimer, keepalivePeriod, TimeUnit.MILLISECONDS);
+		ScheduledFuture<?> pingTimer_future = (ScheduledFuture<?>) scheduledservice.schedule(pingTimer, client.getKeepalivePeriod(), TimeUnit.MILLISECONDS);
 		pingTimer.setFuture(pingTimer_future);
 	}
 }

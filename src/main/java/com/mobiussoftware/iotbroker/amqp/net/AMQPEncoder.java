@@ -35,7 +35,7 @@ public class AMQPEncoder extends MessageToByteEncoder<AMQPHeader>
 	protected void encode(ChannelHandlerContext ctx, AMQPHeader message, ByteBuf out) throws Exception
 	{
 		ByteBuf buf = AMQPParser.encode(message);
-		out.writeBytes(buf);
+		out.writeBytes(buf);		
 	}
 
 }

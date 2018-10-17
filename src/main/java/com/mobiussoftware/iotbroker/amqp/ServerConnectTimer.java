@@ -30,9 +30,11 @@ public class ServerConnectTimer<T> implements Runnable
 	private TimersMapInterface<T> timersMap;
 	private ScheduledFuture<?> future;
 	private ScheduledExecutorService scheduledService;
+	private AmqpClient client;
 	
-    public ServerConnectTimer(TimersMapInterface<T> timersMap,ScheduledExecutorService scheduledService)
+    public ServerConnectTimer(AmqpClient client,TimersMapInterface<T> timersMap,ScheduledExecutorService scheduledService)
     {
+    	this.client = client;
         this.timersMap = timersMap;
         this.scheduledService = scheduledService;
     }
@@ -60,7 +62,8 @@ public class ServerConnectTimer<T> implements Runnable
 			future.cancel(true);
 		
 		future = null;
-        timersMap.cancelConnectTimer();
+		client.cancelConnection();
+		timersMap.cancelConnectTimer();
         return;
     }
 

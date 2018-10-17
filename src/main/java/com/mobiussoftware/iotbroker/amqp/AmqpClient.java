@@ -100,12 +100,22 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
     private ConcurrentHashMap<Long, String> usedMappings = new ConcurrentHashMap<Long, String>();
     private List<AMQPTransfer> pendingMessages = new ArrayList<AMQPTransfer>();
 
+    private Long idleTimeout;
+    
     public AmqpClient(Account account) throws Exception
     {
     	this.dbInterface = DBHelper.getInstance();
 		this.address = new InetSocketAddress(account.getServerHost(), account.getServerPort());
 		this.account = account;
         client = new TCPClient(address, WORKER_THREADS);
+    }
+    
+    public Long getKeepalivePeriod()
+    {
+    	if(idleTimeout==null)
+    		return account.getKeepAlive()*1000L;
+    	
+    	return idleTimeout;
     }
     
     @Override 
@@ -138,8 +148,6 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
         Boolean isSuccess = client.init(this);
         if (!isSuccess)
             setState(ConnectionState.CHANNEL_FAILED);            
-        else
-            timers.storeConnectTimer();
         
         return isSuccess;
     }
@@ -169,9 +177,10 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
     {
         setState(ConnectionState.CONNECTING);
 
-        if (timers != null)
-            timers.stopAllTimers();
-
+        timers=new TimersMap(this, client, RESEND_PERIOND);
+        timers.stopAllTimers();
+        timers.storeConnectTimer();
+        
         AMQPProtoHeader header = new AMQPProtoHeader(3);
         client.send(header);
     }
@@ -462,13 +471,12 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
     }
 
     public void processOpen(Long idleTimeout)
-    {
+    {    	
     	if(idleTimeout!=null)
-    		timers = new TimersMap(this, client, RESEND_PERIOND, idleTimeout);
-    	else
-    		timers = new TimersMap(this, client, RESEND_PERIOND, account.getKeepAlive()*1000);
+    		this.idleTimeout=idleTimeout;
     	
         timers.startPingTimer();
+        timers.cancelConnectTimer();
         
         AMQPBegin begin = AMQPBegin.builder().channel(channel).nextOutgoingId(0L).incomingWindow(2147483647L).outgoingWindow(0L).build();
         client.send(begin);
