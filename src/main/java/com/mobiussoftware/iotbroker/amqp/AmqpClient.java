@@ -464,7 +464,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
     public void processOpen(Long idleTimeout)
     {
     	if(idleTimeout!=null)
-    		timers = new TimersMap(this, client, RESEND_PERIOND, idleTimeout*1000);
+    		timers = new TimersMap(this, client, RESEND_PERIOND, idleTimeout);
     	else
     		timers = new TimersMap(this, client, RESEND_PERIOND, account.getKeepAlive()*1000);
     	
