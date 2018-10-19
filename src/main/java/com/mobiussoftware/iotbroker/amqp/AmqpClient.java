@@ -199,7 +199,6 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
             timers = null;
         }
 
-        setState(ConnectionState.NONE);
         return;
     }
 
