@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.log4j.Logger;
 
 import com.mobius.software.amqp.parser.avps.OutcomeCode;
+import com.mobius.software.amqp.parser.avps.ReceiveCode;
 import com.mobius.software.amqp.parser.avps.RoleCode;
 import com.mobius.software.amqp.parser.avps.SectionCode;
 import com.mobius.software.amqp.parser.avps.SendCode;
@@ -58,6 +59,7 @@ import com.mobius.software.amqp.parser.tlv.impl.AMQPAccepted;
 import com.mobius.software.amqp.parser.wrappers.AMQPMessageFormat;
 import com.mobius.software.amqp.parser.wrappers.AMQPSymbol;
 import com.mobius.software.mqtt.parser.avps.QoS;
+import com.mobius.software.mqtt.parser.avps.Text;
 import com.mobius.software.mqtt.parser.avps.Topic;
 import com.mobiussoftware.iotbroker.amqp.net.TCPClient;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
@@ -318,7 +320,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
             attach.setName(topic.getName().toString());
             attach.setHandle(currentHandler);
             attach.setRole(RoleCode.SENDER);
-            attach.setSndSettleMode(SendCode.MIXED);
+            attach.setRcvSettleMode(ReceiveCode.FIRST);
             attach.setInitialDeliveryCount(0L);
             AMQPSource source = new AMQPSource();
             source.setAddress(topic.getName().toString());
@@ -486,7 +488,22 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
         setState(ConnectionState.CONNECTION_ESTABLISHED);
 
         if (account.isCleanSession())
-            clearAccountTopics();                   
+            clearAccountTopics();
+        else
+        {
+        	try
+        	{
+	        	List<com.mobiussoftware.iotbroker.db.Topic> dbTopics=dbInterface.getTopics(account);
+				for(com.mobiussoftware.iotbroker.db.Topic dbTopic:dbTopics)
+				{
+					subscribe(new Topic[] { new Topic(new Text(dbTopic.getName()), QoS.valueOf((int)dbTopic.getQos()))} );
+				}
+        	}
+        	catch(SQLException ex)
+        	{
+        		
+        	}
+        }
     }
 
     public void processAttach(String name,RoleCode role,Long handle)
@@ -496,13 +513,15 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
         	//its opposite here
             if (role == RoleCode.RECEIVER)
             {
-                //publish
-                if (handle!=null)
+            	Long realHandle = usedOutgoingMappings.get(name);
+                
+            	//publish
+                if (realHandle!=null)
                 {
                     for (int i = 0; i < pendingMessages.size(); i++)
                     {
                         AMQPTransfer currMessage = pendingMessages.get(i);
-                        if (currMessage.getHandle().equals(handle))
+                        if (currMessage.getHandle().equals(realHandle))
                         {
                             pendingMessages.remove(i);
                             i--;
@@ -521,8 +540,29 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
             	usedIncomingMappings.put(name.toString(),handle);
                 usedMappings.put(handle,name);
                 
+                if(handle>=nextHandle)
+                	nextHandle=(int)(handle+1);
+                
                 //subscribe
-            	com.mobiussoftware.iotbroker.db.Topic dbTopic = new com.mobiussoftware.iotbroker.db.Topic(account, name, (byte) QoS.AT_LEAST_ONCE.getValue());
+                try
+				{
+	                List<com.mobiussoftware.iotbroker.db.Topic> dbTopics=dbInterface.getTopics(account);
+					for(com.mobiussoftware.iotbroker.db.Topic dbTopic:dbTopics)
+					{
+						if(dbTopic.getName().equals(name))
+						{
+							dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
+							if (topicListener != null)
+								topicListener.finishDeletingTopic(String.valueOf(dbTopic.getId()));
+						}
+					}
+				}
+				catch (SQLException e)
+				{
+					e.printStackTrace();
+				}
+                
+                com.mobiussoftware.iotbroker.db.Topic dbTopic = new com.mobiussoftware.iotbroker.db.Topic(account, name, (byte) QoS.AT_LEAST_ONCE.getValue());
 				
 				try
 				{

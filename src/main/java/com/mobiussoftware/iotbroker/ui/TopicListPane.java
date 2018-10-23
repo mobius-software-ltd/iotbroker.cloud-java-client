@@ -127,7 +127,8 @@ public class TopicListPane extends JPanel implements TopicListener
 				// System.out.println("Add button clicked!");
 				arg0.getComponent().removeMouseListener(this);
 				addTopicAction();
-				dropDown.setSelectedIndex(0);
+				if(account.getProtocol()!=Protocol.AMQP)
+					dropDown.setSelectedIndex(0);		
 			}
 		};
 		addTopicBtn = UIHelper.createButton("Add", addTopicBtnListener);
@@ -342,6 +343,17 @@ public class TopicListPane extends JPanel implements TopicListener
 		dropDown.setPreferredSize(dropDown.getMinimumSize());
 		dropDown.setUI(CustomComboBoxUI.createUI(dropDown));
 
+		if(account.getProtocol()==Protocol.AMQP)
+		{
+			dropDown.setSelectedIndex(1);
+			dropDown.setEnabled(false);			
+		}
+		else
+		{
+			dropDown.setEnabled(true);
+			dropDown.setSelectedIndex(0);			
+		}
+		
 		BasicComboBoxRenderer renderer = (BasicComboBoxRenderer) dropDown.getRenderer();
 		renderer.setBorder(new EmptyBorder(0, 7, 0, 0));
 
