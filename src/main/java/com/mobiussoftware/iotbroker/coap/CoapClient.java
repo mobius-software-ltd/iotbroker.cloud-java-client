@@ -246,11 +246,8 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
             byte qos=(byte)QoS.AT_MOST_ONCE.getValue();
             for (CoapOption option:message.getOptions())
             	if (option.getNumber() == CoapOptionType.URI_PATH.getValue())
-                {
                     topic = new String(option.getValue());
-                    break;
-                }
-            	else if(option.getNumber() == CoapOptionType.ACCEPT.getValue())
+                else if(option.getNumber() == CoapOptionType.ACCEPT.getValue())
                 	qos=option.getValue()[option.getValue().length-1];                 
 
             byte[] content = message.getPayload();
