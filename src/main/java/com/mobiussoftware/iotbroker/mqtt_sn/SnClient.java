@@ -1,5 +1,13 @@
 package com.mobiussoftware.iotbroker.mqtt_sn;
 
+import java.net.InetSocketAddress;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.log4j.Logger;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -29,19 +37,17 @@ import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
+import com.mobiussoftware.iotbroker.mqtt_sn.net.SnDtlsClient;
 import com.mobiussoftware.iotbroker.mqtt_sn.net.UDPClient;
-import com.mobiussoftware.iotbroker.network.*;
+import com.mobiussoftware.iotbroker.network.ClientListener;
+import com.mobiussoftware.iotbroker.network.ConnectionListener;
+import com.mobiussoftware.iotbroker.network.ConnectionState;
+import com.mobiussoftware.iotbroker.network.MessageResendTimer;
+import com.mobiussoftware.iotbroker.network.NetworkClient;
+import com.mobiussoftware.iotbroker.network.TopicListener;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-
-import org.apache.log4j.Logger;
-
-import java.net.InetSocketAddress;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class SnClient implements ConnectionListener<SNMessage>, SNDevice, NetworkClient
 {
@@ -70,22 +76,25 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		this.dbInterface = DBHelper.getInstance();
 		this.account = account;
 		this.address = new InetSocketAddress(account.getServerHost(), account.getServerPort());
-		this.client = new UDPClient(address, WORKER_THREADS);
+		if (!account.isSecure())
+			this.client = new UDPClient(address, WORKER_THREADS);
+		else
+			this.client = new SnDtlsClient(address, WORKER_THREADS, account.getCertificatePath(), account.getCertificatePassword());
 	}
 
-	@Override 
+	@Override
 	public void setClientListener(ClientListener clientListener)
 	{
 		this.clientListener = clientListener;
 	}
 
-	@Override 
+	@Override
 	public void setTopicListener(TopicListener topicListener)
 	{
 		this.topicListener = topicListener;
 	}
 
-	@Override 
+	@Override
 	public void setState(ConnectionState state)
 	{
 		connectionState = state;
@@ -93,7 +102,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 			clientListener.stateChanged(state);
 	}
 
-	@Override 
+	@Override
 	public Boolean createChannel()
 	{
 		setState(ConnectionState.CHANNEL_CREATING);
@@ -118,20 +127,20 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		return address;
 	}
 
-	@Override 
+	@Override
 	public void closeChannel()
 	{
 		if (client != null)
 			client.shutdown();
 	}
 
-	@Override 
+	@Override
 	public void connect()
 	{
 		setState(ConnectionState.CONNECTING);
 		Boolean willPresent = false;
 
-		if (account.getWillTopic() != null && account.getWillTopic().length()>0)
+		if (account.getWillTopic() != null && account.getWillTopic().length() > 0)
 			willPresent = true;
 
 		SNConnect connect = new SNConnect(account.isCleanSession(), account.getKeepAlive(), account.getClientId(), willPresent);
@@ -146,7 +155,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 			client.send(connect);
 	}
 
-	@Override 
+	@Override
 	public void disconnect()
 	{
 		if (client.isConnected())
@@ -158,7 +167,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		setState(ConnectionState.NONE);
 	}
 
-	@Override 
+	@Override
 	public void subscribe(Topic[] topics)
 	{
 		for (Topic topic1 : topics)
@@ -189,7 +198,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		}
 	}
 
-	@Override 
+	@Override
 	public void unsubscribe(String[] topics)
 	{
 		for (String topic1 : topics)
@@ -207,7 +216,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		}
 	}
 
-	@Override 
+	@Override
 	public void publish(Topic topic, byte[] content, Boolean retain, Boolean dup)
 	{
 		SNQoS realQos = SNQoS.AT_LEAST_ONCE;
@@ -253,7 +262,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		client = new UDPClient(address, WORKER_THREADS);
 	}
 
-	@Override 
+	@Override
 	public void closeConnection()
 	{
 		if (timers != null)
@@ -267,7 +276,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		}
 	}
 
-	@Override 
+	@Override
 	public void packetReceived(SNMessage message)
 	{
 		try
@@ -281,13 +290,13 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		}
 	}
 
-	@Override 
+	@Override
 	public void cancelConnection()
 	{
 		client.shutdown();
 	}
 
-	@Override 
+	@Override
 	public void connectionLost()
 	{
 		if (timers != null)
@@ -300,7 +309,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		}
 	}
 
-	@Override 
+	@Override
 	public void processWillTopicRequest()
 	{
 		Boolean retain = false;
@@ -330,7 +339,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		client.send(willTopic);
 	}
 
-	@Override 
+	@Override
 	public void processWillMessageRequest()
 	{
 		byte[] content;
@@ -343,7 +352,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		}
 	}
 
-	@Override 
+	@Override
 	public void processConnack(ReturnCode code)
 	{
 		// CANCEL CONNECT TIMER
@@ -370,7 +379,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		}
 	}
 
-	@Override 
+	@Override
 	public void processSuback(int packetID, int topicID, ReturnCode returnCode, SNQoS allowedQos)
 	{
 
@@ -388,13 +397,13 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 
 			if (subscribe.getTopic() instanceof IdentifierTopic)
 			{
-				topicName = mappedTopics.get(((IdentifierTopic) subscribe.getTopic()).getValue());				
+				topicName = mappedTopics.get(((IdentifierTopic) subscribe.getTopic()).getValue());
 			}
 			else
 			{
 				topicName = ((FullTopic) subscribe.getTopic()).getValue();
 				mappedTopics.put(topicID, topicName);
-				reverseMappedTopics.put(topicName, topicID);				
+				reverseMappedTopics.put(topicName, topicID);
 			}
 
 			//			SNQoS actualQos = allowedQos;
@@ -402,18 +411,18 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 
 			switch (allowedQos)
 			{
-				case AT_MOST_ONCE:
-					realQos = QoS.AT_MOST_ONCE;
-					break;
-				case EXACTLY_ONCE:
-					realQos = QoS.EXACTLY_ONCE;
-					break;
-				case LEVEL_ONE:
-					realQos = QoS.AT_MOST_ONCE;
-					break;
-				case AT_LEAST_ONCE:
-					realQos = QoS.AT_LEAST_ONCE;
-					break;
+			case AT_MOST_ONCE:
+				realQos = QoS.AT_MOST_ONCE;
+				break;
+			case EXACTLY_ONCE:
+				realQos = QoS.EXACTLY_ONCE;
+				break;
+			case LEVEL_ONE:
+				realQos = QoS.AT_MOST_ONCE;
+				break;
+			case AT_LEAST_ONCE:
+				realQos = QoS.AT_LEAST_ONCE;
+				break;
 			}
 
 			com.mobiussoftware.iotbroker.db.Topic topic = new com.mobiussoftware.iotbroker.db.Topic(account, topicName, (byte) realQos.getValue());
@@ -436,7 +445,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		}
 	}
 
-	@Override 
+	@Override
 	public void processUnsuback(int packetID)
 	{
 		SNMessage message = timers.remove(packetID);
@@ -453,11 +462,11 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 			{
 				try
 				{
-					logger.info("deleting  topic" + topicName + " from DB");					
-					List<com.mobiussoftware.iotbroker.db.Topic> topics=dbInterface.getTopics(account);
-					for(com.mobiussoftware.iotbroker.db.Topic topic:topics)
+					logger.info("deleting  topic" + topicName + " from DB");
+					List<com.mobiussoftware.iotbroker.db.Topic> topics = dbInterface.getTopics(account);
+					for (com.mobiussoftware.iotbroker.db.Topic topic : topics)
 					{
-						if(topic.getName().equals(topicName))
+						if (topic.getName().equals(topicName))
 						{
 							dbInterface.deleteTopic(String.valueOf(topic.getId()));
 							if (topicListener != null)
@@ -473,7 +482,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		}
 	}
 
-	@Override 
+	@Override
 	public void processRegister(int packetID, int topicID, String topicName)
 	{
 		mappedTopics.put(topicID, topicName);
@@ -484,7 +493,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		client.send(message);
 	}
 
-	@Override 
+	@Override
 	public void processRegack(int packetID, int topicID, ReturnCode returnCode)
 	{
 		SNMessage message = timers.remove(packetID);
@@ -511,7 +520,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		}
 	}
 
-	@Override 
+	@Override
 	public void processPublish(int packetID, SNTopic topic, ByteBuf content, Boolean retain, Boolean isDup)
 	{
 		SNQoS publisherQos = topic.getQos();
@@ -519,28 +528,28 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 
 		switch (publisherQos)
 		{
-			case AT_LEAST_ONCE:
-				SNPuback puback = new SNPuback();
-				puback.setMessageID(packetID);
+		case AT_LEAST_ONCE:
+			SNPuback puback = new SNPuback();
+			puback.setMessageID(packetID);
 
-				int topicID=0;
-				if(topic instanceof IdentifierTopic)
-					topicID=((IdentifierTopic)topic).getValue();
-				else if(topic instanceof ShortTopic)
-					topicID=Integer.valueOf(((ShortTopic)topic).getValue());
-				
-				puback.setTopicID(topicID);
-				puback.setCode(ReturnCode.ACCEPTED);
-				client.send(puback);
-				realQos = QoS.AT_LEAST_ONCE;
-				break;
-			case EXACTLY_ONCE:
-				realQos = QoS.EXACTLY_ONCE;
-				SNPubrec pubrec = new SNPubrec(packetID);				
-				client.send(pubrec);
-				break;
-			default:
-				break;
+			int topicID = 0;
+			if (topic instanceof IdentifierTopic)
+				topicID = ((IdentifierTopic) topic).getValue();
+			else if (topic instanceof ShortTopic)
+				topicID = Integer.valueOf(((ShortTopic) topic).getValue());
+
+			puback.setTopicID(topicID);
+			puback.setCode(ReturnCode.ACCEPTED);
+			client.send(puback);
+			realQos = QoS.AT_LEAST_ONCE;
+			break;
+		case EXACTLY_ONCE:
+			realQos = QoS.EXACTLY_ONCE;
+			SNPubrec pubrec = new SNPubrec(packetID);
+			client.send(pubrec);
+			break;
+		default:
+			break;
 		}
 
 		String topicName = null;
@@ -577,13 +586,13 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		}
 	}
 
-	@Override 
+	@Override
 	public void processPuback(int packetID)
 	{
 		timers.remove(packetID);
 	}
 
-	@Override 
+	@Override
 	public void processPubrec(int packetID)
 	{
 		timers.remove(packetID);
@@ -592,115 +601,115 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		client.send(message);
 	}
 
-	@Override 
+	@Override
 	public void processPubrel(int packetID)
 	{
 		client.send(new SNPubcomp(packetID));
 	}
 
-	@Override 
+	@Override
 	public void processPubcomp(int packetID)
 	{
 		timers.remove(packetID);
 	}
 
-	@Override 
+	@Override
 	public void processPingresp()
 	{
 	}
 
-	@Override 
+	@Override
 	public void processSubscribe(int packetID, SNTopic topic)
 	{
 		logger.error("received invalid message subscribe");
 	}
 
-	@Override 
+	@Override
 	public void processConnect(boolean cleanSession, int keepalive)
 	{
 		logger.error("received invalid message connect");
 	}
 
-	@Override 
+	@Override
 	public void processPingreq()
 	{
 		logger.error("received invalid message pingreq");
 	}
 
-	@Override 
+	@Override
 	public void processDisconnect()
 	{
 		closeConnection();
 		setState(ConnectionState.CONNECTION_LOST);
 	}
 
-	@Override 
+	@Override
 	public void processUnsubscribe(int packetID, SNTopic topic)
 	{
 		logger.error("received invalid message unsubscribe");
 	}
 
-	@Override 
+	@Override
 	public void processWillTopicUpdate(FullTopic willTopic)
 	{
 		logger.warn("received invalid message will topic update");
 	}
 
-	@Override 
+	@Override
 	public void processWillMessageUpdate(ByteBuf content)
 	{
 		logger.warn("received invalid message will message update");
 	}
 
-	@Override 
+	@Override
 	public void processWillTopic(FullTopic topic)
 	{
 		logger.warn("received invalid message will topic");
 	}
 
-	@Override 
+	@Override
 	public void processWillMessage(ByteBuf content)
 	{
 		logger.warn("received invalid message will message");
 	}
 
-	@Override 
+	@Override
 	public void processAdvertise(int gatewayID, int duration)
 	{
 		logger.warn("received invalid message advertise");
 	}
 
-	@Override 
+	@Override
 	public void processGwInfo(int gatewayID, String gatewayAddress)
 	{
 		logger.warn("received invalid message gw info");
 	}
 
-	@Override 
+	@Override
 	public void processSearchGw(Radius radius)
 	{
 		logger.warn("received invalid message search gw");
 	}
 
-	@Override 
+	@Override
 	public void processWillTopicResponse()
 	{
 		logger.warn("received invalid message will topic response");
 	}
 
-	@Override 
+	@Override
 	public void processWillMessageResponse()
 	{
 		logger.warn("received invalid message will message response");
 	}
 
-	@Override 
+	@Override
 	public void connected()
 	{
 		setState(ConnectionState.CHANNEL_ESTABLISHED);
 	}
 
-	@Override 
+	@Override
 	public void connectFailed()
 	{
 		setState(ConnectionState.CHANNEL_FAILED);

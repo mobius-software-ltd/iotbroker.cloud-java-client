@@ -1,5 +1,11 @@
 package com.mobiussoftware.iotbroker.mqtt.net;
 
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+
 /*
  * Copyright 2015 The Netty Project
  *
@@ -17,12 +23,6 @@ package com.mobiussoftware.iotbroker.mqtt.net;
  */
 
 import io.netty.handler.codec.http.HttpHeaders;
-
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
 
 public class EmptyHttpHeaders extends HttpHeaders {
     static final Iterator<Entry<CharSequence, CharSequence>> EMPTY_CHARS_ITERATOR =
@@ -127,4 +127,76 @@ public class EmptyHttpHeaders extends HttpHeaders {
         private InstanceInitializer() {
         }
     }
+
+	@Override
+	public Integer getInt(CharSequence name)
+	{
+		return 0;
+	}
+
+	@Override
+	public int getInt(CharSequence name, int defaultValue)
+	{
+		return defaultValue;
+	}
+
+	@Override
+	public Short getShort(CharSequence name)
+	{
+		return 0;
+	}
+
+	@Override
+	public short getShort(CharSequence name, short defaultValue)
+	{
+		return defaultValue;
+	}
+
+	@Override
+	public Long getTimeMillis(CharSequence name)
+	{
+		return 0L;
+	}
+
+	@Override
+	public long getTimeMillis(CharSequence name, long defaultValue)
+	{
+		return defaultValue;
+	}
+
+	@Override
+	public Iterator<Entry<CharSequence, CharSequence>> iteratorCharSequence()
+	{
+		return EMPTY_CHARS_ITERATOR;
+	}
+
+	@Override
+	public int size()
+	{
+		return 0;
+	}
+
+	@Override
+	public HttpHeaders addInt(CharSequence name, int value)
+	{
+		throw new UnsupportedOperationException("read only");
+	}
+
+	@Override
+	public HttpHeaders addShort(CharSequence name, short value)
+	{
+		throw new UnsupportedOperationException("read only");
+	}
+
+	@Override
+	public HttpHeaders setInt(CharSequence name, int value)
+	{
+		throw new UnsupportedOperationException("read only");
+	}
+
+	@Override
+	public HttpHeaders setShort(CharSequence name, short value)
+	{
+		throw new UnsupportedOperationException("read only");
+	}
 }

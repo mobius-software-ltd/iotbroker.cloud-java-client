@@ -1,5 +1,16 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JFrame;
+import javax.swing.Timer;
+import javax.swing.UIDefaults;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -24,11 +35,6 @@ import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.network.NetworkClient;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class Main
 {
@@ -187,7 +193,6 @@ public class Main
 
 	public static void createAndShowLoadingPane(Account account)
 	{
-
 		JFrame frame = new JFrame(account.getProtocol().toString());
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 

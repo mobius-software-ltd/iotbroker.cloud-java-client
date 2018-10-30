@@ -1,5 +1,14 @@
 package com.mobiussoftware.iotbroker.coap.net;
 
+import java.net.InetSocketAddress;
+
+import org.apache.log4j.Logger;
+
+import com.mobius.software.coap.parser.tlv.CoapMessage;
+import com.mobiussoftware.iotbroker.network.ConnectionListener;
+import com.mobiussoftware.iotbroker.network.ExceptionHandler;
+import com.mobiussoftware.iotbroker.network.NetworkChannel;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -20,37 +29,21 @@ package com.mobiussoftware.iotbroker.coap.net;
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.DefaultAddressedEnvelope;
-import io.netty.channel.MultithreadEventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 
-import java.net.InetSocketAddress;
-
-import org.apache.log4j.Logger;
-
-import com.mobius.software.coap.parser.tlv.CoapMessage;
-import com.mobiussoftware.iotbroker.network.ConnectionListener;
-import com.mobiussoftware.iotbroker.network.ExceptionHandler;
-import com.mobiussoftware.iotbroker.network.NetworkChannel;
-
 public class UDPClient implements NetworkChannel<CoapMessage>
 {
+	protected final Logger logger = Logger.getLogger(getClass());
 
-	private final Logger logger = Logger.getLogger(getClass());
+	protected InetSocketAddress address;
+	protected int workerThreads;
 
-	private InetSocketAddress address;
-	private int workerThreads;
-
-	private Bootstrap bootstrap;
-	private MultithreadEventLoopGroup loopGroup;
-	private Channel channel;
+	protected Bootstrap bootstrap;
+	protected MultithreadEventLoopGroup loopGroup;
+	protected Channel channel;
 
 	public UDPClient(InetSocketAddress address, int workerThreads)
 	{
@@ -88,53 +81,16 @@ public class UDPClient implements NetworkChannel<CoapMessage>
 	{
 		if (channel == null)
 		{
-			bootstrap = new Bootstrap();
 			loopGroup = new NioEventLoopGroup(workerThreads);
+			bootstrap = new Bootstrap();
 			bootstrap.group(loopGroup);
 			bootstrap.channel(NioDatagramChannel.class);
-
-			bootstrap.handler(new ChannelInitializer<DatagramChannel>()
-			{
-				@Override 
-				public void initChannel(DatagramChannel ch) throws InterruptedException
-				{
-					ChannelPipeline pipeline = ch.pipeline();
-					pipeline.addLast(new CoapDecoder());
-					pipeline.addLast("handler", new CoapHandler(listener));
-					pipeline.addLast(new CoapEncoder());
-					pipeline.addLast(new ExceptionHandler());
-				}
-			});
+			bootstrap.handler(getChannelInitializer(listener));
 			bootstrap.remoteAddress(address);
 			try
 			{
 				final ChannelFuture future = bootstrap.connect();
-				future.addListener(new ChannelFutureListener()
-				{
-					@Override 
-					public void operationComplete(ChannelFuture channelFuture) throws Exception
-					{
-						try
-						{
-							channel = future.channel();
-						}
-						catch (Exception e)
-						{
-							listener.connectFailed();
-							return;
-						}
-
-						if (isConnected())
-						{
-							listener.connected();
-						}
-						else
-						{
-							listener.connectFailed();
-						}
-					}
-
-				});
+				future.addListener(getChannelFutureListener(listener, future));
 			}
 			catch (Exception e)
 			{
@@ -144,6 +100,46 @@ public class UDPClient implements NetworkChannel<CoapMessage>
 		}
 
 		return true;
+	}
+
+	protected ChannelInitializer<DatagramChannel> getChannelInitializer(final ConnectionListener<CoapMessage> listener)
+	{
+		return new ChannelInitializer<DatagramChannel>()
+		{
+			@Override
+			public void initChannel(DatagramChannel ch) throws InterruptedException
+			{
+				ChannelPipeline pipeline = ch.pipeline();
+				pipeline.addLast(new CoapDecoder());
+				pipeline.addLast("handler", new CoapHandler(listener));
+				pipeline.addLast(new CoapEncoder());
+				pipeline.addLast(new ExceptionHandler());
+			}
+		};
+	}
+
+	protected ChannelFutureListener getChannelFutureListener(final ConnectionListener<CoapMessage> listener, final ChannelFuture future)
+	{
+		return new ChannelFutureListener()
+		{
+			@Override
+			public void operationComplete(ChannelFuture channelFuture) throws Exception
+			{
+				try
+				{
+					channel = future.channel();
+					if (isConnected())
+						listener.connected();
+					else
+						listener.connectFailed();
+				}
+				catch (Exception e)
+				{
+					listener.connectFailed();
+					return;
+				}
+			}
+		};
 	}
 
 	public boolean isConnected()
@@ -157,7 +153,7 @@ public class UDPClient implements NetworkChannel<CoapMessage>
 		if (isConnected())
 		{
 			logger.info("message " + message + " is being sent");
-			channel.writeAndFlush(new DefaultAddressedEnvelope<CoapMessage,InetSocketAddress>(message, address));
+			channel.writeAndFlush(new DefaultAddressedEnvelope<CoapMessage, InetSocketAddress>(message, address));
 		}
 	}
 }

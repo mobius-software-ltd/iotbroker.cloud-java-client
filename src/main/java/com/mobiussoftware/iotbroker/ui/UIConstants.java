@@ -1,5 +1,11 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Image;
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -21,10 +27,7 @@ package com.mobiussoftware.iotbroker.ui;
 */
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
-import java.io.IOException;
-import java.io.InputStream;
+import javax.swing.ImageIcon;
 
 public class UIConstants
 {
@@ -34,7 +37,7 @@ public class UIConstants
 	static final int MAIN_FRAME_WIDTH = 445;
 	static final int MAIN_FRAME_HEIGHT = 533;
 	static final int LOGIN_FRAME_WIDTH = 418;
-	static final int LOGIN_FRAME_HEIGHT = 583;
+	static final int LOGIN_FRAME_HEIGHT = 680;
 	static final int LOGO_FRAME_WIDTH = 299;
 	static final int LOGO_FRAME_HEIGHT = 287;
 	static final Color APP_BG_COLOR = Color.white;

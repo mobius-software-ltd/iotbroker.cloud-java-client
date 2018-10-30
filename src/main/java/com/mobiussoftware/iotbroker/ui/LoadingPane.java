@@ -1,5 +1,20 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.util.Random;
+
+import javax.swing.*;
+import javax.swing.plaf.basic.BasicProgressBarUI;
+
+import org.apache.log4j.Logger;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -32,19 +47,7 @@ import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
 import com.mobiussoftware.iotbroker.network.NetworkClient;
 
-import org.apache.log4j.Logger;
-
-import javax.swing.*;
-import javax.swing.plaf.basic.BasicProgressBarUI;
-
-import java.awt.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.Random;
-
-public class LoadingPane
-		extends JPanel
-		implements PropertyChangeListener, ClientListener
+public class LoadingPane extends JPanel implements PropertyChangeListener, ClientListener
 {
 
 	private static final long serialVersionUID = 3454494855396228813L;
@@ -105,7 +108,7 @@ public class LoadingPane
 		progressBar.setMaximumSize(progressBar.getMinimumSize());
 
 		this.add(progressBar);
-	}	
+	}
 
 	private void closeConnection()
 	{
@@ -117,7 +120,8 @@ public class LoadingPane
 		}
 	}
 
-	@Override public void propertyChange(PropertyChangeEvent evt)
+	@Override
+	public void propertyChange(PropertyChangeEvent evt)
 	{
 		if (evt.getPropertyName().equals("progress"))
 		{
@@ -126,7 +130,8 @@ public class LoadingPane
 		}
 	}
 
-	@Override protected void paintComponent(Graphics graphics)
+	@Override
+	protected void paintComponent(Graphics graphics)
 	{
 		super.paintComponent(graphics);
 
@@ -134,63 +139,66 @@ public class LoadingPane
 		graphics.drawImage(bgImage, 0, 0, null);
 	}
 
-	@Override public void messageSent(Message messageObj)
+	@Override
+	public void messageSent(Message messageObj)
 	{
 	}
 
-	@Override public void messageReceived(Message message)
+	@Override
+	public void messageReceived(Message message)
 	{
 		Main.mainPane.messageReceived(message);
 	}
 
-	@Override public void stateChanged(ConnectionState state)
+	@Override
+	public void stateChanged(ConnectionState state)
 	{
 		logger.info("LoadingPane state changed state=" + state.toString());
 		try
 		{
 			switch (state)
 			{
-				case CHANNEL_ESTABLISHED:
-					client.connect();
-					break;
-				case CHANNEL_FAILED:
-					Main.disposeLogoPane();
+			case CHANNEL_ESTABLISHED:
+				client.connect();
+				break;
+			case CHANNEL_FAILED:
+				Main.disposeLogoPane();
+				Main.showAccountMgmtPane();
+				connectingTask.cancel(true);
+				break;
+			case CONNECTION_ESTABLISHED:
+				Main.disposeLogoPane();
+				try
+				{
+					MainPane mainPane = Main.createAndShowMainPane(account);
+					client.setTopicListener(mainPane.getTopicListener());
+				}
+				catch (Exception e)
+				{
+					logger.error("Error occured while createAndShowMainPane from LoadingPanel");
+					e.printStackTrace();
 					Main.showAccountMgmtPane();
-					connectingTask.cancel(true);
-					break;
-				case CONNECTION_ESTABLISHED:
-					Main.disposeLogoPane();
-					try
-					{
-						MainPane mainPane = Main.createAndShowMainPane(account);
-						client.setTopicListener(mainPane.getTopicListener());
-					}
-					catch (Exception e)
-					{
-						logger.error("Error occured while createAndShowMainPane from LoadingPanel");
-						e.printStackTrace();
-						Main.showAccountMgmtPane();
-					}
-					connectingTask.cancel(true);
-					break;
-				case CONNECTION_LOST:
-					Main.disposeMainPane();
-					Main.showAccountMgmtPane();
-	
-					JOptionPane.showMessageDialog(this.getParent(), "Connection closed by the server.");
-	
-					closeConnection();
-					break;
-				case CONNECTION_FAILED:
-					JOptionPane.showMessageDialog(this.getParent(), "Connection failed.");
-					closeConnection();
-					break;
-	
-				case CHANNEL_CREATING:
-				case CONNECTING:
-				case NONE:
-				default:
-					break;
+				}
+				connectingTask.cancel(true);
+				break;
+			case CONNECTION_LOST:
+				Main.disposeMainPane();
+				Main.showAccountMgmtPane();
+
+				JOptionPane.showMessageDialog(this.getParent(), "Connection closed by the server.");
+
+				closeConnection();
+				break;
+			case CONNECTION_FAILED:
+				JOptionPane.showMessageDialog(this.getParent(), "Connection failed.");
+				closeConnection();
+				break;
+
+			case CHANNEL_CREATING:
+			case CONNECTING:
+			case NONE:
+			default:
+				break;
 			}
 
 		}
@@ -203,41 +211,48 @@ public class LoadingPane
 	class ConnectingTask extends SwingWorker<Void, Void>
 	{
 		private LoadingPane loadingPane;
-		
+
 		public ConnectingTask(LoadingPane loadingPane)
 		{
-			this.loadingPane=loadingPane;					
+			this.loadingPane = loadingPane;
 		}
-		
+
 		/*
 		 * Main task. Executed in background thread.
 		 */
-		@Override 
+		@Override
 		public Void doInBackground()
 		{
+			if (account.isSecure() && !account.getCertificatePath().isEmpty() && !new File(account.getCertificatePath()).exists())
+			{
+				logger.warn("certificate file not found: " + account.getCertificatePath());
+				return null;
+			}
 
 			try
 			{
 				switch (account.getProtocol())
 				{
-					case MQTT:
-						client = new MqttClient(account);;
-						break;
-					case WEBSOCKETS:
-						client = new MqttClient(account);;
-						break;
-					case MQTTSN:
-						client = new SnClient(account);					
-						break;
-					case CoAP:
-						client=new CoapClient(account);
-						 break;
-					case AMQP:
-						client = new AmqpClient(account);
-					default:
-						break;
+				case MQTT:
+					client = new MqttClient(account);
+					;
+					break;
+				case WEBSOCKETS:
+					client = new MqttClient(account);
+					;
+					break;
+				case MQTTSN:
+					client = new SnClient(account);
+					break;
+				case CoAP:
+					client = new CoapClient(account);
+					break;
+				case AMQP:
+					client = new AmqpClient(account);
+				default:
+					break;
 				}
-				
+
 				client.setClientListener(loadingPane);
 				Main.updateCurrentClient(client);
 
@@ -277,7 +292,7 @@ public class LoadingPane
 		/*
 		 * Executed in event dispatching thread
 		 */
-		@Override 
+		@Override
 		public void done()
 		{
 			if (!isCancelled())

@@ -1,5 +1,9 @@
 package com.mobiussoftware.iotbroker.amqp.net;
 
+import java.net.InetSocketAddress;
+
+import org.apache.log4j.Logger;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -29,10 +33,6 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-
-import org.apache.log4j.Logger;
-
-import java.net.InetSocketAddress;
 
 public class TCPClient implements NetworkChannel<AMQPHeader>
 {
@@ -90,26 +90,15 @@ public class TCPClient implements NetworkChannel<AMQPHeader>
 			bootstrap.channel(NioSocketChannel.class);
 			bootstrap.option(ChannelOption.TCP_NODELAY, true);
 			bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
-			bootstrap.handler(new ChannelInitializer<SocketChannel>()
-			{
-				@Override public void initChannel(SocketChannel ch)
-						throws InterruptedException
-				{
-					ChannelPipeline pipeline = ch.pipeline();
-					pipeline.addLast(new AMQPDecoder());
-					pipeline.addLast("handler", new AMQPHandler(listener));
-					pipeline.addLast(new AMQPEncoder());
-					pipeline.addLast(new ExceptionHandler());
-				}
-			});
+			bootstrap.handler(getChannelInitializer(listener));
 			bootstrap.remoteAddress(address);
 			try
 			{
 				final ChannelFuture future = bootstrap.connect();
 				future.addListener(new ChannelFutureListener()
 				{
-					@Override public void operationComplete(ChannelFuture channelFuture)
-							throws Exception
+					@Override
+					public void operationComplete(ChannelFuture channelFuture) throws Exception
 					{
 						try
 						{
@@ -143,12 +132,29 @@ public class TCPClient implements NetworkChannel<AMQPHeader>
 		return true;
 	}
 
+	protected ChannelInitializer<SocketChannel> getChannelInitializer(final ConnectionListener<AMQPHeader> listener)
+	{
+		return new ChannelInitializer<SocketChannel>()
+		{
+			@Override
+			public void initChannel(SocketChannel ch) throws InterruptedException
+			{
+				ChannelPipeline pipeline = ch.pipeline();
+				pipeline.addLast(new AMQPDecoder());
+				pipeline.addLast("handler", new AMQPHandler(listener));
+				pipeline.addLast(new AMQPEncoder());
+				pipeline.addLast(new ExceptionHandler());
+			}
+		};
+	}
+
 	public boolean isConnected()
 	{
 		return channel != null && channel.isOpen();
 	}
 
-	@Override public void send(AMQPHeader message)
+	@Override
+	public void send(AMQPHeader message)
 	{
 		if (isConnected())
 		{

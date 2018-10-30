@@ -1,5 +1,9 @@
 package com.mobiussoftware.iotbroker.mqtt.net;
 
+import java.net.InetSocketAddress;
+
+import org.apache.log4j.Logger;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -23,26 +27,23 @@ import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobiussoftware.iotbroker.network.ConnectionListener;
 import com.mobiussoftware.iotbroker.network.ExceptionHandler;
 import com.mobiussoftware.iotbroker.network.NetworkChannel;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import org.apache.log4j.Logger;
-
-import java.net.InetSocketAddress;
 
 public class TCPClient implements NetworkChannel<MQMessage>
 {
+	protected final Logger logger = Logger.getLogger(getClass());
 
-	private final Logger logger = Logger.getLogger(getClass());
+	protected InetSocketAddress address;
+	protected int workerThreads;
 
-	private InetSocketAddress address;
-	private int workerThreads;
-
-	private Bootstrap bootstrap;
-	private MultithreadEventLoopGroup loopGroup;
-	private Channel channel;
+	protected Bootstrap bootstrap;
+	protected MultithreadEventLoopGroup loopGroup;
+	protected Channel channel;
 
 	// handlers for client connections
 	public TCPClient(InetSocketAddress address, int workerThreads)
@@ -51,6 +52,7 @@ public class TCPClient implements NetworkChannel<MQMessage>
 		this.workerThreads = workerThreads;
 	}
 
+	@Override
 	public void shutdown()
 	{
 
@@ -64,6 +66,7 @@ public class TCPClient implements NetworkChannel<MQMessage>
 			loopGroup.shutdownGracefully();
 	}
 
+	@Override
 	public void close()
 	{
 		if (channel != null)
@@ -78,6 +81,7 @@ public class TCPClient implements NetworkChannel<MQMessage>
 		}
 	}
 
+	@Override
 	public boolean init(final ConnectionListener<MQMessage> listener)
 	{
 		if (channel == null)
@@ -88,26 +92,15 @@ public class TCPClient implements NetworkChannel<MQMessage>
 			bootstrap.channel(NioSocketChannel.class);
 			bootstrap.option(ChannelOption.TCP_NODELAY, true);
 			bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
-			bootstrap.handler(new ChannelInitializer<SocketChannel>()
-			{
-				@Override public void initChannel(SocketChannel ch)
-						throws InterruptedException
-				{
-					ChannelPipeline pipeline = ch.pipeline();
-					pipeline.addLast(new MQDecoder());
-					pipeline.addLast("handler", new MQHandler(listener));
-					pipeline.addLast(new MQEncoder());
-					pipeline.addLast(new ExceptionHandler());
-				}
-			});
+			bootstrap.handler(getChannelInitializer(listener));
 			bootstrap.remoteAddress(address);
 			try
 			{
 				final ChannelFuture future = bootstrap.connect();
 				future.addListener(new ChannelFutureListener()
 				{
-					@Override public void operationComplete(ChannelFuture channelFuture)
-							throws Exception
+					@Override
+					public void operationComplete(ChannelFuture channelFuture) throws Exception
 					{
 						try
 						{
@@ -141,12 +134,29 @@ public class TCPClient implements NetworkChannel<MQMessage>
 		return true;
 	}
 
+	protected ChannelInitializer<SocketChannel> getChannelInitializer(final ConnectionListener<MQMessage> listener) 
+	{
+		return new ChannelInitializer<SocketChannel>()
+		{
+			@Override public void initChannel(SocketChannel ch)
+					throws InterruptedException
+			{
+				ChannelPipeline pipeline = ch.pipeline();
+				pipeline.addLast(new MQDecoder());
+				pipeline.addLast("handler", new MQHandler(listener));
+				pipeline.addLast(new MQEncoder());
+				pipeline.addLast(new ExceptionHandler());
+			}
+		};
+	}
+
 	public boolean isConnected()
 	{
 		return channel != null && channel.isOpen();
 	}
 
-	@Override public void send(MQMessage message)
+	@Override
+	public void send(MQMessage message)
 	{
 		if (isConnected())
 		{

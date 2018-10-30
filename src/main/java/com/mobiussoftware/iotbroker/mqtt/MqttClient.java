@@ -1,5 +1,11 @@
 package com.mobiussoftware.iotbroker.mqtt;
 
+import java.net.InetSocketAddress;
+import java.sql.SQLException;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -27,21 +33,16 @@ import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
+import com.mobiussoftware.iotbroker.mqtt.net.MqttTlsClient;
 import com.mobiussoftware.iotbroker.mqtt.net.TCPClient;
 import com.mobiussoftware.iotbroker.mqtt.net.WSClient;
+import com.mobiussoftware.iotbroker.mqtt.net.WSSClient;
 import com.mobiussoftware.iotbroker.network.*;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-import org.apache.log4j.Logger;
-
-import java.net.InetSocketAddress;
-import java.sql.SQLException;
-import java.util.List;
-
-public class MqttClient
-		implements ConnectionListener<MQMessage>, MQDevice, NetworkClient
+public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, NetworkClient
 {
 
 	public static String MESSAGETYPE_PARAM = "MESSAGETYPE";
@@ -66,36 +67,46 @@ public class MqttClient
 		this.dbInterface = DBHelper.getInstance();
 		this.account = account;
 		this.address = new InetSocketAddress(account.getServerHost(), account.getServerPort());
-		
-		switch(account.getProtocol())
+
+		switch (account.getProtocol())
 		{
-			case WEBSOCKETS:
-				this.client=new WSClient(address, WORKER_THREADS);
-				break;
-			default:
+		case WEBSOCKETS:
+			if(!account.isSecure())
+				this.client = new WSClient(address, WORKER_THREADS);
+			else 
+				this.client = new WSSClient(address, WORKER_THREADS, account.getCertificatePath(), account.getCertificatePassword());
+			break;
+		default:
+			if (!account.isSecure())
 				this.client = new TCPClient(address, WORKER_THREADS);
-				break;
+			else 
+				this.client = new MqttTlsClient(address, WORKER_THREADS, account.getCertificatePath(), account.getCertificatePassword());
+			break;
 		}
 	}
 
-	@Override public void setClientListener(ClientListener clientListener)
+	@Override
+	public void setClientListener(ClientListener clientListener)
 	{
 		this.clientListener = clientListener;
 	}
 
-	@Override public void setTopicListener(TopicListener topicListener)
+	@Override
+	public void setTopicListener(TopicListener topicListener)
 	{
 		this.topicListener = topicListener;
 	}
 
-	@Override public void setState(ConnectionState state)
+	@Override
+	public void setState(ConnectionState state)
 	{
 		connectionState = state;
 		if (clientListener != null)
 			clientListener.stateChanged(state);
 	}
 
-	@Override public Boolean createChannel()
+	@Override
+	public Boolean createChannel()
 	{
 		setState(ConnectionState.CHANNEL_CREATING);
 		Boolean isSuccess = client.init(this);
@@ -119,27 +130,29 @@ public class MqttClient
 		return address;
 	}
 
-	@Override public void closeChannel()
+	@Override
+	public void closeChannel()
 	{
 		if (client != null)
 			client.shutdown();
 	}
 
-	@Override public void connect()
+	@Override
+	public void connect()
 	{
 
 		setState(ConnectionState.CONNECTING);
 
 		Will will = null;
-		if (account.getWillTopic() != null && account.getWillTopic().length()>0)
+		if (account.getWillTopic() != null && account.getWillTopic().length() > 0)
 		{
 			Text topicName = new Text(account.getWillTopic());
 			QoS qos = QoS.valueOf(account.getQos());
 			Topic topic = new Topic(topicName, qos);
-			
+
 			will = new Will(topic, account.getWill().getBytes(), account.isRetain());
 		}
-		
+
 		Connect connect = new Connect(account.getUsername(), account.getPassword(), account.getClientId(), account.isCleanSession(), account.getKeepAlive(), will);
 
 		if (timers != null)
@@ -153,7 +166,8 @@ public class MqttClient
 			client.send(connect);
 	}
 
-	@Override public void disconnect()
+	@Override
+	public void disconnect()
 	{
 		if (client.isConnected())
 		{
@@ -165,14 +179,16 @@ public class MqttClient
 		return;
 	}
 
-	@Override public void subscribe(Topic[] topics)
+	@Override
+	public void subscribe(Topic[] topics)
 	{
 		Subscribe subscribe = new Subscribe(null, topics);
 		timers.store(subscribe);
 		client.send(subscribe);
 	}
 
-	@Override public void unsubscribe(String[] topics)
+	@Override
+	public void unsubscribe(String[] topics)
 	{
 		Text[] texts = new Text[topics.length];
 		for (int i = 0; i < topics.length; i++)
@@ -184,7 +200,8 @@ public class MqttClient
 		client.send(unsubscribe);
 	}
 
-	@Override public void publish(Topic topic, byte[] content, Boolean retain, Boolean dup)
+	@Override
+	public void publish(Topic topic, byte[] content, Boolean retain, Boolean dup)
 	{
 		Publish publish = new Publish(null, topic, Unpooled.wrappedBuffer(content), retain, dup);
 		if (topic.getQos() != QoS.AT_MOST_ONCE)
@@ -202,7 +219,8 @@ public class MqttClient
 		client = new TCPClient(address, WORKER_THREADS);
 	}
 
-	@Override public void closeConnection()
+	@Override
+	public void closeConnection()
 	{
 		if (timers != null)
 			timers.stopAllTimers();
@@ -215,7 +233,8 @@ public class MqttClient
 		}
 	}
 
-	@Override public void packetReceived(MQMessage message)
+	@Override
+	public void packetReceived(MQMessage message)
 	{
 		try
 		{
@@ -228,12 +247,14 @@ public class MqttClient
 		}
 	}
 
-	@Override public void cancelConnection()
+	@Override
+	public void cancelConnection()
 	{
 		client.shutdown();
 	}
 
-	@Override public void connectionLost()
+	@Override
+	public void connectionLost()
 	{
 		if (timers != null)
 			timers.stopAllTimers();
@@ -245,7 +266,8 @@ public class MqttClient
 		}
 	}
 
-	@Override public void processConnack(ConnackCode code, boolean sessionPresent)
+	@Override
+	public void processConnack(ConnackCode code, boolean sessionPresent)
 	{
 		// CANCEL CONNECT TIMER
 		MessageResendTimer<MQMessage> timer = timers.getConnectTimer();
@@ -272,7 +294,8 @@ public class MqttClient
 		}
 	}
 
-	@Override public void processSuback(Integer packetID, List<SubackCode> codes)
+	@Override
+	public void processSuback(Integer packetID, List<SubackCode> codes)
 	{
 
 		logger.info("processing incoming suback...");
@@ -298,7 +321,7 @@ public class MqttClient
 					dbTopic = new com.mobiussoftware.iotbroker.db.Topic(account, topic.getName().toString(), (byte) expectedQos.getValue());
 				else
 					dbTopic = new com.mobiussoftware.iotbroker.db.Topic(account, topic.getName().toString(), (byte) actualQos.getValue());
-			
+
 				try
 				{
 					dbInterface.saveTopic(dbTopic);
@@ -307,7 +330,7 @@ public class MqttClient
 				{
 					e.printStackTrace();
 				}
-				
+
 				if (topicListener != null)
 					topicListener.finishAddingTopic(String.valueOf(dbTopic.getId()), topic.getName().toString(), topic.getQos().getValue());
 			}
@@ -320,7 +343,8 @@ public class MqttClient
 		}
 	}
 
-	@Override public void processUnsuback(Integer packetID)
+	@Override
+	public void processUnsuback(Integer packetID)
 	{
 
 		logger.info("processing incoming unsuback...");
@@ -338,10 +362,10 @@ public class MqttClient
 		{
 			for (Text topic : topics)
 			{
-				List<com.mobiussoftware.iotbroker.db.Topic> dbTopics=dbInterface.getTopics(account);
-				for(com.mobiussoftware.iotbroker.db.Topic dbTopic:dbTopics)
+				List<com.mobiussoftware.iotbroker.db.Topic> dbTopics = dbInterface.getTopics(account);
+				for (com.mobiussoftware.iotbroker.db.Topic dbTopic : dbTopics)
 				{
-					if(dbTopic.getName().equals(topic.toString()))
+					if (dbTopic.getName().equals(topic.toString()))
 					{
 						dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
 						if (topicListener != null)
@@ -357,7 +381,8 @@ public class MqttClient
 
 	}
 
-	@Override public void processPublish(Integer packetID, Topic topic, ByteBuf content, boolean retain, boolean isDup)
+	@Override
+	public void processPublish(Integer packetID, Topic topic, ByteBuf content, boolean retain, boolean isDup)
 	{
 
 		logger.info("processing incoming publish...");
@@ -406,12 +431,14 @@ public class MqttClient
 		}
 	}
 
-	@Override public void processPuback(Integer packetID)
+	@Override
+	public void processPuback(Integer packetID)
 	{
 		timers.remove(packetID);
 	}
 
-	@Override public void processPubrec(Integer packetID)
+	@Override
+	public void processPubrec(Integer packetID)
 	{
 		timers.remove(packetID);
 		MQMessage message = new Pubrel(packetID);
@@ -419,52 +446,62 @@ public class MqttClient
 		client.send(message);
 	}
 
-	@Override public void processPubrel(Integer packetID)
+	@Override
+	public void processPubrel(Integer packetID)
 	{
 		client.send(new Pubcomp(packetID));
 	}
 
-	@Override public void processPubcomp(Integer packetID)
+	@Override
+	public void processPubcomp(Integer packetID)
 	{
 		timers.remove(packetID);
 	}
 
-	@Override public void processPingresp()
+	@Override
+	public void processPingresp()
 	{
 	}
 
-	@Override public void processSubscribe(Integer packetID, Topic[] topics)
+	@Override
+	public void processSubscribe(Integer packetID, Topic[] topics)
 	{
 		logger.error("received invalid message subscribe");
 	}
 
-	@Override public void processConnect(boolean cleanSession, int keepalive, Will will)
+	@Override
+	public void processConnect(boolean cleanSession, int keepalive, Will will)
 	{
 		logger.error("received invalid message connect");
 	}
 
-	@Override public void processPingreq()
+	@Override
+	public void processPingreq()
 	{
 		logger.error("received invalid message pingreq");
 	}
 
-	@Override public void processDisconnect()
+	@Override
+	public void processDisconnect()
 	{
 		closeConnection();
 		setState(ConnectionState.CONNECTION_LOST);
 	}
 
-	@Override public void processUnsubscribe(Integer packetID, Text[] topics)
+	@Override
+	public void processUnsubscribe(Integer packetID, Text[] topics)
 	{
 		logger.error("received invalid message unsubscribe");
 	}
 
-	@Override public void connected()
+	@Override
+	public void connected()
 	{
 		setState(ConnectionState.CHANNEL_ESTABLISHED);
 	}
 
-	@Override public void connectFailed()
+	@Override
+	public void connectFailed()
 	{
 		setState(ConnectionState.CHANNEL_FAILED);
 	}

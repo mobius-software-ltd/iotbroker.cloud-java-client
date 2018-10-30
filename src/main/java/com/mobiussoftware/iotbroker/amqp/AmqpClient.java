@@ -35,21 +35,7 @@ import com.mobius.software.amqp.parser.avps.SectionCode;
 import com.mobius.software.amqp.parser.avps.SendCode;
 import com.mobius.software.amqp.parser.avps.TerminusDurability;
 import com.mobius.software.amqp.parser.header.api.AMQPHeader;
-import com.mobius.software.amqp.parser.header.impl.AMQPAttach;
-import com.mobius.software.amqp.parser.header.impl.AMQPBegin;
-import com.mobius.software.amqp.parser.header.impl.AMQPClose;
-import com.mobius.software.amqp.parser.header.impl.AMQPDetach;
-import com.mobius.software.amqp.parser.header.impl.AMQPDisposition;
-import com.mobius.software.amqp.parser.header.impl.AMQPEnd;
-import com.mobius.software.amqp.parser.header.impl.AMQPFlow;
-import com.mobius.software.amqp.parser.header.impl.AMQPOpen;
-import com.mobius.software.amqp.parser.header.impl.AMQPProtoHeader;
-import com.mobius.software.amqp.parser.header.impl.AMQPTransfer;
-import com.mobius.software.amqp.parser.header.impl.SASLChallenge;
-import com.mobius.software.amqp.parser.header.impl.SASLInit;
-import com.mobius.software.amqp.parser.header.impl.SASLMechanisms;
-import com.mobius.software.amqp.parser.header.impl.SASLOutcome;
-import com.mobius.software.amqp.parser.header.impl.SASLResponse;
+import com.mobius.software.amqp.parser.header.impl.*;
 import com.mobius.software.amqp.parser.sections.AMQPData;
 import com.mobius.software.amqp.parser.sections.AMQPSection;
 import com.mobius.software.amqp.parser.sections.MessageHeader;
@@ -61,6 +47,7 @@ import com.mobius.software.amqp.parser.wrappers.AMQPSymbol;
 import com.mobius.software.mqtt.parser.avps.QoS;
 import com.mobius.software.mqtt.parser.avps.Text;
 import com.mobius.software.mqtt.parser.avps.Topic;
+import com.mobiussoftware.iotbroker.amqp.net.AmqpTlsClient;
 import com.mobiussoftware.iotbroker.amqp.net.TCPClient;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
@@ -72,190 +59,193 @@ import com.mobiussoftware.iotbroker.network.ConnectionState;
 import com.mobiussoftware.iotbroker.network.NetworkClient;
 import com.mobiussoftware.iotbroker.network.TopicListener;
 
-public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, NetworkClient 
+public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, NetworkClient
 {
 	private final Logger logger = Logger.getLogger(getClass());
-	
+
 	public static String MESSAGETYPE_PARAM = "MESSAGETYPE";
-    private Integer RESEND_PERIOND = 3000;
-    private Integer WORKER_THREADS = 4;
-    
-    private InetSocketAddress address;
-    private ConnectionState connectionState;
+	private Integer RESEND_PERIOND = 3000;
+	private Integer WORKER_THREADS = 4;
 
-    private TimersMap timers;
-    private TCPClient client;
+	private InetSocketAddress address;
+	private ConnectionState connectionState;
 
-    private Account account;
-    
-    private ClientListener listener;
-    private TopicListener topicListener;
-	
-    private DBInterface dbInterface;
+	private TimersMap timers;
+	private TCPClient client;
 
-    private Boolean isSaslConfirm=false;
-    
-    private int channel;
-    private Integer nextHandle = 1;
-    private ConcurrentHashMap<String, Long> usedIncomingMappings = new ConcurrentHashMap<String, Long>();
-    private ConcurrentHashMap<String, Long> usedOutgoingMappings = new ConcurrentHashMap<String, Long>();
-    private ConcurrentHashMap<Long, String> usedMappings = new ConcurrentHashMap<Long, String>();
-    private List<AMQPTransfer> pendingMessages = new ArrayList<AMQPTransfer>();
+	private Account account;
 
-    private Long idleTimeout;
-    
-    public AmqpClient(Account account) throws Exception
-    {
-    	this.dbInterface = DBHelper.getInstance();
+	private ClientListener listener;
+	private TopicListener topicListener;
+
+	private DBInterface dbInterface;
+
+	private Boolean isSaslConfirm = false;
+
+	private int channel;
+	private Integer nextHandle = 1;
+	private ConcurrentHashMap<String, Long> usedIncomingMappings = new ConcurrentHashMap<String, Long>();
+	private ConcurrentHashMap<String, Long> usedOutgoingMappings = new ConcurrentHashMap<String, Long>();
+	private ConcurrentHashMap<Long, String> usedMappings = new ConcurrentHashMap<Long, String>();
+	private List<AMQPTransfer> pendingMessages = new ArrayList<AMQPTransfer>();
+
+	private Long idleTimeout;
+
+	public AmqpClient(Account account) throws Exception
+	{
+		this.dbInterface = DBHelper.getInstance();
 		this.address = new InetSocketAddress(account.getServerHost(), account.getServerPort());
 		this.account = account;
-        client = new TCPClient(address, WORKER_THREADS);
-    }
-    
-    public Long getKeepalivePeriod()
-    {
-    	if(idleTimeout==null)
-    		return account.getKeepAlive()*1000L;
-    	
-    	return idleTimeout;
-    }
-    
-    @Override 
+		if (!account.isSecure())
+			client = new TCPClient(address, WORKER_THREADS);
+		else
+			client = new AmqpTlsClient(address, WORKER_THREADS, account.getCertificatePath(), account.getCertificatePassword());
+	}
+
+	public Long getKeepalivePeriod()
+	{
+		if (idleTimeout == null)
+			return account.getKeepAlive() * 1000L;
+
+		return idleTimeout;
+	}
+
+	@Override
 	public void setClientListener(ClientListener clientListener)
 	{
 		this.listener = clientListener;
 	}
 
-	@Override 
+	@Override
 	public void setTopicListener(TopicListener topicListener)
 	{
 		this.topicListener = topicListener;
 	}
 
-    public void setListener(ClientListener listener)
-    {
-        this.listener = listener;
-    }
+	public void setListener(ClientListener listener)
+	{
+		this.listener = listener;
+	}
 
-    public void setState(ConnectionState state)
-    {
-        this.connectionState = state;
-        if (this.listener != null)
-            listener.stateChanged(state);
-    }
+	public void setState(ConnectionState state)
+	{
+		this.connectionState = state;
+		if (this.listener != null)
+			listener.stateChanged(state);
+	}
 
-    public Boolean createChannel()
-    {
-        setState(ConnectionState.CHANNEL_CREATING);
-        Boolean isSuccess = client.init(this);
-        if (!isSuccess)
-            setState(ConnectionState.CHANNEL_FAILED);            
-        
-        return isSuccess;
-    }
-    
-    public Boolean isConnected()
-    {
-        return connectionState == ConnectionState.CONNECTION_ESTABLISHED;
-    }
+	public Boolean createChannel()
+	{
+		setState(ConnectionState.CHANNEL_CREATING);
+		Boolean isSuccess = client.init(this);
+		if (!isSuccess)
+			setState(ConnectionState.CHANNEL_FAILED);
 
-    public ConnectionState getConnectionState()
-    {
-        return connectionState;
-    }
+		return isSuccess;
+	}
 
-    public InetSocketAddress getAddress()
-    {
-        return address;
-    }
+	public Boolean isConnected()
+	{
+		return connectionState == ConnectionState.CONNECTION_ESTABLISHED;
+	}
 
-    public void closeChannel()
-    {
-        if(client!=null)
-            client.shutdown();
-    }
+	public ConnectionState getConnectionState()
+	{
+		return connectionState;
+	}
 
-    public void connect()
-    {
-        setState(ConnectionState.CONNECTING);
+	public InetSocketAddress getAddress()
+	{
+		return address;
+	}
 
-        timers=new TimersMap(this, client, RESEND_PERIOND);
-        timers.stopAllTimers();
-        timers.storeConnectTimer();
-        
-        AMQPProtoHeader header = new AMQPProtoHeader(3);
-        client.send(header);
-    }
+	public void closeChannel()
+	{
+		if (client != null)
+			client.shutdown();
+	}
 
-    public void disconnect()
-    {
-        if (client.isConnected())
-        {
-            AMQPEnd end = new AMQPEnd();
-            end.setChannel(channel);
-            client.send(end);
+	public void connect()
+	{
+		setState(ConnectionState.CONNECTING);
 
-            if (timers != null)
-                timers.stopAllTimers();
+		timers = new TimersMap(this, client, RESEND_PERIOND);
+		timers.stopAllTimers();
+		timers.storeConnectTimer();
 
-            timers = null;
-        }
+		AMQPProtoHeader header = new AMQPProtoHeader(3);
+		client.send(header);
+	}
 
-        return;
-    }
+	public void disconnect()
+	{
+		if (client.isConnected())
+		{
+			AMQPEnd end = new AMQPEnd();
+			end.setChannel(channel);
+			client.send(end);
 
-    public void subscribe(Topic[] topics)
-    {
-        for(int i=0;i<topics.length;i++)
-        {
-            Long currentHandler;
-            if (usedIncomingMappings.containsKey(topics[i].getName().toString()))
-                currentHandler = usedIncomingMappings.get(topics[i].getName().toString());
-            else
-            {
-                currentHandler = nextHandle.longValue();
-                nextHandle++;
-                usedIncomingMappings.put(topics[i].getName().toString(),currentHandler);
-                usedMappings.put(currentHandler,topics[i].getName().toString());
-            }
+			if (timers != null)
+				timers.stopAllTimers();
 
-            AMQPAttach attach = new AMQPAttach();
-            attach.setChannel(channel);
-            attach.setName(topics[i].getName().toString());
-            attach.setHandle(currentHandler);
-            attach.setRole(RoleCode.RECEIVER);
-            attach.setSndSettleMode(SendCode.MIXED);
-            AMQPTarget target = new AMQPTarget();
-            target.setAddress(topics[i].getName().toString());
-            target.setDurable(TerminusDurability.NONE);
-            target.setTimeout(0L);
-            target.setDynamic(false);
-            attach.setTarget(target);
-            client.send(attach);
-        }
-    }
+			timers = null;
+		}
 
-    public void unsubscribe(String[] topics)
-    {
-        for(String topic:topics)
-        {
-            if (usedIncomingMappings.containsKey(topic))
-            {
-                AMQPDetach detach = new AMQPDetach();
-                detach.setChannel(channel);
-                detach.setClosed(true);
-                detach.setHandle(usedIncomingMappings.get(topic));
-                client.send(detach);
-            }
-            else
-            {
-            	try
+		return;
+	}
+
+	public void subscribe(Topic[] topics)
+	{
+		for (int i = 0; i < topics.length; i++)
+		{
+			Long currentHandler;
+			if (usedIncomingMappings.containsKey(topics[i].getName().toString()))
+				currentHandler = usedIncomingMappings.get(topics[i].getName().toString());
+			else
+			{
+				currentHandler = nextHandle.longValue();
+				nextHandle++;
+				usedIncomingMappings.put(topics[i].getName().toString(), currentHandler);
+				usedMappings.put(currentHandler, topics[i].getName().toString());
+			}
+
+			AMQPAttach attach = new AMQPAttach();
+			attach.setChannel(channel);
+			attach.setName(topics[i].getName().toString());
+			attach.setHandle(currentHandler);
+			attach.setRole(RoleCode.RECEIVER);
+			attach.setSndSettleMode(SendCode.MIXED);
+			AMQPTarget target = new AMQPTarget();
+			target.setAddress(topics[i].getName().toString());
+			target.setDurable(TerminusDurability.NONE);
+			target.setTimeout(0L);
+			target.setDynamic(false);
+			attach.setTarget(target);
+			client.send(attach);
+		}
+	}
+
+	public void unsubscribe(String[] topics)
+	{
+		for (String topic : topics)
+		{
+			if (usedIncomingMappings.containsKey(topic))
+			{
+				AMQPDetach detach = new AMQPDetach();
+				detach.setChannel(channel);
+				detach.setClosed(true);
+				detach.setHandle(usedIncomingMappings.get(topic));
+				client.send(detach);
+			}
+			else
+			{
+				try
 				{
 					logger.info("deleting  topic" + topic + " from DB");
-					List<com.mobiussoftware.iotbroker.db.Topic> dbTopics=dbInterface.getTopics(account);
-					for(com.mobiussoftware.iotbroker.db.Topic dbTopic:dbTopics)
+					List<com.mobiussoftware.iotbroker.db.Topic> dbTopics = dbInterface.getTopics(account);
+					for (com.mobiussoftware.iotbroker.db.Topic dbTopic : dbTopics)
 					{
-						if(dbTopic.getName().equals(topic))
+						if (dbTopic.getName().equals(topic))
 						{
 							dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
 							if (topicListener != null)
@@ -267,289 +257,290 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 				{
 					e.printStackTrace();
 				}
-            }
-        }
-    }
-
-    public void publish(Topic topic, byte[] content, Boolean retain, Boolean dup)
-    {
-        AMQPTransfer transfer = new AMQPTransfer();
-        transfer.setChannel(channel);
-        if(topic.getQos()==QoS.AT_MOST_ONCE)
-        	transfer.setSettled(true);
-        else
-        	transfer.setSettled(false);
-        
-        transfer.setMore(false);
-        transfer.setMessageFormat(new AMQPMessageFormat(0));
-
-        MessageHeader messageHeader = new MessageHeader();
-        messageHeader.setDurable(true);
-        messageHeader.setPriority((short) 3);
-        messageHeader.setMilliseconds(1000L);
-
-        AMQPData data = new AMQPData();
-        data.setValue(content);
-
-        ConcurrentHashMap<SectionCode, AMQPSection> sections=new ConcurrentHashMap<>();
-        sections.put(SectionCode.DATA,data);
-        transfer.setSections(sections);
-
-        if (usedOutgoingMappings.containsKey(topic.getName().toString()))
-        {
-            Long handle = usedOutgoingMappings.get(topic.getName().toString());
-            transfer.setHandle(handle);
-            timers.store(transfer);
-            if(transfer.getSettled())
-            	timers.remove(transfer.getDeliveryId().intValue());
-            
-            client.send(transfer);
-        }
-        else
-        {
-            Long currentHandler = nextHandle.longValue();
-            nextHandle++;
-            usedOutgoingMappings.put(topic.getName().toString(),currentHandler);
-            usedMappings.put(currentHandler,topic.getName().toString());
-
-            transfer.setHandle(currentHandler);
-            pendingMessages.add(transfer);
-
-            AMQPAttach attach = new AMQPAttach();
-            attach.setChannel(channel);
-            attach.setName(topic.getName().toString());
-            attach.setHandle(currentHandler);
-            attach.setRole(RoleCode.SENDER);
-            attach.setRcvSettleMode(ReceiveCode.FIRST);
-            attach.setInitialDeliveryCount(0L);
-            AMQPSource source = new AMQPSource();
-            source.setAddress(topic.getName().toString());
-            source.setDurable(TerminusDurability.NONE);            
-            source.setTimeout(0L);
-            source.setDynamic(false);
-            attach.setSource(source);
-            client.send(attach);
-        }
-    }
-
-    public void reinit()
-    {
-        setState(ConnectionState.CHANNEL_CREATING);
-
-        if (client != null)
-            client.shutdown();
-
-        client = new TCPClient(address, WORKER_THREADS);            
-    }
-
-    public void closeConnection()
-    {
-        if (timers != null)
-            timers.stopAllTimers();
-
-        if (client != null)
-        {
-            TCPClient currClient = client;
-            client = null;
-            currClient.shutdown();
-        }
-    }
-
-    public void packetReceived(AMQPHeader message)
-    {
-    	try
-		{
-	    	switch(message.getCode())
-	    	{
-				case ATTACH:
-					AMQPAttach attach=(AMQPAttach)message;					
-					processAttach(attach.getName(),attach.getRole(),attach.getHandle());
-					break;
-				case BEGIN:
-					processBegin();
-					break;
-				case CHALLENGE:
-					processSASLChallenge(((SASLChallenge)message).getChallenge());
-					break;
-				case CLOSE:
-					processClose();
-					break;
-				case DETACH:
-					AMQPDetach detach=(AMQPDetach)message;
-					processDetach(detach.getChannel(), detach.getHandle());
-					break;
-				case DISPOSITION:
-					AMQPDisposition disposition=(AMQPDisposition)message;
-					processDisposition(disposition.getFirst(), disposition.getLast());
-					break;
-				case END:
-					processEnd(((AMQPEnd)message).getChannel());
-					break;
-				case FLOW:
-					processFlow(((AMQPFlow)message).getChannel());
-					break;
-				case INIT:
-					break;
-				case MECHANISMS:
-					SASLMechanisms mechanisms=(SASLMechanisms)message;
-					processSASLMechanism(mechanisms.getMechanisms(), mechanisms.getChannel(), mechanisms.getType());
-					break;
-				case OPEN:
-					processOpen(((AMQPOpen)message).getIdleTimeout());					
-					break;
-				case OUTCOME:
-					SASLOutcome outcome = ((SASLOutcome)message);
-					processSASLOutcome(outcome.getAdditionalData(), outcome.getOutcomeCode());
-					break;
-				case PING:
-					processPing();
-					break;
-				case PROTO:
-					AMQPProtoHeader header = (AMQPProtoHeader)message;
-					processProto(header.getChannel(),header.getProtocolId());
-					break;
-				case RESPONSE:
-					processSASLResponse(((SASLResponse)message).getResponse());
-					break;
-				case TRANSFER:
-					AMQPTransfer transfer=(AMQPTransfer)message;
-					processTransfer(((AMQPData)transfer.getData()),transfer.getHandle(),transfer.getSettled(),transfer.getDeliveryId());
-					break;
-				default:
-					break;    		
-	    	}
+			}
 		}
-    	catch (Exception ex)
+	}
+
+	public void publish(Topic topic, byte[] content, Boolean retain, Boolean dup)
+	{
+		AMQPTransfer transfer = new AMQPTransfer();
+		transfer.setChannel(channel);
+		if (topic.getQos() == QoS.AT_MOST_ONCE)
+			transfer.setSettled(true);
+		else
+			transfer.setSettled(false);
+
+		transfer.setMore(false);
+		transfer.setMessageFormat(new AMQPMessageFormat(0));
+
+		MessageHeader messageHeader = new MessageHeader();
+		messageHeader.setDurable(true);
+		messageHeader.setPriority((short) 3);
+		messageHeader.setMilliseconds(1000L);
+
+		AMQPData data = new AMQPData();
+		data.setValue(content);
+
+		ConcurrentHashMap<SectionCode, AMQPSection> sections = new ConcurrentHashMap<>();
+		sections.put(SectionCode.DATA, data);
+		transfer.setSections(sections);
+
+		if (usedOutgoingMappings.containsKey(topic.getName().toString()))
+		{
+			Long handle = usedOutgoingMappings.get(topic.getName().toString());
+			transfer.setHandle(handle);
+			timers.store(transfer);
+			if (transfer.getSettled())
+				timers.remove(transfer.getDeliveryId().intValue());
+
+			client.send(transfer);
+		}
+		else
+		{
+			Long currentHandler = nextHandle.longValue();
+			nextHandle++;
+			usedOutgoingMappings.put(topic.getName().toString(), currentHandler);
+			usedMappings.put(currentHandler, topic.getName().toString());
+
+			transfer.setHandle(currentHandler);
+			pendingMessages.add(transfer);
+
+			AMQPAttach attach = new AMQPAttach();
+			attach.setChannel(channel);
+			attach.setName(topic.getName().toString());
+			attach.setHandle(currentHandler);
+			attach.setRole(RoleCode.SENDER);
+			attach.setRcvSettleMode(ReceiveCode.FIRST);
+			attach.setInitialDeliveryCount(0L);
+			AMQPSource source = new AMQPSource();
+			source.setAddress(topic.getName().toString());
+			source.setDurable(TerminusDurability.NONE);
+			source.setTimeout(0L);
+			source.setDynamic(false);
+			attach.setSource(source);
+			client.send(attach);
+		}
+	}
+
+	public void reinit()
+	{
+		setState(ConnectionState.CHANNEL_CREATING);
+
+		if (client != null)
+			client.shutdown();
+
+		client = new TCPClient(address, WORKER_THREADS);
+	}
+
+	public void closeConnection()
+	{
+		if (timers != null)
+			timers.stopAllTimers();
+
+		if (client != null)
+		{
+			TCPClient currClient = client;
+			client = null;
+			currClient.shutdown();
+		}
+	}
+
+	public void packetReceived(AMQPHeader message)
+	{
+		try
+		{
+			switch (message.getCode())
+			{
+			case ATTACH:
+				AMQPAttach attach = (AMQPAttach) message;
+				processAttach(attach.getName(), attach.getRole(), attach.getHandle());
+				break;
+			case BEGIN:
+				processBegin();
+				break;
+			case CHALLENGE:
+				processSASLChallenge(((SASLChallenge) message).getChallenge());
+				break;
+			case CLOSE:
+				processClose();
+				break;
+			case DETACH:
+				AMQPDetach detach = (AMQPDetach) message;
+				processDetach(detach.getChannel(), detach.getHandle());
+				break;
+			case DISPOSITION:
+				AMQPDisposition disposition = (AMQPDisposition) message;
+				processDisposition(disposition.getFirst(), disposition.getLast());
+				break;
+			case END:
+				processEnd(((AMQPEnd) message).getChannel());
+				break;
+			case FLOW:
+				processFlow(((AMQPFlow) message).getChannel());
+				break;
+			case INIT:
+				break;
+			case MECHANISMS:
+				SASLMechanisms mechanisms = (SASLMechanisms) message;
+				processSASLMechanism(mechanisms.getMechanisms(), mechanisms.getChannel(), mechanisms.getType());
+				break;
+			case OPEN:
+				processOpen(((AMQPOpen) message).getIdleTimeout());
+				break;
+			case OUTCOME:
+				SASLOutcome outcome = ((SASLOutcome) message);
+				processSASLOutcome(outcome.getAdditionalData(), outcome.getOutcomeCode());
+				break;
+			case PING:
+				processPing();
+				break;
+			case PROTO:
+				AMQPProtoHeader header = (AMQPProtoHeader) message;
+				processProto(header.getChannel(), header.getProtocolId());
+				break;
+			case RESPONSE:
+				processSASLResponse(((SASLResponse) message).getResponse());
+				break;
+			case TRANSFER:
+				AMQPTransfer transfer = (AMQPTransfer) message;
+				processTransfer(((AMQPData) transfer.getData()), transfer.getHandle(), transfer.getSettled(), transfer.getDeliveryId());
+				break;
+			default:
+				break;
+			}
+		}
+		catch (Exception ex)
 		{
 			ex.printStackTrace();
 			client.shutdown();
 		}
-    }
+	}
 
-    public void cancelConnection()
-    {
-        client.shutdown();            
-    }
+	public void cancelConnection()
+	{
+		client.shutdown();
+	}
 
-    public void connectionLost()
-    {
-        if (account.isCleanSession())
-            clearAccountTopics();
+	public void connectionLost()
+	{
+		if (account.isCleanSession())
+			clearAccountTopics();
 
-        if(timers!=null)
-            timers.stopAllTimers();
+		if (timers != null)
+			timers.stopAllTimers();
 
-        if (client != null)
-        {
-            client.shutdown();
-            setState(ConnectionState.CONNECTION_LOST);
-        }
-    }
+		if (client != null)
+		{
+			client.shutdown();
+			setState(ConnectionState.CONNECTION_LOST);
+		}
+	}
 
-    private void clearAccountTopics()
-    {
-        dbInterface.deleteAllTopics();
-    }
-    
-    public void connected()
-    {
-        setState(ConnectionState.CHANNEL_ESTABLISHED);           
-    }
+	private void clearAccountTopics()
+	{
+		dbInterface.deleteAllTopics();
+	}
 
-    public void connectFailed()
-    {
-        setState(ConnectionState.CHANNEL_FAILED);
-    }
+	public void connected()
+	{
+		setState(ConnectionState.CHANNEL_ESTABLISHED);
+	}
 
-    public void processProto(Integer channel, Integer protocolId)
-    {
-        if (isSaslConfirm && protocolId == 0)
-        {
-        	this.channel = channel;
-        	AMQPOpen open = AMQPOpen.builder().channel(channel).containerId(account.getClientId()).idleTimeout(account.getKeepAlive()*1000).build();
-        	client.send(open);
-        }
-    }
+	public void connectFailed()
+	{
+		setState(ConnectionState.CHANNEL_FAILED);
+	}
 
-    public void processOpen(Long idleTimeout)
-    {    	
-    	if(idleTimeout!=null)
-    		this.idleTimeout=idleTimeout;
-    	
-        timers.startPingTimer();
-        timers.cancelConnectTimer();
-        
-        AMQPBegin begin = AMQPBegin.builder().channel(channel).nextOutgoingId(0L).incomingWindow(2147483647L).outgoingWindow(0L).build();
-        client.send(begin);
-    }
+	public void processProto(Integer channel, Integer protocolId)
+	{
+		if (isSaslConfirm && protocolId == 0)
+		{
+			this.channel = channel;
+			AMQPOpen open = AMQPOpen.builder().channel(channel).containerId(account.getClientId()).idleTimeout(account.getKeepAlive() * 1000).build();
+			client.send(open);
+		}
+	}
 
-    public void processBegin()
-    {
-        setState(ConnectionState.CONNECTION_ESTABLISHED);
+	public void processOpen(Long idleTimeout)
+	{
+		if (idleTimeout != null)
+			this.idleTimeout = idleTimeout;
 
-        if (account.isCleanSession())
-            clearAccountTopics();
-        else
-        {
-        	try
-        	{
-	        	List<com.mobiussoftware.iotbroker.db.Topic> dbTopics=dbInterface.getTopics(account);
-				for(com.mobiussoftware.iotbroker.db.Topic dbTopic:dbTopics)
+		timers.startPingTimer();
+		timers.cancelConnectTimer();
+
+		AMQPBegin begin = AMQPBegin.builder().channel(channel).nextOutgoingId(0L).incomingWindow(2147483647L).outgoingWindow(0L).build();
+		client.send(begin);
+	}
+
+	public void processBegin()
+	{
+		setState(ConnectionState.CONNECTION_ESTABLISHED);
+
+		if (account.isCleanSession())
+			clearAccountTopics();
+		else
+		{
+			try
+			{
+				List<com.mobiussoftware.iotbroker.db.Topic> dbTopics = dbInterface.getTopics(account);
+				for (com.mobiussoftware.iotbroker.db.Topic dbTopic : dbTopics)
 				{
-					subscribe(new Topic[] { new Topic(new Text(dbTopic.getName()), QoS.valueOf((int)dbTopic.getQos()))} );
+					subscribe(new Topic[]
+					{ new Topic(new Text(dbTopic.getName()), QoS.valueOf((int) dbTopic.getQos())) });
 				}
-        	}
-        	catch(SQLException ex)
-        	{
-        		
-        	}
-        }
-    }
+			}
+			catch (SQLException ex)
+			{
 
-    public void processAttach(String name,RoleCode role,Long handle)
-    {
-        if (role!=null)
-        {
-        	//its opposite here
-            if (role == RoleCode.RECEIVER)
-            {
-            	Long realHandle = usedOutgoingMappings.get(name);
-                
-            	//publish
-                if (realHandle!=null)
-                {
-                    for (int i = 0; i < pendingMessages.size(); i++)
-                    {
-                        AMQPTransfer currMessage = pendingMessages.get(i);
-                        if (currMessage.getHandle().equals(realHandle))
-                        {
-                            pendingMessages.remove(i);
-                            i--;
+			}
+		}
+	}
 
-                            timers.store(currMessage);
-                            if(currMessage.getSettled())
-                            	timers.remove(currMessage.getDeliveryId().intValue());
-                            
-                            client.send(currMessage);
-                        }
-                    }
-                }
-            }
-            else
-            {
-            	usedIncomingMappings.put(name.toString(),handle);
-                usedMappings.put(handle,name);
-                
-                if(handle>=nextHandle)
-                	nextHandle=(int)(handle+1);
-                
-                //subscribe
-                try
+	public void processAttach(String name, RoleCode role, Long handle)
+	{
+		if (role != null)
+		{
+			//its opposite here
+			if (role == RoleCode.RECEIVER)
+			{
+				Long realHandle = usedOutgoingMappings.get(name);
+
+				//publish
+				if (realHandle != null)
 				{
-	                List<com.mobiussoftware.iotbroker.db.Topic> dbTopics=dbInterface.getTopics(account);
-					for(com.mobiussoftware.iotbroker.db.Topic dbTopic:dbTopics)
+					for (int i = 0; i < pendingMessages.size(); i++)
 					{
-						if(dbTopic.getName().equals(name))
+						AMQPTransfer currMessage = pendingMessages.get(i);
+						if (currMessage.getHandle().equals(realHandle))
+						{
+							pendingMessages.remove(i);
+							i--;
+
+							timers.store(currMessage);
+							if (currMessage.getSettled())
+								timers.remove(currMessage.getDeliveryId().intValue());
+
+							client.send(currMessage);
+						}
+					}
+				}
+			}
+			else
+			{
+				usedIncomingMappings.put(name.toString(), handle);
+				usedMappings.put(handle, name);
+
+				if (handle >= nextHandle)
+					nextHandle = (int) (handle + 1);
+
+				//subscribe
+				try
+				{
+					List<com.mobiussoftware.iotbroker.db.Topic> dbTopics = dbInterface.getTopics(account);
+					for (com.mobiussoftware.iotbroker.db.Topic dbTopic : dbTopics)
+					{
+						if (dbTopic.getName().equals(name))
 						{
 							dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
 							if (topicListener != null)
@@ -561,9 +552,9 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 				{
 					e.printStackTrace();
 				}
-                
-                com.mobiussoftware.iotbroker.db.Topic dbTopic = new com.mobiussoftware.iotbroker.db.Topic(account, name, (byte) QoS.AT_LEAST_ONCE.getValue());
-				
+
+				com.mobiussoftware.iotbroker.db.Topic dbTopic = new com.mobiussoftware.iotbroker.db.Topic(account, name, (byte) QoS.AT_LEAST_ONCE.getValue());
+
 				try
 				{
 					dbInterface.saveTopic(dbTopic);
@@ -572,42 +563,42 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 				{
 					e.printStackTrace();
 				}
-				
+
 				if (topicListener != null)
 					topicListener.finishAddingTopic(String.valueOf(dbTopic.getId()), name, QoS.AT_LEAST_ONCE.getValue());
-            }
-        }
-    }
+			}
+		}
+	}
 
-    public void processFlow(Integer channel)
-    {
-        //not implemented for now
-    }
+	public void processFlow(Integer channel)
+	{
+		//not implemented for now
+	}
 
-    public void processTransfer(AMQPData data, Long handle,Boolean settled, Long deliveryId)
-    {
-    	QoS qos=QoS.AT_LEAST_ONCE;
-        if (settled!=null && settled)
-            qos = QoS.AT_MOST_ONCE;
-        else
-        {
-            AMQPDisposition disposition = new AMQPDisposition();
-            disposition.setChannel(channel);
-            disposition.setRole(RoleCode.RECEIVER);
-            disposition.setFirst(deliveryId);
-            disposition.setLast(deliveryId);
-            disposition.setSettled(true);
-            disposition.setState(new AMQPAccepted());
-            client.send(disposition);
-        }
+	public void processTransfer(AMQPData data, Long handle, Boolean settled, Long deliveryId)
+	{
+		QoS qos = QoS.AT_LEAST_ONCE;
+		if (settled != null && settled)
+			qos = QoS.AT_MOST_ONCE;
+		else
+		{
+			AMQPDisposition disposition = new AMQPDisposition();
+			disposition.setChannel(channel);
+			disposition.setRole(RoleCode.RECEIVER);
+			disposition.setFirst(deliveryId);
+			disposition.setLast(deliveryId);
+			disposition.setSettled(true);
+			disposition.setState(new AMQPAccepted());
+			client.send(disposition);
+		}
 
-        String topicName=null;
-        if (handle==null || !usedMappings.containsKey(handle))
-            return;
+		String topicName = null;
+		if (handle == null || !usedMappings.containsKey(handle))
+			return;
 
-        topicName  = usedMappings.get(handle);  
-        Message message=new Message(account, topicName, new String(data.getData()), true, (byte)qos.getValue(), false, false);
-        try
+		topicName = usedMappings.get(handle);
+		Message message = new Message(account, topicName, new String(data.getData()), true, (byte) qos.getValue(), false, false);
+		try
 		{
 			logger.info("storing publish to DB");
 			dbInterface.saveMessage(message);
@@ -616,41 +607,41 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 		{
 			e.printStackTrace();
 		}
-        
-        if (listener != null)
-            listener.messageReceived(message);
-    }
 
-    public void processDisposition(Long first, Long last)
-    {
-        if(first!=null)
-        {
-        	if(last!=null)
-        	{
-        		for (Long i = first; i < last; i++)
-        			timers.remove(i.intValue());
-        	}
-        	else
-        		timers.remove(first.intValue());
-        }
-    }
+		if (listener != null)
+			listener.messageReceived(message);
+	}
 
-    public void processDetach(Integer channel,Long handle)
-    {
-        if (handle!=null && usedMappings.containsKey(handle))
-        {
-            String topicName=usedMappings.get(handle);
-            usedMappings.remove(handle);
-            if (usedOutgoingMappings.containsKey(topicName))
-                usedOutgoingMappings.remove(topicName);
-            
-            try
+	public void processDisposition(Long first, Long last)
+	{
+		if (first != null)
+		{
+			if (last != null)
+			{
+				for (Long i = first; i < last; i++)
+					timers.remove(i.intValue());
+			}
+			else
+				timers.remove(first.intValue());
+		}
+	}
+
+	public void processDetach(Integer channel, Long handle)
+	{
+		if (handle != null && usedMappings.containsKey(handle))
+		{
+			String topicName = usedMappings.get(handle);
+			usedMappings.remove(handle);
+			if (usedOutgoingMappings.containsKey(topicName))
+				usedOutgoingMappings.remove(topicName);
+
+			try
 			{
 				logger.info("deleting  topic" + topicName + " from DB");
-				List<com.mobiussoftware.iotbroker.db.Topic> dbTopics=dbInterface.getTopics(account);
-				for(com.mobiussoftware.iotbroker.db.Topic dbTopic:dbTopics)
+				List<com.mobiussoftware.iotbroker.db.Topic> dbTopics = dbInterface.getTopics(account);
+				for (com.mobiussoftware.iotbroker.db.Topic dbTopic : dbTopics)
 				{
-					if(dbTopic.getName().equals(topicName))
+					if (dbTopic.getName().equals(topicName))
 					{
 						dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
 						if (topicListener != null)
@@ -662,92 +653,92 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 			{
 				e.printStackTrace();
 			}
-        }
-    }
+		}
+	}
 
-    public void processEnd(Integer channel)
-    {
-        AMQPClose close = new AMQPClose();
-        close.setChannel(channel);
-        client.send(close);
-    }
+	public void processEnd(Integer channel)
+	{
+		AMQPClose close = new AMQPClose();
+		close.setChannel(channel);
+		client.send(close);
+	}
 
-    public void processClose()
-    {
-        if (client.isConnected())
-            client.close();
-        
-        setState(ConnectionState.NONE);
-        return;
-    }
+	public void processClose()
+	{
+		if (client.isConnected())
+			client.close();
 
-    public void processSASLInit(String mechanism, byte[] initialResponse, String hostName) throws CoreLogicException
-    {
-        throw new CoreLogicException("received invalid message init");
-    }
+		setState(ConnectionState.NONE);
+		return;
+	}
 
-    public void processSASLChallenge(byte[] challenge) throws CoreLogicException
-    {
-        throw new CoreLogicException("received invalid message challenge");
-    }
+	public void processSASLInit(String mechanism, byte[] initialResponse, String hostName) throws CoreLogicException
+	{
+		throw new CoreLogicException("received invalid message init");
+	}
 
-    public void processSASLMechanism(List<AMQPSymbol> mechanisms, Integer channel, Integer headerType)
-    {
-        AMQPSymbol plainMechanism = null;
-        for (AMQPSymbol mechanism:mechanisms)
-        {
-            if (mechanism.getValue().toLowerCase().equals("plain"))
-            {
-                plainMechanism = mechanism;
-                break;
-            }
-        }
+	public void processSASLChallenge(byte[] challenge) throws CoreLogicException
+	{
+		throw new CoreLogicException("received invalid message challenge");
+	}
 
-        //currently supporting only plain
-        if (plainMechanism==null)
-        {
-            timers.stopAllTimers();
-            client.shutdown();
-            setState(ConnectionState.CONNECTION_FAILED);
-            return;
-        }
+	public void processSASLMechanism(List<AMQPSymbol> mechanisms, Integer channel, Integer headerType)
+	{
+		AMQPSymbol plainMechanism = null;
+		for (AMQPSymbol mechanism : mechanisms)
+		{
+			if (mechanism.getValue().toLowerCase().equals("plain"))
+			{
+				plainMechanism = mechanism;
+				break;
+			}
+		}
 
-        SASLInit saslInit = new SASLInit();
-        saslInit.setType(headerType);
-        saslInit.setChannel(channel);
-        saslInit.setMechanism(plainMechanism.getValue());
+		//currently supporting only plain
+		if (plainMechanism == null)
+		{
+			timers.stopAllTimers();
+			client.shutdown();
+			setState(ConnectionState.CONNECTION_FAILED);
+			return;
+		}
 
-        byte[] userBytes = account.getUsername().getBytes();
-        byte[] passwordBytes = account.getPassword().getBytes();
-        byte[] challenge = new byte[userBytes.length + 1 + userBytes.length + 1 + passwordBytes.length];
-        System.arraycopy(userBytes, 0, challenge, 0, userBytes.length);
-        challenge[userBytes.length] = 0x00;
-        System.arraycopy(userBytes, 0, challenge, userBytes.length + 1, userBytes.length);
-        challenge[userBytes.length + 1 + userBytes.length] = 0x00;
-        System.arraycopy(passwordBytes, 0, challenge, userBytes.length + 1 + userBytes.length + 1, passwordBytes.length);            
+		SASLInit saslInit = new SASLInit();
+		saslInit.setType(headerType);
+		saslInit.setChannel(channel);
+		saslInit.setMechanism(plainMechanism.getValue());
 
-        saslInit.setInitialResponse(challenge);
-        client.send(saslInit);
-    }
+		byte[] userBytes = account.getUsername().getBytes();
+		byte[] passwordBytes = account.getPassword().getBytes();
+		byte[] challenge = new byte[userBytes.length + 1 + userBytes.length + 1 + passwordBytes.length];
+		System.arraycopy(userBytes, 0, challenge, 0, userBytes.length);
+		challenge[userBytes.length] = 0x00;
+		System.arraycopy(userBytes, 0, challenge, userBytes.length + 1, userBytes.length);
+		challenge[userBytes.length + 1 + userBytes.length] = 0x00;
+		System.arraycopy(passwordBytes, 0, challenge, userBytes.length + 1 + userBytes.length + 1, passwordBytes.length);
 
-    public void processSASLOutcome(byte[] additionalData, OutcomeCode outcomeCode)
-    {
-        if (outcomeCode!=null)
-            if(outcomeCode == OutcomeCode.OK)
-            {
-            	isSaslConfirm=true;
-            	AMQPProtoHeader header = new AMQPProtoHeader(0);
-                client.send(header);
-            }
-        }
+		saslInit.setInitialResponse(challenge);
+		client.send(saslInit);
+	}
 
-    public void processSASLResponse(byte[] response) throws CoreLogicException
-    {
-        throw new CoreLogicException("received invalid message response");
-    }
+	public void processSASLOutcome(byte[] additionalData, OutcomeCode outcomeCode)
+	{
+		if (outcomeCode != null)
+			if (outcomeCode == OutcomeCode.OK)
+			{
+				isSaslConfirm = true;
+				AMQPProtoHeader header = new AMQPProtoHeader(0);
+				client.send(header);
+			}
+	}
 
-    public void processPing()
-    {
-       //nothing to be done here
-    }
+	public void processSASLResponse(byte[] response) throws CoreLogicException
+	{
+		throw new CoreLogicException("received invalid message response");
+	}
+
+	public void processPing()
+	{
+		//nothing to be done here
+	}
 }

@@ -1,5 +1,18 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.*;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.*;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -23,16 +36,7 @@ import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 
-import javax.swing.*;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-
-public class AccountMgmtPane
-		extends JPanel
+public class AccountMgmtPane extends JPanel
 {
 
 	private static final long serialVersionUID = -2902157175553624396L;
@@ -59,22 +63,23 @@ public class AccountMgmtPane
 
 		MouseListener listener = new MouseAdapter()
 		{
-			@Override public void mouseClicked(MouseEvent arg0)
+			@Override
+			public void mouseClicked(MouseEvent arg0)
 			{
 				addAccountBtnClicked(arg0);
 			}
 		};
-		
+
 		this.add(UIHelper.createButton("Add new account", 40, listener));
-		final JFrame parent=frame;
-		frame.addComponentListener(new ComponentAdapter() 
+		final JFrame parent = frame;
+		frame.addComponentListener(new ComponentAdapter()
 		{
-			public void componentHidden(ComponentEvent e) 
+			public void componentHidden(ComponentEvent e)
 			{
 			}
-			
-			public void componentShown(ComponentEvent e) 
-			{			
+
+			public void componentShown(ComponentEvent e)
+			{
 				accountsPane.removeAll();
 				addAccounts();
 				parent.revalidate();
@@ -86,7 +91,7 @@ public class AccountMgmtPane
 	private void addAccounts()
 	{
 		componentList.clear();
-		
+
 		// final int accountCount = 3;
 		final int parameterAlignment = SwingConstants.LEFT;
 
@@ -144,7 +149,8 @@ public class AccountMgmtPane
 				accountData.addMouseListener(new MouseAdapter()
 				{
 
-					@Override public void mouseClicked(MouseEvent mouseEvent)
+					@Override
+					public void mouseClicked(MouseEvent mouseEvent)
 					{
 						if (accountChosen)
 							return;
@@ -168,7 +174,8 @@ public class AccountMgmtPane
 						int delay = 200;
 						Timer timer = new Timer(delay, new ActionListener()
 						{
-							@Override public void actionPerformed(ActionEvent e)
+							@Override
+							public void actionPerformed(ActionEvent e)
 							{
 								Main.createAndShowLoadingPane(account);
 								row[0].setBackground(UIConstants.APP_BG_COLOR);
@@ -181,7 +188,8 @@ public class AccountMgmtPane
 						timer.start();
 					}
 
-					@Override public void mouseEntered(MouseEvent mouseEvent)
+					@Override
+					public void mouseEntered(MouseEvent mouseEvent)
 					{
 						super.mouseEntered(mouseEvent);
 						String tag = ((Component) mouseEvent.getSource()).getName();
@@ -192,7 +200,8 @@ public class AccountMgmtPane
 						accountsPane.repaint();
 					}
 
-					@Override public void mouseExited(MouseEvent mouseEvent)
+					@Override
+					public void mouseExited(MouseEvent mouseEvent)
 					{
 						super.mouseExited(mouseEvent);
 						String tag = ((Component) mouseEvent.getSource()).getName();
@@ -219,7 +228,8 @@ public class AccountMgmtPane
 				// CompoundBorder(BorderFactory.createLineBorder(Color.cyan),BorderFactory.createEmptyBorder(5,5,5,5)));
 				deleteBtn.addMouseListener(new MouseAdapter()
 				{
-					@Override public void mouseClicked(MouseEvent arg0)
+					@Override
+					public void mouseClicked(MouseEvent arg0)
 					{
 
 						JLabel btnClicked = (JLabel) arg0.getSource();

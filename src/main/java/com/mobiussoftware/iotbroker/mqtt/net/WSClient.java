@@ -1,5 +1,18 @@
 package com.mobiussoftware.iotbroker.mqtt.net;
 
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.apache.log4j.Logger;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.mobius.software.mqtt.parser.MQJsonParser;
+import com.mobius.software.mqtt.parser.header.api.MQMessage;
+import com.mobiussoftware.iotbroker.network.ConnectionListener;
+import com.mobiussoftware.iotbroker.network.ExceptionHandler;
+import com.mobiussoftware.iotbroker.network.NetworkChannel;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -21,13 +34,7 @@ package com.mobiussoftware.iotbroker.mqtt.net;
 */
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.MultithreadEventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -38,31 +45,19 @@ import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory;
 import io.netty.handler.codec.http.websocketx.WebSocketVersion;
 
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
-import org.apache.log4j.Logger;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.mobius.software.mqtt.parser.MQJsonParser;
-import com.mobius.software.mqtt.parser.header.api.MQMessage;
-import com.mobiussoftware.iotbroker.network.ConnectionListener;
-import com.mobiussoftware.iotbroker.network.ExceptionHandler;
-import com.mobiussoftware.iotbroker.network.NetworkChannel;
-
 public class WSClient implements NetworkChannel<MQMessage>
 {
-	private final Logger logger = Logger.getLogger(getClass());
+	protected final Logger logger = Logger.getLogger(getClass());
 
-	private InetSocketAddress address;
-	private int workerThreads;
+	protected InetSocketAddress address;
+	protected int workerThreads;
 
-	private Bootstrap bootstrap;
-	private MultithreadEventLoopGroup loopGroup;
-	private Channel channel;
+	protected Bootstrap bootstrap;
+	protected MultithreadEventLoopGroup loopGroup;
+	protected Channel channel;
 
-	private ConcurrentLinkedQueue<MQJsonParser> parsers=new ConcurrentLinkedQueue<>();
+	protected ConcurrentLinkedQueue<MQJsonParser> parsers = new ConcurrentLinkedQueue<>();
+
 	// handlers for client connections
 	public WSClient(InetSocketAddress address, int workerThreads)
 	{
@@ -107,30 +102,16 @@ public class WSClient implements NetworkChannel<MQMessage>
 			bootstrap.channel(NioSocketChannel.class);
 			bootstrap.option(ChannelOption.TCP_NODELAY, true);
 			bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
-			
-			WebSocketClientHandshaker handshaker = WebSocketClientHandshakerFactory.newHandshaker(this.getUri(), WebSocketVersion.V13, null, false,EmptyHttpHeaders.INSTANCE, 1280000);			
-	        final WebSocketClientHandler handler = new WebSocketClientHandler(this, handshaker, listener);
-	        
-			bootstrap.handler(new ChannelInitializer<SocketChannel>()
-			{
-				@Override public void initChannel(SocketChannel ch)
-						throws InterruptedException
-				{
-					ChannelPipeline pipeline = ch.pipeline();
-					pipeline.addLast("http-codec", new HttpClientCodec());
-					pipeline.addLast("aggregator", new HttpObjectAggregator(65536));
-					pipeline.addLast("ws-handler", handler);
-					pipeline.addLast(new ExceptionHandler());
-				}
-			});
+
+			bootstrap.handler(getChannelInitializer(listener));
 			bootstrap.remoteAddress(address);
 			try
 			{
 				final ChannelFuture future = bootstrap.connect();
 				future.addListener(new ChannelFutureListener()
 				{
-					@Override public void operationComplete(ChannelFuture channelFuture)
-							throws Exception
+					@Override
+					public void operationComplete(ChannelFuture channelFuture) throws Exception
 					{
 						try
 						{
@@ -164,56 +145,79 @@ public class WSClient implements NetworkChannel<MQMessage>
 		return true;
 	}
 
+	protected ChannelInitializer<SocketChannel> getChannelInitializer(final ConnectionListener<MQMessage> listener)
+	{
+		WebSocketClientHandshaker handshaker = WebSocketClientHandshakerFactory.newHandshaker(this.getUri(), WebSocketVersion.V13, null, false, EmptyHttpHeaders.INSTANCE, 1280000);
+		final WebSocketClientHandler handler = new WebSocketClientHandler(this, handshaker, listener);
+
+		return new ChannelInitializer<SocketChannel>()
+		{
+			@Override
+			public void initChannel(SocketChannel ch) throws InterruptedException
+			{
+				ChannelPipeline pipeline = ch.pipeline();
+				pipeline.addLast("http-codec", new HttpClientCodec());
+				pipeline.addLast("aggregator", new HttpObjectAggregator(65536));
+				pipeline.addLast("ws-handler", handler);
+				pipeline.addLast(new ExceptionHandler());
+			}
+		};
+	}
+
 	public boolean isConnected()
 	{
 		return channel != null && channel.isOpen();
 	}
 
-	@Override public void send(MQMessage message)
-	{		
+	@Override
+	public void send(MQMessage message)
+	{
 		if (isConnected())
 		{
 			logger.info("message " + message + " is being sent");
 			String string = null;
-			MQJsonParser parser=getParser();
-            try 
-            {            	
-                string = parser.jsonString(message);
-            } 
-            catch (JsonProcessingException e) 
-            {
-                e.printStackTrace();
-            }
-            
-            releaseParser(parser);
-            channel.writeAndFlush(new TextWebSocketFrame(string));
+			MQJsonParser parser = getParser();
+			try
+			{
+				string = parser.jsonString(message);
+			}
+			catch (JsonProcessingException e)
+			{
+				e.printStackTrace();
+			}
+
+			releaseParser(parser);
+			channel.writeAndFlush(new TextWebSocketFrame(string));
 		}
 	}
 
 	protected MQJsonParser getParser()
 	{
-		MQJsonParser parser=parsers.poll();
-		if(parser==null)
-			parser=new MQJsonParser();
-		
+		MQJsonParser parser = parsers.poll();
+		if (parser == null)
+			parser = new MQJsonParser();
+
 		return parser;
 	}
-	
+
 	public void releaseParser(MQJsonParser parser)
 	{
 		this.parsers.offer(parser);
 	}
-	
-	private URI getUri() 
+
+	protected URI getUri()
 	{
-        String type = "ws";
-        String url = type + "://" + this.address.getHostName() + ":" + String.valueOf(this.address.getPort()) + "/" + type;
-        URI uri;
-        try {
-            uri = new URI(url);
-        } catch (Exception e) {
-            return null;
-        }
-        return uri;
-    }
+		String type = "ws";
+		String url = type + "://" + this.address.getHostName() + ":" + String.valueOf(this.address.getPort()) + "/" + type;
+		URI uri;
+		try
+		{
+			uri = new URI(url);
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
+		return uri;
+	}
 }

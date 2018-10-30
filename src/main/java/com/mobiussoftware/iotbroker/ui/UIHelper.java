@@ -1,5 +1,22 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseListener;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.ColorUIResource;
+import javax.swing.plaf.basic.BasicCheckBoxUI;
+import javax.swing.plaf.basic.BasicComboBoxRenderer;
+import javax.swing.plaf.basic.BasicProgressBarUI;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -23,17 +40,6 @@ package com.mobiussoftware.iotbroker.ui;
 import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.ColorUIResource;
-import javax.swing.plaf.basic.BasicCheckBoxUI;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
-import javax.swing.plaf.basic.BasicProgressBarUI;
-import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseListener;
 
 public class UIHelper
 {
@@ -163,6 +169,14 @@ public class UIHelper
 		return tf;
 	}
 
+	static JButton createBrowseButton(int alignment, String name)
+	{
+		JButton btnBrowse = new JButton(name);
+		btnBrowse.setHorizontalAlignment(alignment);
+	    btnBrowse.setBounds(10, 41, 87, 23);
+	    return btnBrowse;
+	}
+	
 	static HintDialogTextField createTextArea(String hint, Dimension dimension)
 	{
 
@@ -216,7 +230,6 @@ public class UIHelper
 		if (listener != null)
 			btnLabel.addMouseListener(listener);
 		btnPanel.add(btnLabel);
-
 		return btnPanel;
 	}
 

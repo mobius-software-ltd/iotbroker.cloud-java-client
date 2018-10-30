@@ -1,5 +1,15 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
+
+import org.apache.log4j.Logger;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -25,12 +35,6 @@ import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
-import org.apache.log4j.Logger;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
 
 public class LogInPane extends JPanel
 {
@@ -42,8 +46,10 @@ public class LogInPane extends JPanel
 	private final int columns = 2;
 	int regInfoColorCount = 0;
 	private JPanel settingsPane;
+	private JPanel securityPane;
 	private JPanel regInfoPane;
 	private JPanel settingsPaneWrapper;
+	private JPanel securityPaneWrapper;
 	private JComboBox<String> protocolCB;
 	private HintTextField usernameTF;
 	private HintTextField passwordTF;
@@ -54,13 +60,20 @@ public class LogInPane extends JPanel
 	private HintTextField keepAliveTF;
 	private HintDialogTextField willTF;
 	private HintTextField willTopicTF;
+	private JButton certificateButton;
+	private HintTextField certificatePasswordTF;
+	private HintTextField certificateTF;
 	private JCheckBox retainCB;
+	private JCheckBox securityCB;
 	private JComboBox<Integer> qosCB;
 	private JPanel settingsBlockLabel;
+	private JPanel securityBlockLabel;
+
 	private JPanel usernameLabel;
 	private JPanel passwordLabel;
 	private JPanel clientIdLabel;
-	@SuppressWarnings("unused") private Protocol previousProtocolChoice;
+	@SuppressWarnings("unused")
+	private Protocol previousProtocolChoice;
 
 	LogInPane()
 	{
@@ -72,7 +85,7 @@ public class LogInPane extends JPanel
 		regInfoPane = new JPanel();
 		regInfoPane.setBackground(UIConstants.APP_BG_COLOR);
 		this.add(UIHelper.wrapInBorderLayout(regInfoPane, BorderLayout.PAGE_START));
-		
+
 		// settings:
 		settingsBlockLabel = UIHelper.createSmallBoldLabel("settings:");
 		settingsBlockLabel.setAlignmentY(Component.TOP_ALIGNMENT);
@@ -80,17 +93,31 @@ public class LogInPane extends JPanel
 
 		settingsPane = new JPanel();
 		settingsPane.setBackground(UIConstants.APP_BG_COLOR);
-		
+
 		settingsPaneWrapper = UIHelper.wrapInBorderLayout(settingsPane, BorderLayout.PAGE_START);
 		this.add(settingsPaneWrapper);
-		
+
 		addRegInfoBlock();
 
 		addSettingsPaneElements(true);
 
+		// security
+		securityBlockLabel = UIHelper.createSmallBoldLabel("security:");
+		securityBlockLabel.setAlignmentY(Component.TOP_ALIGNMENT);
+		this.add(securityBlockLabel);
+
+		securityPane = new JPanel();
+		securityPane.setBackground(UIConstants.APP_BG_COLOR);
+
+		securityPaneWrapper = UIHelper.wrapInBorderLayout(securityPane, BorderLayout.PAGE_START);
+		this.add(securityPaneWrapper);
+
+		addSecurityPaneElements();
+
 		MouseListener listener = new MouseAdapter()
 		{
-			@Override public void mouseClicked(MouseEvent arg0)
+			@Override
+			public void mouseClicked(MouseEvent arg0)
 			{
 				loginBtnClicked(arg0);
 			}
@@ -134,7 +161,8 @@ public class LogInPane extends JPanel
 		return rowNumber % 2 == 0 ? UIConstants.ROW_EVEN_COLOR : UIConstants.ROW_ODD_COLOR;
 	}
 
-	@SuppressWarnings("unchecked") private void addRegInfoBlock()
+	@SuppressWarnings("unchecked")
+	private void addRegInfoBlock()
 	{
 		Image tmp = UIConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
 		final ImageIcon settingsIcn = new ImageIcon(tmp);
@@ -147,7 +175,8 @@ public class LogInPane extends JPanel
 		protocolCB = (JComboBox<String>) (panel.getComponent(0));
 		protocolCB.addItemListener(new ItemListener()
 		{
-			@Override public void itemStateChanged(ItemEvent itemEvent)
+			@Override
+			public void itemStateChanged(ItemEvent itemEvent)
 			{
 
 				if (itemEvent.getStateChange() == ItemEvent.SELECTED)
@@ -246,9 +275,9 @@ public class LogInPane extends JPanel
 		if (this.getComponent(2) != settingsBlockLabel)
 		{
 			this.add(settingsBlockLabel, 2);
-			this.add(settingsPaneWrapper, 3);			
+			this.add(settingsPaneWrapper, 3);
 		}
-		
+
 		this.revalidate();
 		this.repaint();
 	}
@@ -296,7 +325,8 @@ public class LogInPane extends JPanel
 		regInfoPane.add(UIHelper.wrapInJPanel(portTF, rowColor(regInfoColorCount++)));
 	}
 
-	@SuppressWarnings("unchecked") private void addSettingsPaneElements(Boolean showWill)
+	@SuppressWarnings("unchecked")
+	private void addSettingsPaneElements(Boolean showWill)
 	{
 		Image tmp = UIConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
 		final ImageIcon settingsIcn = new ImageIcon(tmp);
@@ -324,7 +354,7 @@ public class LogInPane extends JPanel
 		int rows = 6;
 		//if(!showWill)
 		//	rows=1;
-			
+
 		settingsPane.removeAll();
 		settingsPane.setLayout(new GridLayout(rows, columns));
 
@@ -332,23 +362,23 @@ public class LogInPane extends JPanel
 		final int parameterAlignment = SwingConstants.LEFT;
 		int i = 0;
 
-		if(showWill)
+		if (showWill)
 		{
 			settingsPane.add(UIHelper.createParameterLabel("Clean Session:", cleanSessionIcn, parameterAlignment, rowColor(i)));
 			cleanSessionCB = UIHelper.createJCheckBox(rowColor(i));
 			settingsPane.add(UIHelper.wrapInJPanel(cleanSessionCB, rowColor(i++)));
-		}		
-		
+		}
+
 		settingsPane.add(UIHelper.createParameterLabel("Keepalive:", keepAliveIcn, parameterAlignment, rowColor(i)));
 		keepAliveTF = UIHelper.createHintTextField("keepalive", tfDimension);
 		settingsPane.add(UIHelper.wrapInJPanel(keepAliveTF, rowColor(i++)));
 
-		if(showWill)
+		if (showWill)
 		{
 			settingsPane.add(UIHelper.createParameterLabel("Will topic:", settingsIcn, parameterAlignment, rowColor(i)));
 			willTopicTF = UIHelper.createHintTextField("will topic", tfDimension);
 			settingsPane.add(UIHelper.wrapInJPanel(willTopicTF, rowColor(i++)));
-		
+
 			settingsPane.add(UIHelper.createParameterLabel("Will:", settingsIcn, parameterAlignment, rowColor(i)));
 			willTF = UIHelper.createTextArea("will", tfDimension);
 			settingsPane.add(UIHelper.wrapInJPanel(willTF, rowColor(i++)));
@@ -364,9 +394,9 @@ public class LogInPane extends JPanel
 		}
 		else
 		{
-			for(int j=0;j<10;j++)
+			for (int j = 0; j < 10; j++)
 			{
-				settingsPane.add(UIHelper.createParameterLabel("", null, parameterAlignment, rowColor(0)));				
+				settingsPane.add(UIHelper.createParameterLabel("", null, parameterAlignment, rowColor(0)));
 			}
 		}
 		// for (int i = 0; i < rows.length; i++) {
@@ -400,8 +430,88 @@ public class LogInPane extends JPanel
 		// }
 	}
 
-	private Account getAccountObject()
-			throws NumberFormatException
+	private void addSecurityPaneElements()
+	{
+		Image tmp = UIConstants.IC_SETTINGS.getImage().getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
+		final ImageIcon securityIcn = new ImageIcon(tmp);
+
+		int rows = 3;
+
+		securityPane.removeAll();
+		securityPane.setLayout(new GridLayout(rows, columns));
+
+		final Dimension tfDimension = new Dimension(150, 28);
+		final int parameterAlignment = SwingConstants.LEFT;
+		int i = 0;
+
+		securityPane.add(UIHelper.createParameterLabel("Enabled:", securityIcn, parameterAlignment, rowColor(i)));
+		securityCB = UIHelper.createJCheckBox(rowColor(i));
+		securityCB.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				AbstractButton abstractButton = (AbstractButton) e.getSource();
+				boolean selected = abstractButton.getModel().isSelected();
+				certificateButton.setEnabled(selected);
+				certificateTF.setEnabled(selected);
+				certificatePasswordTF.setEnabled(selected);
+			}
+		});
+		securityPane.add(UIHelper.wrapInJPanel(securityCB, rowColor(i++)));
+
+		certificateTF = UIHelper.createHintTextField("certificate path", tfDimension);
+		certificateTF.setEnabled(false);
+		certificateTF.setDisabledTextColor(Color.GRAY);
+		certificateButton = UIHelper.createBrowseButton(parameterAlignment, "Select certificate");
+		certificateButton.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				JFileChooser fileChooser = new JFileChooser();
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setFileFilter(new FileFilter()
+				{
+
+					public String getDescription()
+					{
+						return "Supported (*.jks, *.pfx)";
+					}
+
+					public boolean accept(File f)
+					{
+						if (f.isDirectory())
+						{
+							return true;
+						}
+						else
+						{
+							String filename = f.getName().toLowerCase();
+							return filename.endsWith(".jks") || filename.endsWith(".pfx");
+						}
+					}
+				});
+				int rVal = fileChooser.showOpenDialog(null);
+				if (rVal == JFileChooser.APPROVE_OPTION)
+				{
+					String certPath = fileChooser.getSelectedFile().getAbsolutePath();
+					certificateTF.focusGained(null);
+					certificateTF.setText(certPath);
+				}
+			}
+		});
+
+		certificateButton.setEnabled(false);
+		securityPane.add(UIHelper.wrapInJPanel(certificateButton, rowColor(i++)));
+		securityPane.add(UIHelper.wrapInJPanel(certificateTF, rowColor(i)));
+
+		securityPane.add(UIHelper.createParameterLabel("Password:", securityIcn, parameterAlignment, rowColor(i)));
+		certificatePasswordTF = UIHelper.createHintTextField("certificate password", tfDimension);
+		certificatePasswordTF.setEnabled(false);
+		securityPane.add(UIHelper.wrapInJPanel(certificatePasswordTF, rowColor(i++)));
+	}
+
+	private Account getAccountObject() throws NumberFormatException
 	{
 		Protocol protocol = (Protocol) protocolCB.getSelectedItem();
 		String username = usernameTF.getText();
@@ -416,12 +526,15 @@ public class LogInPane extends JPanel
 		boolean retain = retainCB.isSelected();
 		int qos = qosCB.getSelectedIndex();
 
-		Account account = new Account(protocol, username, password, clientId, hostName, port, cleanSesssion, keepAlive, will, willTopic, retain, qos, true);
+		boolean isSecure = securityCB.isSelected();
+		String certificatePath = certificateTF.getText() != null ? certificateTF.getText() : "";
+		String certificatePassword = certificatePasswordTF.getText() != null ? certificatePasswordTF.getText() : "";
 
-		return account;
+		return new Account(protocol, username, password, clientId, hostName, port, cleanSesssion, keepAlive, will, willTopic, retain, qos, true, isSecure, certificatePath, certificatePassword);
 	}
 
-	@Override protected void paintComponent(Graphics g)
+	@Override
+	protected void paintComponent(Graphics g)
 	{
 		Image bgImage = UIConstants.BG_IMAGE;
 		g.drawImage(bgImage, 0, 0, null);

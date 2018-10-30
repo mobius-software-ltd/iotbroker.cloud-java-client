@@ -1,5 +1,9 @@
 package com.mobiussoftware.iotbroker.mqtt_sn.net;
 
+import java.net.InetSocketAddress;
+
+import org.apache.log4j.Logger;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -30,21 +34,16 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 
-import org.apache.log4j.Logger;
-
-import java.net.InetSocketAddress;
-
 public class UDPClient implements NetworkChannel<SNMessage>
 {
+	protected final Logger logger = Logger.getLogger(getClass());
 
-	private final Logger logger = Logger.getLogger(getClass());
+	protected InetSocketAddress address;
+	protected int workerThreads;
 
-	private InetSocketAddress address;
-	private int workerThreads;
-
-	private Bootstrap bootstrap;
-	private MultithreadEventLoopGroup loopGroup;
-	private Channel channel;
+	protected Bootstrap bootstrap;
+	protected MultithreadEventLoopGroup loopGroup;
+	protected Channel channel;
 
 	public UDPClient(InetSocketAddress address, int workerThreads)
 	{
@@ -82,53 +81,16 @@ public class UDPClient implements NetworkChannel<SNMessage>
 	{
 		if (channel == null)
 		{
-			bootstrap = new Bootstrap();
 			loopGroup = new NioEventLoopGroup(workerThreads);
+			bootstrap = new Bootstrap();
 			bootstrap.group(loopGroup);
 			bootstrap.channel(NioDatagramChannel.class);
-
-			bootstrap.handler(new ChannelInitializer<DatagramChannel>()
-			{
-				@Override 
-				public void initChannel(DatagramChannel ch) throws InterruptedException
-				{
-					ChannelPipeline pipeline = ch.pipeline();
-					pipeline.addLast(new SnDecoder());
-					pipeline.addLast("handler", new SnHandler(listener));
-					pipeline.addLast(new SnEncoder());
-					pipeline.addLast(new ExceptionHandler());
-				}
-			});
+			bootstrap.handler(getChannelInitializer(listener));
 			bootstrap.remoteAddress(address);
 			try
 			{
 				final ChannelFuture future = bootstrap.connect();
-				future.addListener(new ChannelFutureListener()
-				{
-					@Override 
-					public void operationComplete(ChannelFuture channelFuture) throws Exception
-					{
-						try
-						{
-							channel = future.channel();
-						}
-						catch (Exception e)
-						{
-							listener.connectFailed();
-							return;
-						}
-
-						if (isConnected())
-						{
-							listener.connected();
-						}
-						else
-						{
-							listener.connectFailed();
-						}
-					}
-
-				});
+				future.addListener(getChannelFutureListener(listener, future));
 			}
 			catch (Exception e)
 			{
@@ -140,6 +102,46 @@ public class UDPClient implements NetworkChannel<SNMessage>
 		return true;
 	}
 
+	protected ChannelInitializer<DatagramChannel> getChannelInitializer(final ConnectionListener<SNMessage> listener) 
+	{
+		return new ChannelInitializer<DatagramChannel>()
+		{
+			@Override 
+			public void initChannel(DatagramChannel ch) throws InterruptedException
+			{
+				ChannelPipeline pipeline = ch.pipeline();
+				pipeline.addLast(new SnDecoder());
+				pipeline.addLast("handler", new SnHandler(listener));
+				pipeline.addLast(new SnEncoder());
+				pipeline.addLast(new ExceptionHandler());
+			}
+		};
+	}
+	
+	protected ChannelFutureListener getChannelFutureListener(final ConnectionListener<SNMessage> listener, final ChannelFuture future) 
+	{
+		return new ChannelFutureListener()
+		{
+			@Override 
+			public void operationComplete(ChannelFuture channelFuture) throws Exception
+			{
+				try
+				{
+					channel = future.channel();
+					if (isConnected())
+						listener.connected();
+					else
+						listener.connectFailed();
+				}
+				catch (Exception e)
+				{
+					listener.connectFailed();
+					return;
+				}
+			}
+		};
+	}
+	
 	public boolean isConnected()
 	{
 		return channel != null && channel.isOpen();
