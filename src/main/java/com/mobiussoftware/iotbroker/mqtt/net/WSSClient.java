@@ -42,7 +42,7 @@ public class WSSClient extends WSClient
 			public void initChannel(SocketChannel ch) throws Exception
 			{
 				ChannelPipeline pipeline = ch.pipeline();
-				pipeline.addLast(new SslHandler(TLSHelper.getClientEngine(certPath, certPwd)));
+				pipeline.addLast("ssl", new SslHandler(TLSHelper.getClientEngine(certPath, certPwd)));
 				pipeline.addLast("http-codec", new HttpClientCodec());
 				pipeline.addLast("aggregator", new HttpObjectAggregator(65536));
 				pipeline.addLast("ws-handler", handler);

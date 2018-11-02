@@ -102,7 +102,8 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 	private AtomicLong nextHandle = new AtomicLong();
 	private ConcurrentHashMap<String, Long> usedIncomingMappings = new ConcurrentHashMap<String, Long>();
 	private ConcurrentHashMap<String, Long> usedOutgoingMappings = new ConcurrentHashMap<String, Long>();
-	private ConcurrentHashMap<Long, String> usedMappings = new ConcurrentHashMap<Long, String>();
+	private ConcurrentHashMap<Long, String> usedIncomingHandles = new ConcurrentHashMap<Long, String>();
+	private ConcurrentHashMap<Long, String> usedOutgoingHandles = new ConcurrentHashMap<Long, String>();
 	private List<AMQPTransfer> pendingMessages = new ArrayList<AMQPTransfer>();
 
 	private Long idleTimeout;
@@ -216,11 +217,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 		{
 			Long currentHandler = usedIncomingMappings.get(topics[i].getName().toString());
 			if (currentHandler == null)
-			{
 				currentHandler = nextHandle.incrementAndGet();
-				usedIncomingMappings.put(topics[i].getName().toString(), currentHandler);
-				usedMappings.put(currentHandler, topics[i].getName().toString());
-			}
 
 			AMQPAttach attach = new AMQPAttach();
 			attach.setChannel(channel);
@@ -250,21 +247,6 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 				detach.setClosed(true);
 				detach.setHandle(incomingHandle);
 				client.send(detach);
-			}
-			else
-			{
-				try
-				{
-					logger.info("deleting  topic " + topic + " from DB");
-					DBTopic dbTopic = dbInterface.getTopicByName(topic);
-					dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
-					if (topicListener != null)
-						topicListener.finishDeletingTopic(dbTopic.getName());
-				}
-				catch (SQLException e)
-				{
-					e.printStackTrace();
-				}
 			}
 		}
 	}
@@ -307,7 +289,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 		{
 			Long currentHandler = nextHandle.incrementAndGet();
 			usedOutgoingMappings.put(topic.getName().toString(), currentHandler);
-			usedMappings.put(currentHandler, topic.getName().toString());
+			usedOutgoingHandles.put(currentHandler, topic.getName().toString());
 
 			transfer.setHandle(currentHandler);
 			pendingMessages.add(transfer);
@@ -354,6 +336,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 
 	public void packetReceived(AMQPHeader message)
 	{
+		logger.info("incoming: " + message);
 		try
 		{
 			switch (message.getCode())
@@ -542,11 +525,8 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 			}
 			else
 			{
-				usedIncomingMappings.put(name.toString(), handle);
-				usedMappings.put(handle, name);
-
-				if (handle >= nextHandle.get())
-					nextHandle.set(handle + 1);
+				usedIncomingMappings.put(name, handle);
+				usedIncomingHandles.put(handle, name);
 
 				byte qos = (byte) QoS.AT_LEAST_ONCE.getValue();
 				try
@@ -597,10 +577,10 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 		}
 
 		String topicName = null;
-		if (handle == null || !usedMappings.containsKey(handle))
+		if (handle == null || !usedOutgoingHandles.containsKey(handle))
 			return;
 
-		topicName = usedMappings.get(handle);
+		topicName = usedOutgoingHandles.get(handle);
 		Message message = new Message(account, topicName, new String(data.getData()), true, (byte) qos.getValue(), false, false);
 		try
 		{
@@ -632,28 +612,24 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 
 	public void processDetach(Integer channel, Long handle)
 	{
-		if (handle == null)
-			return;
-
-		if (usedMappings.containsKey(handle))
+		String topicName = usedIncomingHandles.remove(handle);
+		if (topicName == null)
 		{
-			String topicName = usedMappings.get(handle);
-			usedMappings.remove(handle);
-			if (usedOutgoingMappings.containsKey(topicName))
-				usedOutgoingMappings.remove(topicName);
-
-			try
-			{
-				logger.info("deleting  topic " + topicName + " from DB");
-				DBTopic dbTopic = dbInterface.getTopicByName(topicName);
-				dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
-				if (topicListener != null)
-					topicListener.finishDeletingTopic(dbTopic.getName());
-			}
-			catch (SQLException e)
-			{
-				e.printStackTrace();
-			}
+			logger.warn("received unrecognized detach handle=" + handle);
+			return;
+		}
+		
+		try
+		{
+			logger.info("deleting  topic " + topicName + " from DB");
+			DBTopic dbTopic = dbInterface.getTopicByName(topicName);
+			dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
+			if (topicListener != null)
+				topicListener.finishDeletingTopic(dbTopic.getName());
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
 		}
 	}
 

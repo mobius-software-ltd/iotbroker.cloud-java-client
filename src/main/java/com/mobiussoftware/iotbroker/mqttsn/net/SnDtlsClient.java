@@ -162,7 +162,7 @@ public class SnDtlsClient extends UDPClient implements DtlsStateHandler
 	{
 		File file = new File(certPath);
 		if (!file.exists())
-			throw new IllegalArgumentException("invalid ks:" + certPath);
+			return null;
 
 		FileInputStream fis = new FileInputStream(file);
 		KeyStore ks = KeyStore.getInstance("JKS");
