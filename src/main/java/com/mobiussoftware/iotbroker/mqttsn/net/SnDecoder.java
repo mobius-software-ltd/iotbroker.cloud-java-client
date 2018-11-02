@@ -1,4 +1,4 @@
-package com.mobiussoftware.iotbroker.mqtt_sn.net;
+package com.mobiussoftware.iotbroker.mqttsn.net;
 
 /**
 * Mobius Software LTD
@@ -21,21 +21,18 @@ package com.mobiussoftware.iotbroker.mqtt_sn.net;
 */
 import com.mobius.software.mqttsn.parser.Parser;
 import com.mobius.software.mqttsn.parser.packet.api.SNMessage;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.AddressedEnvelope;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
-import io.netty.handler.codec.MessageToMessageEncoder;
+import io.netty.handler.codec.MessageToMessageDecoder;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 
-public class SnEncoder extends MessageToMessageEncoder<AddressedEnvelope<SNMessage, InetSocketAddress>>
+public class SnDecoder extends MessageToMessageDecoder<DatagramPacket>
 {
 	@Override 
-	protected void encode(ChannelHandlerContext context, AddressedEnvelope<SNMessage, InetSocketAddress> message, List<Object> output) throws Exception
+	protected void decode(ChannelHandlerContext context, DatagramPacket message, List<Object> output) throws Exception
 	{
-		ByteBuf buffer = Parser.encode(message.content());
-		output.add(new DatagramPacket(buffer, message.recipient()));
+		SNMessage result = Parser.decode(message.content());
+		output.add(result);
 	}
 }

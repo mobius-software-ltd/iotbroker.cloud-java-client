@@ -439,7 +439,14 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 
 	private void clearAccountTopics()
 	{
-		dbInterface.deleteAllTopics();
+		try
+		{
+			dbInterface.deleteAllTopics(account);
+		}
+		catch (SQLException e)
+		{
+			logger.error("error deleting topics " + e.getMessage(), e);
+		}
 	}
 
 	public void connected()

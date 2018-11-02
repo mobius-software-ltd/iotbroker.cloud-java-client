@@ -1,5 +1,13 @@
 package com.mobiussoftware.iotbroker.dal.impl;
 
+import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.log4j.Logger;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -27,14 +35,8 @@ import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.db.Account;
-import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.db.DBTopic;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
-
-import java.sql.SQLException;
-import java.util.List;
+import com.mobiussoftware.iotbroker.db.Message;
 
 public class DBHelper
 		implements DBInterface
@@ -168,9 +170,13 @@ public class DBHelper
 		messageDao.create(message);
 	}
 
-	@Override public void deleteAllTopics()
+	@Override public void deleteAllTopics(Account account) throws SQLException
 	{
-
+		List<DBTopic> topics = getTopics(account);
+		Set<String> ids = new HashSet<>();
+		for(DBTopic topic : topics)
+			ids.add(String.valueOf(topic.getId()));
+		topicDao.deleteIds(ids);
 	}
 
 	@Override public Account getDefaultAccount()

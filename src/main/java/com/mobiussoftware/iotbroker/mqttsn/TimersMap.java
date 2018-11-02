@@ -1,4 +1,4 @@
-package com.mobiussoftware.iotbroker.mqtt_sn;
+package com.mobiussoftware.iotbroker.mqttsn;
 
 /**
 * Mobius Software LTD
@@ -23,7 +23,7 @@ import com.mobius.software.mqttsn.parser.avps.SNType;
 import com.mobius.software.mqttsn.parser.packet.api.CountableMessage;
 import com.mobius.software.mqttsn.parser.packet.api.SNMessage;
 import com.mobius.software.mqttsn.parser.packet.impl.SNPingreq;
-import com.mobiussoftware.iotbroker.mqtt_sn.net.UDPClient;
+import com.mobiussoftware.iotbroker.mqttsn.net.UDPClient;
 import com.mobiussoftware.iotbroker.network.MessageResendTimer;
 import com.mobiussoftware.iotbroker.network.TimersMapInterface;
 

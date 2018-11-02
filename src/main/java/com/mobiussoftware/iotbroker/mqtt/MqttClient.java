@@ -109,6 +109,9 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 	@Override
 	public Boolean createChannel()
 	{
+		if (account.isCleanSession())
+			clearAccountTopics();
+		
 		setState(ConnectionState.CHANNEL_CREATING);
 		Boolean isSuccess = client.init(this);
 		if (!isSuccess)
@@ -141,7 +144,6 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 	@Override
 	public void connect()
 	{
-
 		setState(ConnectionState.CONNECTING);
 
 		Will will = null;
@@ -417,17 +419,14 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 			content.readBytes(bytes);
 			Message message = new Message(account, topicName.toString(), new String(bytes), true, (byte) publisherQos.getValue(), retain, isDup);
 
-			if (!account.isCleanSession())
+			try
 			{
-				try
-				{
-					logger.info("storing publish to DB");
-					dbInterface.saveMessage(message);
-				}
-				catch (SQLException e)
-				{
-					e.printStackTrace();
-				}
+				logger.info("storing publish to DB");
+				dbInterface.saveMessage(message);
+			}
+			catch (SQLException e)
+			{
+				logger.error(e.getMessage(), e);
 			}
 
 			if (clientListener != null)
@@ -511,5 +510,17 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 	public void connectFailed()
 	{
 		setState(ConnectionState.CHANNEL_FAILED);
+	}
+	
+	private void clearAccountTopics()
+	{
+		try
+		{
+			dbInterface.deleteAllTopics(account);
+		}
+		catch (SQLException e)
+		{
+			logger.error("error deleting topics " + e.getMessage(), e);
+		}
 	}
 }

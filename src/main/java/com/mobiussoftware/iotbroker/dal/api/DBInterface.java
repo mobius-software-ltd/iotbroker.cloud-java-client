@@ -62,7 +62,7 @@ public interface DBInterface
 	void saveMessage(Message message)
 			throws SQLException;
 
-	void deleteAllTopics();
+	void deleteAllTopics(Account account) throws SQLException;
 
 	Account getDefaultAccount()
 			throws SQLException;

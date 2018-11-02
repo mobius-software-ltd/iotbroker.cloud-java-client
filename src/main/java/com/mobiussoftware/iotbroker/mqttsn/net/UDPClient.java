@@ -1,4 +1,4 @@
-package com.mobiussoftware.iotbroker.mqtt_sn.net;
+package com.mobiussoftware.iotbroker.mqttsn.net;
 
 import java.net.InetSocketAddress;
 

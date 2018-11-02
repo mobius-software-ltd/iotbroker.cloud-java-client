@@ -42,7 +42,7 @@ import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.mqtt.MqttClient;
-import com.mobiussoftware.iotbroker.mqtt_sn.MqttsnClient;
+import com.mobiussoftware.iotbroker.mqttsn.MqttsnClient;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
 import com.mobiussoftware.iotbroker.network.NetworkClient;
@@ -200,7 +200,6 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 			default:
 				break;
 			}
-
 		}
 		catch (Exception ex)
 		{

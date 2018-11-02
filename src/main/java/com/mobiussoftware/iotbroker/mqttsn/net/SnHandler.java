@@ -1,4 +1,4 @@
-package com.mobiussoftware.iotbroker.mqtt_sn.net;
+package com.mobiussoftware.iotbroker.mqttsn.net;
 
 /**
 * Mobius Software LTD

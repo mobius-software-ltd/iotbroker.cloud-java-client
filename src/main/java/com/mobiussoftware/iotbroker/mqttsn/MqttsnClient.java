@@ -1,4 +1,4 @@
-package com.mobiussoftware.iotbroker.mqtt_sn;
+package com.mobiussoftware.iotbroker.mqttsn;
 
 import java.net.InetSocketAddress;
 import java.sql.SQLException;
@@ -38,8 +38,8 @@ import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.DBTopic;
 import com.mobiussoftware.iotbroker.db.Message;
-import com.mobiussoftware.iotbroker.mqtt_sn.net.SnDtlsClient;
-import com.mobiussoftware.iotbroker.mqtt_sn.net.UDPClient;
+import com.mobiussoftware.iotbroker.mqttsn.net.SnDtlsClient;
+import com.mobiussoftware.iotbroker.mqttsn.net.UDPClient;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
@@ -138,6 +138,9 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 	@Override
 	public void connect()
 	{
+		if (account.isCleanSession())
+			clearAccountTopics();
+
 		setState(ConnectionState.CONNECTING);
 		Boolean willPresent = false;
 
@@ -176,11 +179,11 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 			SNQoS realQos = SNQoS.AT_LEAST_ONCE;
 			switch (topic1.getQos())
 			{
-			case AT_LEAST_ONCE:
-				realQos = SNQoS.AT_LEAST_ONCE;
-				break;
 			case AT_MOST_ONCE:
 				realQos = SNQoS.AT_MOST_ONCE;
+				break;
+			case AT_LEAST_ONCE:
+				realQos = SNQoS.AT_LEAST_ONCE;
 				break;
 			case EXACTLY_ONCE:
 				realQos = SNQoS.EXACTLY_ONCE;
@@ -204,7 +207,7 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 	{
 		for (String topic1 : topics)
 		{
-			SNQoS realQos = SNQoS.AT_LEAST_ONCE;
+			SNQoS realQos = SNQoS.AT_MOST_ONCE;
 			SNTopic topic;
 			if (reverseMappedTopics.containsKey(topic1))
 				topic = new IdentifierTopic(reverseMappedTopics.get(topic1), realQos);
@@ -220,14 +223,14 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 	@Override
 	public void publish(Topic topic, byte[] content, Boolean retain, Boolean dup)
 	{
-		SNQoS realQos = SNQoS.AT_LEAST_ONCE;
+		SNQoS realQos = SNQoS.AT_MOST_ONCE;
 		switch (topic.getQos())
 		{
-		case AT_LEAST_ONCE:
-			realQos = SNQoS.AT_LEAST_ONCE;
-			break;
 		case AT_MOST_ONCE:
 			realQos = SNQoS.AT_MOST_ONCE;
+			break;
+		case AT_LEAST_ONCE:
+			realQos = SNQoS.AT_LEAST_ONCE;
 			break;
 		case EXACTLY_ONCE:
 			realQos = SNQoS.EXACTLY_ONCE;
@@ -314,7 +317,7 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 	public void processWillTopicRequest()
 	{
 		Boolean retain = false;
-		SNQoS topicQos = SNQoS.EXACTLY_ONCE;
+		SNQoS topicQos = SNQoS.AT_MOST_ONCE;
 
 		if (account.getWillTopic() != null)
 		{
@@ -324,11 +327,14 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 
 			switch (SNQoS.valueOf(account.getQos()))
 			{
+			case AT_MOST_ONCE:
+				topicQos = SNQoS.AT_MOST_ONCE;
+				break;
 			case AT_LEAST_ONCE:
 				topicQos = SNQoS.AT_LEAST_ONCE;
 				break;
-			case AT_MOST_ONCE:
-				topicQos = SNQoS.AT_MOST_ONCE;
+			case EXACTLY_ONCE:
+				topicQos = SNQoS.EXACTLY_ONCE;
 				break;
 			default:
 				break;
@@ -407,22 +413,21 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 				reverseMappedTopics.put(name, topicID);
 			}
 
-			//			SNQoS actualQos = allowedQos;
-			QoS realQos = QoS.AT_LEAST_ONCE;
-
+			// SNQoS actualQos = allowedQos;
+			QoS realQos = QoS.AT_MOST_ONCE;
 			switch (allowedQos)
 			{
 			case AT_MOST_ONCE:
 				realQos = QoS.AT_MOST_ONCE;
+				break;
+			case AT_LEAST_ONCE:
+				realQos = QoS.AT_LEAST_ONCE;
 				break;
 			case EXACTLY_ONCE:
 				realQos = QoS.EXACTLY_ONCE;
 				break;
 			case LEVEL_ONE:
 				realQos = QoS.AT_MOST_ONCE;
-				break;
-			case AT_LEAST_ONCE:
-				realQos = QoS.AT_LEAST_ONCE;
 				break;
 			}
 
@@ -440,7 +445,7 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 					topic = new DBTopic(account, name, qos);
 					dbInterface.createTopic(topic);
 				}
-				
+
 				if (topicListener != null)
 					topicListener.finishAddingTopic(topic.getName(), topic.getQos());
 			}
@@ -464,26 +469,22 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 			else
 				topicName = ((FullTopic) unsubscribe.getTopic()).getValue();
 
-			if (!account.isCleanSession())
+			try
 			{
-				try
+				List<DBTopic> topics = dbInterface.getTopics(account);
+				for (DBTopic topic : topics)
 				{
-					logger.info("deleting  topic" + topicName + " from DB");
-					List<com.mobiussoftware.iotbroker.db.DBTopic> topics = dbInterface.getTopics(account);
-					for (com.mobiussoftware.iotbroker.db.DBTopic topic : topics)
+					if (topic.getName().equals(topicName))
 					{
-						if (topic.getName().equals(topicName))
-						{
-							dbInterface.deleteTopic(String.valueOf(topic.getId()));
-							if (topicListener != null)
-								topicListener.finishDeletingTopic(topic.getName());
-						}
+						dbInterface.deleteTopic(String.valueOf(topic.getId()));
+						if (topicListener != null)
+							topicListener.finishDeletingTopic(topic.getName());
 					}
 				}
-				catch (SQLException e)
-				{
-					e.printStackTrace();
-				}
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
 			}
 		}
 	}
@@ -519,7 +520,8 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 				{
 					pendingMessages.remove(i--);
 					currMessage.setTopic(new IdentifierTopic(topicID, (currMessage.getTopic()).getQos()));
-					timers.store(currMessage);
+					if (currMessage.getTopic().getQos() == SNQoS.AT_LEAST_ONCE || currMessage.getTopic().getQos() == SNQoS.EXACTLY_ONCE)
+						timers.store(currMessage);
 					client.send(currMessage);
 				}
 			}
@@ -571,17 +573,14 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 			content.readBytes(bytes);
 			Message message = new Message(account, topicName, new String(bytes), true, (byte) realQos.getValue(), retain, isDup);
 
-			if (!account.isCleanSession())
+			try
 			{
-				try
-				{
-					logger.info("storing publish to DB");
-					dbInterface.saveMessage(message);
-				}
-				catch (SQLException e)
-				{
-					e.printStackTrace();
-				}
+				logger.info("storing publish to DB");
+				dbInterface.saveMessage(message);
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
 			}
 
 			if (clientListener != null)
@@ -719,5 +718,17 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 	public void connectFailed()
 	{
 		setState(ConnectionState.CHANNEL_FAILED);
+	}
+
+	private void clearAccountTopics()
+	{
+		try
+		{
+			dbInterface.deleteAllTopics(account);
+		}
+		catch (SQLException e)
+		{
+			logger.error("error deleting topics " + e.getMessage(), e);
+		}
 	}
 }

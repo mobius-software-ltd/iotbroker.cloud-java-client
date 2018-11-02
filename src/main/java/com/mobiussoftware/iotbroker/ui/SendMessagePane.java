@@ -232,8 +232,7 @@ public class SendMessagePane extends JPanel
 		{
 			try
 			{
-				if (!account.isCleanSession())
-					DBHelper.getInstance().saveMessage(messageObj);
+				DBHelper.getInstance().saveMessage(messageObj);
 				sendMessage();
 			}
 			catch (Exception e)

@@ -20,6 +20,7 @@ package com.mobiussoftware.iotbroker.coap;
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
 import java.net.InetSocketAddress;
+import java.sql.SQLException;
 
 import org.apache.log4j.Logger;
 
@@ -144,6 +145,9 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 
 	public void connect()
 	{
+		if (account.isCleanSession())
+			clearAccountTopics();
+		
 		setState(ConnectionState.CONNECTION_ESTABLISHED);
 
 		if (timers != null)
@@ -385,7 +389,14 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 
 	private void clearAccountTopics()
 	{
-		dbInterface.deleteAllTopics();
+		try
+		{
+			dbInterface.deleteAllTopics(account);
+		}
+		catch (SQLException e)
+		{
+			logger.error("error deleting topics " + e.getMessage(), e);
+		}
 	}
 
 	public String getClientID()
