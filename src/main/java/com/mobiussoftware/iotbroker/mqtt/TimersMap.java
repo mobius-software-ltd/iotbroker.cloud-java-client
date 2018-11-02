@@ -23,6 +23,7 @@ import com.mobius.software.mqtt.parser.avps.MessageType;
 import com.mobius.software.mqtt.parser.header.api.CountableMessage;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.Pingreq;
+import com.mobius.software.mqtt.parser.header.impl.Pubrel;
 import com.mobiussoftware.iotbroker.network.MessageResendTimer;
 import com.mobiussoftware.iotbroker.network.NetworkChannel;
 import com.mobiussoftware.iotbroker.network.TimersMapInterface;
@@ -71,10 +72,10 @@ public class TimersMap implements TimersMapInterface<MQMessage>
 				while (!added)
 				{
 					packetID = packetIDCounter.incrementAndGet() % MAX_VALUE;
-					if(packetID>=MIN_VALUE)
+					if (packetID >= MIN_VALUE)
 					{
-						MessageResendTimer<MQMessage> previous=timersMap.putIfAbsent(packetID, timer);
-						if(previous==null)
+						MessageResendTimer<MQMessage> previous = timersMap.putIfAbsent(packetID, timer);
+						if (previous == null)
 							added = true;
 					}
 				}
@@ -94,7 +95,14 @@ public class TimersMap implements TimersMapInterface<MQMessage>
 		}
 	}
 
-	@Override public void refreshTimer(MessageResendTimer<MQMessage> timer)
+	public void store(Pubrel pubrel)
+	{
+		MessageResendTimer<MQMessage> timer = new MessageResendTimer<MQMessage>(pubrel, listener, this, false);
+		timersMap.put(pubrel.getPacketID(), timer);
+	}
+
+	@Override
+	public void refreshTimer(MessageResendTimer<MQMessage> timer)
 	{
 		ScheduledFuture<?> timer_future = null;
 		switch (timer.getMessage().getType())
@@ -112,7 +120,10 @@ public class TimersMap implements TimersMapInterface<MQMessage>
 
 	public MQMessage remove(Integer packetID)
 	{
-		return cancelTimer(timersMap.remove(packetID));
+		MessageResendTimer<MQMessage> timer = timersMap.remove(packetID);
+		if (timer == null)
+			return null;
+		return cancelTimer(timer);
 	}
 
 	public void stopAllTimers()
@@ -139,7 +150,8 @@ public class TimersMap implements TimersMapInterface<MQMessage>
 		connectTimer.setFuture(connectTimer_future);
 	}
 
-	@Override public void cancelConnectTimer()
+	@Override
+	public void cancelConnectTimer()
 	{
 		cancelTimer(connectTimer);
 	}
@@ -147,7 +159,7 @@ public class TimersMap implements TimersMapInterface<MQMessage>
 	private MQMessage cancelTimer(MessageResendTimer<MQMessage> timer)
 	{
 		MQMessage pendingMessage = null;
-		if (timer != null)
+		if (timer != null && timer.getFuture() != null)
 		{
 			timer.getFuture().cancel(true);
 			pendingMessage = timer.getMessage();

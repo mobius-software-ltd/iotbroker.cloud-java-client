@@ -405,7 +405,6 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 			break;
 		case EXACTLY_ONCE:
 			Pubrec pubrec = new Pubrec(packetID.intValue());
-			timers.store(pubrec);
 			client.send(pubrec);
 			break;
 		default:
@@ -447,7 +446,7 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 	public void processPubrec(Integer packetID)
 	{
 		timers.remove(packetID);
-		MQMessage message = new Pubrel(packetID);
+		Pubrel message = new Pubrel(packetID);
 		timers.store(message);
 		client.send(message);
 	}

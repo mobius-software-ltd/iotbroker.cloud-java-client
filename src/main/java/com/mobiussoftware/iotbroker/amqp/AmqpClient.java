@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.log4j.Logger;
 
@@ -35,7 +36,21 @@ import com.mobius.software.amqp.parser.avps.SectionCode;
 import com.mobius.software.amqp.parser.avps.SendCode;
 import com.mobius.software.amqp.parser.avps.TerminusDurability;
 import com.mobius.software.amqp.parser.header.api.AMQPHeader;
-import com.mobius.software.amqp.parser.header.impl.*;
+import com.mobius.software.amqp.parser.header.impl.AMQPAttach;
+import com.mobius.software.amqp.parser.header.impl.AMQPBegin;
+import com.mobius.software.amqp.parser.header.impl.AMQPClose;
+import com.mobius.software.amqp.parser.header.impl.AMQPDetach;
+import com.mobius.software.amqp.parser.header.impl.AMQPDisposition;
+import com.mobius.software.amqp.parser.header.impl.AMQPEnd;
+import com.mobius.software.amqp.parser.header.impl.AMQPFlow;
+import com.mobius.software.amqp.parser.header.impl.AMQPOpen;
+import com.mobius.software.amqp.parser.header.impl.AMQPProtoHeader;
+import com.mobius.software.amqp.parser.header.impl.AMQPTransfer;
+import com.mobius.software.amqp.parser.header.impl.SASLChallenge;
+import com.mobius.software.amqp.parser.header.impl.SASLInit;
+import com.mobius.software.amqp.parser.header.impl.SASLMechanisms;
+import com.mobius.software.amqp.parser.header.impl.SASLOutcome;
+import com.mobius.software.amqp.parser.header.impl.SASLResponse;
 import com.mobius.software.amqp.parser.sections.AMQPData;
 import com.mobius.software.amqp.parser.sections.AMQPSection;
 import com.mobius.software.amqp.parser.sections.MessageHeader;
@@ -84,7 +99,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 	private Boolean isSaslConfirm = false;
 
 	private int channel;
-	private Integer nextHandle = 1;
+	private AtomicLong nextHandle = new AtomicLong();
 	private ConcurrentHashMap<String, Long> usedIncomingMappings = new ConcurrentHashMap<String, Long>();
 	private ConcurrentHashMap<String, Long> usedOutgoingMappings = new ConcurrentHashMap<String, Long>();
 	private ConcurrentHashMap<Long, String> usedMappings = new ConcurrentHashMap<Long, String>();
@@ -199,13 +214,10 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 	{
 		for (int i = 0; i < topics.length; i++)
 		{
-			Long currentHandler;
-			if (usedIncomingMappings.containsKey(topics[i].getName().toString()))
-				currentHandler = usedIncomingMappings.get(topics[i].getName().toString());
-			else
+			Long currentHandler = usedIncomingMappings.get(topics[i].getName().toString());
+			if (currentHandler == null)
 			{
-				currentHandler = nextHandle.longValue();
-				nextHandle++;
+				currentHandler = nextHandle.incrementAndGet();
 				usedIncomingMappings.put(topics[i].getName().toString(), currentHandler);
 				usedMappings.put(currentHandler, topics[i].getName().toString());
 			}
@@ -230,29 +242,24 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 	{
 		for (String topic : topics)
 		{
-			if (usedIncomingMappings.containsKey(topic))
+			Long incomingHandle = usedIncomingMappings.remove(topic);
+			if (incomingHandle != null)
 			{
 				AMQPDetach detach = new AMQPDetach();
 				detach.setChannel(channel);
 				detach.setClosed(true);
-				detach.setHandle(usedIncomingMappings.get(topic));
+				detach.setHandle(incomingHandle);
 				client.send(detach);
 			}
 			else
 			{
 				try
 				{
-					logger.info("deleting  topic" + topic + " from DB");
-					List<DBTopic> dbTopics = dbInterface.getTopics(account);
-					for (DBTopic dbTopic : dbTopics)
-					{
-						if (dbTopic.getName().equals(topic))
-						{
-							dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
-							if (topicListener != null)
-								topicListener.finishDeletingTopic(dbTopic.getName());
-						}
-					}
+					logger.info("deleting  topic " + topic + " from DB");
+					DBTopic dbTopic = dbInterface.getTopicByName(topic);
+					dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
+					if (topicListener != null)
+						topicListener.finishDeletingTopic(dbTopic.getName());
 				}
 				catch (SQLException e)
 				{
@@ -298,8 +305,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 		}
 		else
 		{
-			Long currentHandler = nextHandle.longValue();
-			nextHandle++;
+			Long currentHandler = nextHandle.incrementAndGet();
 			usedOutgoingMappings.put(topic.getName().toString(), currentHandler);
 			usedMappings.put(currentHandler, topic.getName().toString());
 
@@ -539,8 +545,8 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 				usedIncomingMappings.put(name.toString(), handle);
 				usedMappings.put(handle, name);
 
-				if (handle >= nextHandle)
-					nextHandle = (int) (handle + 1);
+				if (handle >= nextHandle.get())
+					nextHandle.set(handle + 1);
 
 				byte qos = (byte) QoS.AT_LEAST_ONCE.getValue();
 				try
@@ -556,7 +562,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 						topic = new DBTopic(account, name, qos);
 						dbInterface.createTopic(topic);
 					}
-					
+
 					if (topicListener != null)
 						topicListener.finishAddingTopic(topic.getName(), topic.getQos());
 				}
@@ -626,7 +632,10 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 
 	public void processDetach(Integer channel, Long handle)
 	{
-		if (handle != null && usedMappings.containsKey(handle))
+		if (handle == null)
+			return;
+
+		if (usedMappings.containsKey(handle))
 		{
 			String topicName = usedMappings.get(handle);
 			usedMappings.remove(handle);
@@ -635,17 +644,11 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 
 			try
 			{
-				logger.info("deleting  topic" + topicName + " from DB");
-				List<DBTopic> dbTopics = dbInterface.getTopics(account);
-				for (DBTopic dbTopic : dbTopics)
-				{
-					if (dbTopic.getName().equals(topicName))
-					{
-						dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
-						if (topicListener != null)
-							topicListener.finishDeletingTopic(dbTopic.getName());
-					}
-				}
+				logger.info("deleting  topic " + topicName + " from DB");
+				DBTopic dbTopic = dbInterface.getTopicByName(topicName);
+				dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
+				if (topicListener != null)
+					topicListener.finishDeletingTopic(dbTopic.getName());
 			}
 			catch (SQLException e)
 			{
