@@ -22,7 +22,7 @@ package com.mobiussoftware.iotbroker.db;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "topics") public class Topic
+@DatabaseTable(tableName = "topics") public class DBTopic
 {
 
 	@DatabaseField(generatedId = true) private int id;
@@ -33,11 +33,11 @@ import com.j256.ormlite.table.DatabaseTable;
 
 	@DatabaseField private byte qos;
 
-	public Topic()
+	public DBTopic()
 	{
 	}
 
-	public Topic(Account account, String name, byte qos)
+	public DBTopic(Account account, String name, byte qos)
 	{
 		this.account = account;
 		this.name = name;

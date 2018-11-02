@@ -130,7 +130,7 @@ public class LogInPane extends JPanel
 	{
 		logger.info("LogIn button clicked!");
 
-		if (!UIHelper.validateTF(usernameTF, passwordTF, clientIdTF, hostNameTF) || !UIHelper.validateNumTF(portTF) || !UIHelper.validateNumTF(keepAliveTF))
+		if (!UIHelper.validateTF(usernameTF, passwordTF, clientIdTF, hostNameTF) || !UIHelper.validateNumTF(portTF) || !UIHelper.validateKeepaliveTF(keepAliveTF))
 			return;
 
 		Account account = getAccountObject();

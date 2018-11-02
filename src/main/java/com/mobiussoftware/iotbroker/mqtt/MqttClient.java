@@ -32,6 +32,7 @@ import com.mobius.software.mqtt.parser.header.impl.*;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.db.DBTopic;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.mqtt.net.MqttTlsClient;
 import com.mobiussoftware.iotbroker.mqtt.net.TCPClient;
@@ -71,15 +72,15 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 		switch (account.getProtocol())
 		{
 		case WEBSOCKETS:
-			if(!account.isSecure())
+			if (!account.isSecure())
 				this.client = new WSClient(address, WORKER_THREADS);
-			else 
+			else
 				this.client = new WSSClient(address, WORKER_THREADS, account.getCertificatePath(), account.getCertificatePassword());
 			break;
 		default:
 			if (!account.isSecure())
 				this.client = new TCPClient(address, WORKER_THREADS);
-			else 
+			else
 				this.client = new MqttTlsClient(address, WORKER_THREADS, account.getCertificatePath(), account.getCertificatePassword());
 			break;
 		}
@@ -313,26 +314,32 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 			SubackCode code = codes.get(i);
 			if (code != SubackCode.FAILURE)
 			{
-				Topic topic = subscribe.getTopics()[i];
-				QoS expectedQos = topic.getQos();
+				Topic messageTopic = subscribe.getTopics()[i];
+				String name = messageTopic.getName().toString();
+				QoS expectedQos = messageTopic.getQos();
 				QoS actualQos = QoS.valueOf(code.getNum());
-				com.mobiussoftware.iotbroker.db.Topic dbTopic;
-				if (expectedQos == actualQos)
-					dbTopic = new com.mobiussoftware.iotbroker.db.Topic(account, topic.getName().toString(), (byte) expectedQos.getValue());
-				else
-					dbTopic = new com.mobiussoftware.iotbroker.db.Topic(account, topic.getName().toString(), (byte) actualQos.getValue());
-
+				byte qos = (byte) QoS.calculate(expectedQos, actualQos).getValue();
 				try
 				{
-					dbInterface.saveTopic(dbTopic);
+					DBTopic topic = dbInterface.getTopicByName(name);
+					if (topic != null)
+					{
+						topic.setQos(qos);
+						dbInterface.updateTopic(topic);
+					}
+					else
+					{
+						topic = new DBTopic(account, name, qos);
+						dbInterface.createTopic(topic);
+					}
+					
+					if (topicListener != null)
+						topicListener.finishAddingTopic(topic.getName(), topic.getQos());
 				}
-				catch (SQLException e)
+				catch (Exception ex)
 				{
-					e.printStackTrace();
+					logger.error("An error occured while saving topic," + ex.getMessage(), ex);
 				}
-
-				if (topicListener != null)
-					topicListener.finishAddingTopic(String.valueOf(dbTopic.getId()), topic.getName().toString(), topic.getQos().getValue());
 			}
 			else
 			{
@@ -362,14 +369,14 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 		{
 			for (Text topic : topics)
 			{
-				List<com.mobiussoftware.iotbroker.db.Topic> dbTopics = dbInterface.getTopics(account);
-				for (com.mobiussoftware.iotbroker.db.Topic dbTopic : dbTopics)
+				List<com.mobiussoftware.iotbroker.db.DBTopic> dbTopics = dbInterface.getTopics(account);
+				for (com.mobiussoftware.iotbroker.db.DBTopic dbTopic : dbTopics)
 				{
 					if (dbTopic.getName().equals(topic.toString()))
 					{
 						dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
 						if (topicListener != null)
-							topicListener.finishDeletingTopic(String.valueOf(dbTopic.getId()));
+							topicListener.finishDeletingTopic(dbTopic.getName());
 					}
 				}
 			}

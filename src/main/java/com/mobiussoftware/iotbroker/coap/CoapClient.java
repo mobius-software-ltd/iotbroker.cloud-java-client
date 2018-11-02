@@ -20,8 +20,6 @@ package com.mobiussoftware.iotbroker.coap;
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -30,13 +28,13 @@ import com.mobius.software.coap.parser.message.options.CoapOptionType;
 import com.mobius.software.coap.parser.tlv.CoapCode;
 import com.mobius.software.coap.parser.tlv.CoapMessage;
 import com.mobius.software.coap.parser.tlv.CoapType;
-import com.mobius.software.mqtt.parser.avps.QoS;
 import com.mobius.software.mqtt.parser.avps.Topic;
 import com.mobiussoftware.iotbroker.coap.net.CoapDtlsClient;
 import com.mobiussoftware.iotbroker.coap.net.UDPClient;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.db.DBTopic;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionListener;
@@ -185,9 +183,11 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 			break;
 		}
 
-		CoapMessage coapMessage = CoapMessage.builder().version(VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.PUT).messageID(0).payload(content).option(new CoapOption(CoapOptionType.URI_PATH.getValue(), nameBytes.length, nameBytes)).option(new CoapOption((int) CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).option(new CoapOption(CoapOptionType.ACCEPT.getValue(), 2, qosValue)).build();
+		CoapMessage coapMessage = CoapMessage.builder().version(VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.PUT).messageID(0).payload(content)
+				.option(new CoapOption(CoapOptionType.URI_PATH.getValue(), nameBytes.length, nameBytes))
+				.option(new CoapOption((int) CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).option(new CoapOption(CoapOptionType.ACCEPT.getValue(), 2, qosValue)).build();
 		timers.store(coapMessage);
-		//set message id = token id
+		// set message id = token id
 		int messageID = Integer.parseInt(new String(coapMessage.getToken()));
 		coapMessage.setMessageID(messageID);
 		client.send(coapMessage);
@@ -204,10 +204,10 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 			byte[] nodeIdBytes = account.getClientId().getBytes();
 			switch (topics[i].getQos())
 			{
-			case AT_LEAST_ONCE:
+			case AT_MOST_ONCE:
 				qosValue[1] = 0x00;
 				break;
-			case AT_MOST_ONCE:
+			case AT_LEAST_ONCE:
 				qosValue[1] = 0x01;
 				break;
 			case EXACTLY_ONCE:
@@ -215,10 +215,12 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 				break;
 			}
 
-			CoapMessage coapMessage = CoapMessage.builder().version(VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.GET).messageID(0).payload(new byte[0]).option(new CoapOption(CoapOptionType.OBSERVE.getValue(), 4, new byte[]
-			{ 0x00, 0x00, 0x00, 0x00 })).option(new CoapOption(CoapOptionType.URI_PATH.getValue(), nameBytes.length, nameBytes)).option(new CoapOption(CoapOptionType.ACCEPT.getValue(), 2, qosValue)).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
+			CoapMessage coapMessage = CoapMessage.builder().version(VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.GET).messageID(0).payload(new byte[0])
+					.option(new CoapOption(CoapOptionType.OBSERVE.getValue(), 4, new byte[]
+					{ 0x00, 0x00, 0x00, 0x00 })).option(new CoapOption(CoapOptionType.URI_PATH.getValue(), nameBytes.length, nameBytes))
+					.option(new CoapOption(CoapOptionType.ACCEPT.getValue(), 2, qosValue)).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
 			timers.store(coapMessage);
-			//set message id = token id      
+			// set message id = token id
 			int messageID = Integer.parseInt(new String(coapMessage.getToken()));
 			coapMessage.setMessageID(messageID);
 			client.send(coapMessage);
@@ -228,8 +230,9 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 	public void unsubscribe(String[] topics)
 	{
 		byte[] nodeIdBytes = account.getClientId().getBytes();
-		CoapMessage.Builder builder = CoapMessage.builder().version(VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.GET).messageID(0).payload(new byte[0]).option(new CoapOption(CoapOptionType.OBSERVE.getValue(), 4, new byte[]
-		{ 0x00, 0x00, 0x00, 0x01 })).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes));
+		CoapMessage.Builder builder = CoapMessage.builder().version(VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.GET).messageID(0).payload(new byte[0])
+				.option(new CoapOption(CoapOptionType.OBSERVE.getValue(), 4, new byte[]
+				{ 0x00, 0x00, 0x00, 0x01 })).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes));
 		for (int i = 0; i < topics.length; i++)
 		{
 			byte[] nameBytes = topics[i].getBytes();
@@ -238,7 +241,7 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 
 		CoapMessage coapMessage = builder.build();
 		timers.store(coapMessage);
-		//set message id = token id
+		// set message id = token id
 		int messageID = Integer.parseInt(new String(coapMessage.getToken()));
 		coapMessage.setMessageID(messageID);
 		client.send(coapMessage);
@@ -249,21 +252,17 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 		CoapType type = message.getType();
 		if ((message.getCode() == CoapCode.POST || message.getCode() == CoapCode.PUT) && type != CoapType.ACKNOWLEDGEMENT)
 		{
-			String topic = null;
-			byte qos = (byte) QoS.AT_MOST_ONCE.getValue();
-			for (CoapOption option : message.getOptions())
-				if (option.getNumber() == CoapOptionType.URI_PATH.getValue())
-					topic = new String(option.getValue());
-				else if (option.getNumber() == CoapOptionType.ACCEPT.getValue())
-					qos = option.getValue()[option.getValue().length - 1];
-
+			String topic = message.options().fetchUriPath();
+			byte qos = message.options().fetchAccept().byteValue();
 			byte[] content = message.getPayload();
 			if (topic == null)
 			{
 				byte[] textBytes = "text/plain".getBytes();
 				byte[] nodeIdBytes = account.getClientId().getBytes();
 
-				CoapMessage ack = CoapMessage.builder().version(VERSION).type(CoapType.ACKNOWLEDGEMENT).code(CoapCode.BAD_OPTION).messageID(message.getMessageID()).token(message.getToken()).payload(new byte[0]).option(new CoapOption(CoapOptionType.CONTENT_FORMAT.getValue(), textBytes.length, textBytes)).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
+				CoapMessage ack = CoapMessage.builder().version(VERSION).type(CoapType.ACKNOWLEDGEMENT).code(CoapCode.BAD_OPTION).messageID(message.getMessageID()).token(message.getToken())
+						.payload(new byte[0]).option(new CoapOption(CoapOptionType.CONTENT_FORMAT.getValue(), textBytes.length, textBytes))
+						.option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
 				client.send(ack);
 				return;
 			}
@@ -286,7 +285,8 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 		{
 		case CONFIRMABLE:
 			byte[] nodeIdBytes = account.getClientId().getBytes();
-			CoapMessage response = CoapMessage.builder().version(message.getVersion()).type(CoapType.ACKNOWLEDGEMENT).code(message.getCode()).messageID(message.getMessageID()).token(message.getToken()).payload(new byte[0]).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
+			CoapMessage response = CoapMessage.builder().version(message.getVersion()).type(CoapType.ACKNOWLEDGEMENT).code(message.getCode()).messageID(message.getMessageID())
+					.token(message.getToken()).payload(new byte[0]).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
 			client.send(response);
 			break;
 		case NON_CONFIRMABLE:
@@ -295,88 +295,56 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 		case ACKNOWLEDGEMENT:
 			if (message.getCode() == CoapCode.GET)
 			{
-				Boolean observe = null;
-				for (CoapOption option : message.getOptions())
+				Integer observe = message.options().fetchObserve();
+				if (observe == 0)
 				{
-					if (option.getNumber() == CoapOptionType.OBSERVE.getValue() && option.getValue().length > 0)
+					CoapMessage originalMessage = timers.remove(message.getToken());
+					if (originalMessage != null)
 					{
-						if (option.getValue()[option.getValue().length - 1] == 0x00)
-							observe = false;
-						else
-							observe = true;
-
-						break;
-					}
-				}
-
-				if (observe != null)
-				{
-					if (!observe)
-					{
-						CoapMessage originalMessage = timers.remove(message.getToken());
-						if (originalMessage != null)
+						String name = originalMessage.options().fetchUriPath();
+						byte qos = originalMessage.options().fetchAccept().byteValue();
+						try
 						{
-							List<String> topics = new ArrayList<String>();
-							byte qos = (byte) QoS.AT_MOST_ONCE.getValue();
-							for (CoapOption option : originalMessage.getOptions())
+							DBTopic topic = dbInterface.getTopicByName(name);
+							if (topic != null)
 							{
-								if (option.getNumber() == CoapOptionType.URI_PATH.getValue())
-									topics.add(new String(option.getValue()));
-								else if (option.getNumber() == CoapOptionType.ACCEPT.getValue())
-									qos = option.getValue()[option.getValue().length - 1];
+								topic.setQos(qos);
+								dbInterface.updateTopic(topic);
 							}
-
-							for (int i = 0; i < topics.size(); i++)
+							else
 							{
-								com.mobiussoftware.iotbroker.db.Topic topic = new com.mobiussoftware.iotbroker.db.Topic(account, topics.get(i), qos);
-								try
-								{
-									dbInterface.saveTopic(topic);
-								}
-								catch (Exception ex)
-								{
-									logger.error("An error occured while saving topic," + ex.getMessage(), ex);
-								}
-
-								if (topicListener != null)
-									topicListener.finishAddingTopic(String.valueOf(topic.getId()), topics.get(i), (byte) QoS.AT_MOST_ONCE.getValue());
+								topic = new DBTopic(account, name, qos);
+								dbInterface.createTopic(topic);
 							}
+							
+							if (topicListener != null)
+								topicListener.finishAddingTopic(topic.getName(), topic.getQos());
+						}
+						catch (Exception ex)
+						{
+							logger.error("An error occured while saving topic," + ex.getMessage(), ex);
 						}
 					}
-					else
+				}
+				else if (observe == 1)
+				{
+					CoapMessage originalMessage = timers.remove(message.getToken());
+					if (originalMessage != null)
 					{
-						CoapMessage originalMessage = timers.remove(message.getToken());
-						if (originalMessage != null)
+						String name = originalMessage.options().fetchUriPath();
+						try
 						{
-							List<String> topics = new ArrayList<String>();
-							for (CoapOption option : originalMessage.getOptions())
+							com.mobiussoftware.iotbroker.db.DBTopic topic = dbInterface.getTopicByName(name);
+							if (topic != null)
 							{
-								if (option.getNumber() == CoapOptionType.URI_PATH.getValue())
-									topics.add(new String(option.getValue()));
+								dbInterface.deleteTopic(String.valueOf(topic.getId()));
+								if (topicListener != null)
+									topicListener.finishDeletingTopic(name);
 							}
-
-							for (int i = 0; i < topics.size(); i++)
-							{
-								try
-								{
-									List<com.mobiussoftware.iotbroker.db.Topic> dbTopics = dbInterface.getTopics(account);
-									for (com.mobiussoftware.iotbroker.db.Topic topic : dbTopics)
-									{
-										if (topic.getName().equals(topics.get(i)))
-										{
-
-											dbInterface.deleteTopic(String.valueOf(topic.getId()));
-
-											if (topicListener != null)
-												topicListener.finishDeletingTopic(String.valueOf(topic.getId()));
-										}
-									}
-								}
-								catch (Exception ex)
-								{
-									logger.error("An error occured while deleting topic," + ex.getMessage(), ex);
-								}
-							}
+						}
+						catch (Exception ex)
+						{
+							logger.error("An error occured while deleting topic," + ex.getMessage(), ex);
 						}
 					}
 				}

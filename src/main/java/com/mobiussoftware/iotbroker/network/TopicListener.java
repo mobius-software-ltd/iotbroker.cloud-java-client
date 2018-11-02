@@ -21,7 +21,7 @@ package com.mobiussoftware.iotbroker.network;
 */
 public interface TopicListener
 {
-	void finishAddingTopic(String id,String topicName, int qosVal);
+	void finishAddingTopic(String topicName, int qosVal);
 
 	void finishAddingTopicFailed();
 

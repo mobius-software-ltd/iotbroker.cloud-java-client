@@ -52,6 +52,7 @@ import com.mobiussoftware.iotbroker.amqp.net.TCPClient;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.db.DBTopic;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionListener;
@@ -242,14 +243,14 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 				try
 				{
 					logger.info("deleting  topic" + topic + " from DB");
-					List<com.mobiussoftware.iotbroker.db.Topic> dbTopics = dbInterface.getTopics(account);
-					for (com.mobiussoftware.iotbroker.db.Topic dbTopic : dbTopics)
+					List<DBTopic> dbTopics = dbInterface.getTopics(account);
+					for (DBTopic dbTopic : dbTopics)
 					{
 						if (dbTopic.getName().equals(topic))
 						{
 							dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
 							if (topicListener != null)
-								topicListener.finishDeletingTopic(String.valueOf(dbTopic.getId()));
+								topicListener.finishDeletingTopic(dbTopic.getName());
 						}
 					}
 				}
@@ -483,8 +484,8 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 		{
 			try
 			{
-				List<com.mobiussoftware.iotbroker.db.Topic> dbTopics = dbInterface.getTopics(account);
-				for (com.mobiussoftware.iotbroker.db.Topic dbTopic : dbTopics)
+				List<DBTopic> dbTopics = dbInterface.getTopics(account);
+				for (DBTopic dbTopic : dbTopics)
 				{
 					subscribe(new Topic[]
 					{ new Topic(new Text(dbTopic.getName()), QoS.valueOf((int) dbTopic.getQos())) });
@@ -492,7 +493,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 			}
 			catch (SQLException ex)
 			{
-
+				logger.error(ex.getMessage(), ex);
 			}
 		}
 	}
@@ -501,12 +502,12 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 	{
 		if (role != null)
 		{
-			//its opposite here
+			// its opposite here
 			if (role == RoleCode.RECEIVER)
 			{
 				Long realHandle = usedOutgoingMappings.get(name);
 
-				//publish
+				// publish
 				if (realHandle != null)
 				{
 					for (int i = 0; i < pendingMessages.size(); i++)
@@ -534,45 +535,35 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 				if (handle >= nextHandle)
 					nextHandle = (int) (handle + 1);
 
-				//subscribe
+				byte qos = (byte) QoS.AT_LEAST_ONCE.getValue();
 				try
 				{
-					List<com.mobiussoftware.iotbroker.db.Topic> dbTopics = dbInterface.getTopics(account);
-					for (com.mobiussoftware.iotbroker.db.Topic dbTopic : dbTopics)
+					DBTopic topic = dbInterface.getTopicByName(name);
+					if (topic != null)
 					{
-						if (dbTopic.getName().equals(name))
-						{
-							dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
-							if (topicListener != null)
-								topicListener.finishDeletingTopic(String.valueOf(dbTopic.getId()));
-						}
+						topic.setQos(qos);
+						dbInterface.updateTopic(topic);
 					}
+					else
+					{
+						topic = new DBTopic(account, name, qos);
+						dbInterface.createTopic(topic);
+					}
+					
+					if (topicListener != null)
+						topicListener.finishAddingTopic(topic.getName(), topic.getQos());
 				}
-				catch (SQLException e)
+				catch (Exception ex)
 				{
-					e.printStackTrace();
+					logger.error("An error occured while saving topic," + ex.getMessage(), ex);
 				}
-
-				com.mobiussoftware.iotbroker.db.Topic dbTopic = new com.mobiussoftware.iotbroker.db.Topic(account, name, (byte) QoS.AT_LEAST_ONCE.getValue());
-
-				try
-				{
-					dbInterface.saveTopic(dbTopic);
-				}
-				catch (SQLException e)
-				{
-					e.printStackTrace();
-				}
-
-				if (topicListener != null)
-					topicListener.finishAddingTopic(String.valueOf(dbTopic.getId()), name, QoS.AT_LEAST_ONCE.getValue());
 			}
 		}
 	}
 
 	public void processFlow(Integer channel)
 	{
-		//not implemented for now
+		// not implemented for now
 	}
 
 	public void processTransfer(AMQPData data, Long handle, Boolean settled, Long deliveryId)
@@ -638,14 +629,14 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 			try
 			{
 				logger.info("deleting  topic" + topicName + " from DB");
-				List<com.mobiussoftware.iotbroker.db.Topic> dbTopics = dbInterface.getTopics(account);
-				for (com.mobiussoftware.iotbroker.db.Topic dbTopic : dbTopics)
+				List<DBTopic> dbTopics = dbInterface.getTopics(account);
+				for (DBTopic dbTopic : dbTopics)
 				{
 					if (dbTopic.getName().equals(topicName))
 					{
 						dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
 						if (topicListener != null)
-							topicListener.finishDeletingTopic(String.valueOf(dbTopic.getId()));
+							topicListener.finishDeletingTopic(dbTopic.getName());
 					}
 				}
 			}
@@ -694,7 +685,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 			}
 		}
 
-		//currently supporting only plain
+		// currently supporting only plain
 		if (plainMechanism == null)
 		{
 			timers.stopAllTimers();
@@ -739,6 +730,6 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 
 	public void processPing()
 	{
-		//nothing to be done here
+		// nothing to be done here
 	}
 }

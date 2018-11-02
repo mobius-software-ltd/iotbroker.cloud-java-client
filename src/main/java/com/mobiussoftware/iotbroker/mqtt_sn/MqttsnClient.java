@@ -36,6 +36,7 @@ import com.mobius.software.mqttsn.parser.packet.impl.*;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.db.DBTopic;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.mqtt_sn.net.SnDtlsClient;
 import com.mobiussoftware.iotbroker.mqtt_sn.net.UDPClient;
@@ -49,7 +50,7 @@ import com.mobiussoftware.iotbroker.network.TopicListener;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-public class SnClient implements ConnectionListener<SNMessage>, SNDevice, NetworkClient
+public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, NetworkClient
 {
 	public static String MESSAGETYPE_PARAM = "MESSAGETYPE";
 	private final Logger logger = Logger.getLogger(getClass());
@@ -71,7 +72,7 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 	private ConcurrentHashMap<String, Integer> reverseMappedTopics = new ConcurrentHashMap<>();
 	private List<SNPublish> pendingMessages = new ArrayList<>();
 
-	public SnClient(Account account) throws Exception
+	public MqttsnClient(Account account) throws Exception
 	{
 		this.dbInterface = DBHelper.getInstance();
 		this.account = account;
@@ -393,17 +394,17 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 		else
 		{
 			SNSubscribe subscribe = (SNSubscribe) message;
-			String topicName;
+			String name;
 
 			if (subscribe.getTopic() instanceof IdentifierTopic)
 			{
-				topicName = mappedTopics.get(((IdentifierTopic) subscribe.getTopic()).getValue());
+				name = mappedTopics.get(((IdentifierTopic) subscribe.getTopic()).getValue());
 			}
 			else
 			{
-				topicName = ((FullTopic) subscribe.getTopic()).getValue();
-				mappedTopics.put(topicID, topicName);
-				reverseMappedTopics.put(topicName, topicID);
+				name = ((FullTopic) subscribe.getTopic()).getValue();
+				mappedTopics.put(topicID, name);
+				reverseMappedTopics.put(name, topicID);
 			}
 
 			//			SNQoS actualQos = allowedQos;
@@ -425,23 +426,28 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 				break;
 			}
 
-			com.mobiussoftware.iotbroker.db.Topic topic = new com.mobiussoftware.iotbroker.db.Topic(account, topicName, (byte) realQos.getValue());
-
-			if (!account.isCleanSession())
+			byte qos = (byte) realQos.getValue();
+			try
 			{
-				try
+				DBTopic topic = dbInterface.getTopicByName(name);
+				if (topic != null)
 				{
-					logger.info("storing topic " + topicName + " to DB");
-					dbInterface.saveTopic(topic);
+					topic.setQos(qos);
+					dbInterface.updateTopic(topic);
 				}
-				catch (SQLException e)
+				else
 				{
-					e.printStackTrace();
+					topic = new DBTopic(account, name, qos);
+					dbInterface.createTopic(topic);
 				}
+				
+				if (topicListener != null)
+					topicListener.finishAddingTopic(topic.getName(), topic.getQos());
 			}
-
-			if (topicListener != null)
-				topicListener.finishAddingTopic(String.valueOf(topic.getId()), topic.getName().toString(), topic.getQos());
+			catch (Exception ex)
+			{
+				logger.error("An error occured while saving topic," + ex.getMessage(), ex);
+			}
 		}
 	}
 
@@ -463,14 +469,14 @@ public class SnClient implements ConnectionListener<SNMessage>, SNDevice, Networ
 				try
 				{
 					logger.info("deleting  topic" + topicName + " from DB");
-					List<com.mobiussoftware.iotbroker.db.Topic> topics = dbInterface.getTopics(account);
-					for (com.mobiussoftware.iotbroker.db.Topic topic : topics)
+					List<com.mobiussoftware.iotbroker.db.DBTopic> topics = dbInterface.getTopics(account);
+					for (com.mobiussoftware.iotbroker.db.DBTopic topic : topics)
 					{
 						if (topic.getName().equals(topicName))
 						{
 							dbInterface.deleteTopic(String.valueOf(topic.getId()));
 							if (topicListener != null)
-								topicListener.finishDeletingTopic(String.valueOf(topic.getId()));
+								topicListener.finishDeletingTopic(topic.getName());
 						}
 					}
 				}

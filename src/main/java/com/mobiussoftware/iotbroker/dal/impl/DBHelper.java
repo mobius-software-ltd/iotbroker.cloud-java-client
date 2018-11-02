@@ -28,8 +28,9 @@ import com.j256.ormlite.table.TableUtils;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
-import com.mobiussoftware.iotbroker.db.Topic;
+import com.mobiussoftware.iotbroker.db.DBTopic;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 
 import java.sql.SQLException;
@@ -44,7 +45,7 @@ public class DBHelper
 	private final Logger logger = Logger.getLogger(getClass());
 	ConnectionSource connectionSource;
 	Dao<Account, String> accountDao;
-	Dao<Topic, String> topicDao;
+	Dao<DBTopic, String> topicDao;
 	Dao<Message, String> messageDao;
 
 	protected DBHelper()
@@ -77,7 +78,7 @@ public class DBHelper
 			logger.info("database is set up");
 
 			accountDao = DaoManager.createDao(connectionSource, Account.class);
-			topicDao = DaoManager.createDao(connectionSource, Topic.class);
+			topicDao = DaoManager.createDao(connectionSource, DBTopic.class);
 			messageDao = DaoManager.createDao(connectionSource, Message.class);
 
 		}
@@ -95,7 +96,7 @@ public class DBHelper
 			throws Exception
 	{
 		TableUtils.createTableIfNotExists(connectionSource, Account.class);
-		TableUtils.createTableIfNotExists(connectionSource, Topic.class);
+		TableUtils.createTableIfNotExists(connectionSource, DBTopic.class);
 		TableUtils.createTableIfNotExists(connectionSource, Message.class);
 	}
 
@@ -116,25 +117,38 @@ public class DBHelper
 		accountDao.deleteById(id);
 	}
 
-	@Override public List<Topic> getTopics(Account account)
+	@Override public List<DBTopic> getTopics(Account account)
 			throws SQLException
 	{
-		List<Topic> topics = topicDao.queryBuilder().where().eq("account_id", account).query();
+		List<DBTopic> topics = topicDao.queryBuilder().where().eq("account_id", account).query();
 		return topics;
 	}
 
-	@Override public Topic getTopic(String id)
+	@Override public DBTopic getTopic(String id)
 			throws SQLException
 	{
 		return topicDao.queryForId(id);
 	}
 
-	@Override public void saveTopic(Topic topic)
+	@Override
+	public DBTopic getTopicByName(String name) throws SQLException
+	{
+		List<DBTopic> topics = topicDao.queryBuilder().where().eq("name", name).query();
+		return CollectionUtils.isEmpty(topics) ? null : topics.get(0);
+	}
+	
+	@Override public void createTopic(DBTopic topic)
 			throws SQLException
 	{
 		topicDao.create(topic);
 	}
 
+	@Override
+	public void updateTopic(DBTopic topic) throws SQLException
+	{
+		topicDao.update(topic);
+	}
+	
 	@Override public void deleteTopic(String id)
 			throws SQLException
 	{

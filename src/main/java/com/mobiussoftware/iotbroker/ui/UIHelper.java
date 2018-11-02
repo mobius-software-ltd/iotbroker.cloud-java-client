@@ -173,10 +173,10 @@ public class UIHelper
 	{
 		JButton btnBrowse = new JButton(name);
 		btnBrowse.setHorizontalAlignment(alignment);
-	    btnBrowse.setBounds(10, 41, 87, 23);
-	    return btnBrowse;
+		btnBrowse.setBounds(10, 41, 87, 23);
+		return btnBrowse;
 	}
-	
+
 	static HintDialogTextField createTextArea(String hint, Dimension dimension)
 	{
 
@@ -268,17 +268,20 @@ public class UIHelper
 		tf.requestFocusInWindow();
 		tf.addKeyListener(new KeyListener()
 		{
-			@Override public void keyTyped(KeyEvent keyEvent)
+			@Override
+			public void keyTyped(KeyEvent keyEvent)
 			{
 				tf.setBorder(BorderFactory.createLineBorder(Color.lightGray));
 				tf.removeKeyListener(this);
 			}
 
-			@Override public void keyPressed(KeyEvent keyEvent)
+			@Override
+			public void keyPressed(KeyEvent keyEvent)
 			{
 			}
 
-			@Override public void keyReleased(KeyEvent keyEvent)
+			@Override
+			public void keyReleased(KeyEvent keyEvent)
 			{
 			}
 		});
@@ -319,6 +322,38 @@ public class UIHelper
 			else
 				return false;
 		}
+		return true;
+	}
+
+	static boolean validateKeepaliveTF(HintTextField tf)
+	{
+		if (validateTF(tf))
+		{
+			String content = tf.getText();
+			for (int i = 0; i < content.length(); i++)
+			{
+				if (!Character.isDigit(content.charAt(i)))
+				{
+					createRedBorder(tf);
+					return false;
+				}
+				else
+				{
+					int keepalive = Integer.parseInt(content);
+					if (keepalive < 0 || keepalive > 65535) 
+					{
+						createRedBorder(tf);
+						return false;
+					}
+				}
+			}
+		}
+		else
+		{
+			createRedBorder(tf);
+			return false;
+		}
+		
 		return true;
 	}
 

@@ -22,7 +22,7 @@ package com.mobiussoftware.iotbroker.dal.api;
 import com.j256.ormlite.dao.CloseableWrappedIterable;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
-import com.mobiussoftware.iotbroker.db.Topic;
+import com.mobiussoftware.iotbroker.db.DBTopic;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -38,15 +38,21 @@ public interface DBInterface
 	void deleteAccount(String id)
 			throws SQLException;
 
-	List<Topic> getTopics(Account account)
+	List<DBTopic> getTopics(Account account)
 			throws SQLException;
 
-	Topic getTopic(String id)
+	DBTopic getTopic(String id)
 			throws SQLException;
 
-	void saveTopic(Topic topic)
+	DBTopic getTopicByName(String name)
+		throws SQLException;
+	
+	void createTopic(DBTopic topic)
 			throws SQLException;
 
+	void updateTopic(DBTopic topic)
+			throws SQLException;
+	
 	void deleteTopic(String id)
 			throws SQLException;
 

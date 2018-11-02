@@ -1,5 +1,44 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.TexturePaint;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Map;
+import java.util.TreeMap;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.ColorUIResource;
+import javax.swing.plaf.basic.BasicComboBoxRenderer;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -25,25 +64,11 @@ import com.mobius.software.mqtt.parser.avps.Text;
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
-import com.mobiussoftware.iotbroker.db.Topic;
+import com.mobiussoftware.iotbroker.db.DBTopic;
 import com.mobiussoftware.iotbroker.network.TopicListener;
 import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.ColorUIResource;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
-
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.HashMap;
-import java.util.Map;
+import com.mobiussoftware.iotbroker.ui.elements.TopicComponent;
 
 public class TopicListPane extends JPanel implements TopicListener
 {
@@ -58,7 +83,7 @@ public class TopicListPane extends JPanel implements TopicListener
 	private JPanel progressBarSpace;
 	private JProgressBar progressBar;
 
-	private Map<Integer, Component[]> componentList = new HashMap<>();
+	private Map<String, TopicComponent> componentsMap = new TreeMap<>();
 
 	private HintTextField topicInput;
 	private JComboBox<Integer> dropDown;
@@ -122,13 +147,14 @@ public class TopicListPane extends JPanel implements TopicListener
 
 		addTopicBtnListener = new MouseAdapter()
 		{
-			@Override public void mouseClicked(MouseEvent arg0)
+			@Override
+			public void mouseClicked(MouseEvent arg0)
 			{
 				// System.out.println("Add button clicked!");
 				arg0.getComponent().removeMouseListener(this);
 				addTopicAction();
-				if(account.getProtocol()!=Protocol.AMQP)
-					dropDown.setSelectedIndex(0);		
+				if (account.getProtocol() != Protocol.AMQP)
+					dropDown.setSelectedIndex(0);
 			}
 		};
 		addTopicBtn = UIHelper.createButton("Add", addTopicBtnListener);
@@ -152,9 +178,8 @@ public class TopicListPane extends JPanel implements TopicListener
 		{
 			final DBInterface dbInterface = DBHelper.getInstance();
 
-			for (Topic tp : dbInterface.getTopics(account))
+			for (DBTopic tp : dbInterface.getTopics(account))
 			{
-				int id = tp.getId();
 				String topicName = tp.getName();
 				String qosValue = String.valueOf(tp.getQos());
 
@@ -197,7 +222,8 @@ public class TopicListPane extends JPanel implements TopicListener
 				row[1] = qos;
 				row[2] = deleteBtn;
 
-				componentList.put(id, row);
+				TopicComponent topicComponent = new TopicComponent(topicName, row);
+				componentsMap.put(topicName, topicComponent);
 			}
 		}
 		catch (Exception e)
@@ -214,14 +240,14 @@ public class TopicListPane extends JPanel implements TopicListener
 		parent.add(emptySpace, c);
 	}
 
-	private void addTopicListRow(String id,String topicText, int qosValue)
+	private void addTopicListRow(String topicName, int qosValue)
 	{
 		int rowNumber = ((GridBagLayout) topics.getLayout()).getLayoutDimensions()[1].length - 1;
 
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.VERTICAL;
 
-		JLabel topic = new JLabel(topicText, SwingConstants.LEFT);
+		JLabel topic = new JLabel(topicName, SwingConstants.LEFT);
 		topic.setFont(UIConstants.REGULAR_FONT);
 		topic.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
@@ -250,7 +276,7 @@ public class TopicListPane extends JPanel implements TopicListener
 		deleteBtn.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		deleteBtn.addMouseListener(deleteTopicAction());
 
-		deleteBtn.setName(topicText);
+		deleteBtn.setName(topicName);
 
 		c.gridx = 2;
 		c.weightx = 0.1;
@@ -266,7 +292,8 @@ public class TopicListPane extends JPanel implements TopicListener
 		row[1] = qos;
 		row[2] = deleteBtn;
 
-		componentList.put(Integer.valueOf(id), row);
+		TopicComponent topicComponent = new TopicComponent(topicName, row);
+		componentsMap.put(topicName, topicComponent);
 
 		c.weighty = 1;
 		c.gridy = rowNumber + 1;
@@ -277,16 +304,15 @@ public class TopicListPane extends JPanel implements TopicListener
 		topics.add(emptySpace, c);
 	}
 
-	private void deleteListRow(String index)
+	private void deleteListRow(String name)
 	{
-		int i = Integer.valueOf(index);
-
-		Component[] row = componentList.get(i);
-		topics.remove(row[0]);
-		topics.remove(row[1]);
-		topics.remove(row[2]);
-
-		componentList.remove(i);
+		TopicComponent topicComponent = componentsMap.remove(name);
+		if(topicComponent != null) 
+		{
+			for(Component component : topicComponent.getComponents())
+				topics.remove(component);
+		}
+		
 		topics.revalidate();
 		topics.repaint();
 	}
@@ -343,17 +369,17 @@ public class TopicListPane extends JPanel implements TopicListener
 		dropDown.setPreferredSize(dropDown.getMinimumSize());
 		dropDown.setUI(CustomComboBoxUI.createUI(dropDown));
 
-		if(account.getProtocol()==Protocol.AMQP)
+		if (account.getProtocol() == Protocol.AMQP)
 		{
 			dropDown.setSelectedIndex(1);
-			dropDown.setEnabled(false);			
+			dropDown.setEnabled(false);
 		}
 		else
 		{
 			dropDown.setEnabled(true);
-			dropDown.setSelectedIndex(0);			
+			dropDown.setSelectedIndex(0);
 		}
-		
+
 		BasicComboBoxRenderer renderer = (BasicComboBoxRenderer) dropDown.getRenderer();
 		renderer.setBorder(new EmptyBorder(0, 7, 0, 0));
 
@@ -394,7 +420,8 @@ public class TopicListPane extends JPanel implements TopicListener
 	{
 		return new MouseAdapter()
 		{
-			@Override public void mouseClicked(MouseEvent arg0)
+			@Override
+			public void mouseClicked(MouseEvent arg0)
 			{
 				JLabel btnClicked = (JLabel) arg0.getSource();
 				btnClicked.removeMouseListener(this);
@@ -409,29 +436,40 @@ public class TopicListPane extends JPanel implements TopicListener
 	}
 
 	@Override
-	public void finishAddingTopic(String id,String topicName, int qosVal)
+	public void finishAddingTopic(String topicName, int qosVal)
 	{
+		TopicComponent curr = componentsMap.get(topicName);
+		if(curr != null) 
+		{
+			JLabel qos = (JLabel)curr.getComponents()[1];
+			qos.setText("QoS:" + qosVal);
+			topics.revalidate();
+			topics.repaint();
+		}
+		else 
+			addTopicListRow(topicName, qosVal);
+		
 		addTopicBtn.addMouseListener(addTopicBtnListener);
-		addTopicListRow(id, topicName, qosVal);
 	}
 
 	@Override
 	public void finishAddingTopicFailed()
 	{
-		JOptionPane.showMessageDialog(this.getParent(), "Failed to add topic.");		
+		JOptionPane.showMessageDialog(this.getParent(), "Failed to add topic.");
 	}
 
 	@Override
-	public void finishDeletingTopic(String id)
+	public void finishDeletingTopic(String name)
 	{
-		deleteListRow(id);
+		deleteListRow(name);
 	}
 
 	private PropertyChangeListener propertyChangeListener()
 	{
 		return new PropertyChangeListener()
 		{
-			@Override public void propertyChange(PropertyChangeEvent evt)
+			@Override
+			public void propertyChange(PropertyChangeEvent evt)
 			{
 				if (evt.getPropertyName() == "progress")
 				{
@@ -463,7 +501,8 @@ public class TopicListPane extends JPanel implements TopicListener
 		TopicListPane.this.repaint();
 	}
 
-	@Override protected void paintComponent(Graphics g)
+	@Override
+	protected void paintComponent(Graphics g)
 	{
 		Image bgImage = UIConstants.BG_IMAGE;
 		g.drawImage(bgImage, 0, 0, null);
@@ -483,8 +522,7 @@ public class TopicListPane extends JPanel implements TopicListener
 		g2d.fillRect(0, 0, getWidth(), getHeight());
 	}
 
-	class AddTopicTask
-			extends NetworkTask<Void, Void>
+	class AddTopicTask extends NetworkTask<Void, Void>
 	{
 		private String topicName;
 		private int qosVal;
@@ -495,11 +533,13 @@ public class TopicListPane extends JPanel implements TopicListener
 			this.qosVal = qosVal;
 		}
 
-		@Override public Void doInBackground()
+		@Override
+		public Void doInBackground()
 		{
 			try
 			{
-				Main.getCurrentClient().subscribe(new com.mobius.software.mqtt.parser.avps.Topic[] { new com.mobius.software.mqtt.parser.avps.Topic(new Text(topicName), QoS.valueOf(qosVal)) });
+				Main.getCurrentClient().subscribe(new com.mobius.software.mqtt.parser.avps.Topic[]
+				{ new com.mobius.software.mqtt.parser.avps.Topic(new Text(topicName), QoS.valueOf(qosVal)) });
 			}
 			catch (Exception e)
 			{
@@ -508,15 +548,15 @@ public class TopicListPane extends JPanel implements TopicListener
 			return super.doInBackground();
 		}
 
-		@Override protected void done()
+		@Override
+		protected void done()
 		{
 			topicInput.setText("");
 			removeProgressBar();
 		}
 	}
 
-	class DeleteTopicTask
-			extends NetworkTask<Void, Void>
+	class DeleteTopicTask extends NetworkTask<Void, Void>
 	{
 
 		private String id;
@@ -526,11 +566,13 @@ public class TopicListPane extends JPanel implements TopicListener
 			this.id = id;
 		}
 
-		@Override public Void doInBackground()
+		@Override
+		public Void doInBackground()
 		{
 			try
 			{
-				Main.getCurrentClient().unsubscribe(new String[] { id });
+				Main.getCurrentClient().unsubscribe(new String[]
+				{ id });
 			}
 			catch (Exception e)
 			{
@@ -539,14 +581,14 @@ public class TopicListPane extends JPanel implements TopicListener
 			return super.doInBackground();
 		}
 
-		@Override public void done()
+		@Override
+		public void done()
 		{
 			removeProgressBar();
 		}
 	}
 
-	class RoundedFilledLabel
-			extends JLabel
+	class RoundedFilledLabel extends JLabel
 	{
 
 		private static final long serialVersionUID = -8353580452631276508L;
@@ -564,7 +606,8 @@ public class TopicListPane extends JPanel implements TopicListener
 			this.horizontalOffset = horizontalOffset;
 		}
 
-		@Override protected void paintComponent(Graphics g)
+		@Override
+		protected void paintComponent(Graphics g)
 		{
 
 			int width = getWidth();
