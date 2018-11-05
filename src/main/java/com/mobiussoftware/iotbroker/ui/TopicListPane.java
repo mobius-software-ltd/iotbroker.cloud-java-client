@@ -1,19 +1,6 @@
 package com.mobiussoftware.iotbroker.ui;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Image;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.TexturePaint;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -23,18 +10,7 @@ import java.beans.PropertyChangeListener;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
@@ -153,8 +129,7 @@ public class TopicListPane extends JPanel implements TopicListener
 				// System.out.println("Add button clicked!");
 				arg0.getComponent().removeMouseListener(this);
 				addTopicAction();
-				if (account.getProtocol() != Protocol.AMQP)
-					dropDown.setSelectedIndex(0);
+				dropDown.setSelectedIndex(0);
 			}
 		};
 		addTopicBtn = UIHelper.createButton("Add", addTopicBtnListener);
@@ -353,7 +328,7 @@ public class TopicListPane extends JPanel implements TopicListener
 		text.setFont(UIConstants.REGULAR_FONT);
 		JLabel icon2 = new JLabel(new ImageIcon(tmp2));
 		icon2.setBorder(new EmptyBorder(0, 10, 0, 10));
-		dropDown = new JComboBox<>(AppConstants.QOS_VALUES);
+		dropDown = new JComboBox<>(AppConstants.qosValues(account.getProtocol()));
 
 		JPanel el4 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		el4.setBackground(UIConstants.ROW_ODD_COLOR);
@@ -368,17 +343,8 @@ public class TopicListPane extends JPanel implements TopicListener
 		dropDown.setMinimumSize(new Dimension(70, 22));
 		dropDown.setPreferredSize(dropDown.getMinimumSize());
 		dropDown.setUI(CustomComboBoxUI.createUI(dropDown));
-
-		if (account.getProtocol() == Protocol.AMQP)
-		{
-			dropDown.setSelectedIndex(1);
-			dropDown.setEnabled(false);
-		}
-		else
-		{
-			dropDown.setEnabled(true);
-			dropDown.setSelectedIndex(0);
-		}
+		dropDown.setEnabled(true);
+		dropDown.setSelectedIndex(0);
 
 		BasicComboBoxRenderer renderer = (BasicComboBoxRenderer) dropDown.getRenderer();
 		renderer.setBorder(new EmptyBorder(0, 7, 0, 0));

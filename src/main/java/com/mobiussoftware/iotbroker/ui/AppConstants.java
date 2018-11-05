@@ -22,5 +22,20 @@ package com.mobiussoftware.iotbroker.ui;
 
 public class AppConstants
 {
-	static Integer[] QOS_VALUES = new Integer[] { 0, 1, 2 };
+	static Integer[] ALL = new Integer[] { 0, 1, 2 };
+	static Integer[] ZERO_ONE = new Integer[] { 0, 1 };
+	static Integer[] ONE = new Integer[] { 1 };
+	
+	public static Integer[] qosValues(Protocol protocol) 
+	{
+		switch(protocol)
+		{
+		case AMQP:
+			return ONE;
+		case CoAP:
+			return ZERO_ONE;
+		default: 
+			return ALL;
+		}
+	}
 }

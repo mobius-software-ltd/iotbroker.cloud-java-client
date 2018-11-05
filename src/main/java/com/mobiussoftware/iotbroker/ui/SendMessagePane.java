@@ -1,5 +1,16 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
+import javax.swing.*;
+import javax.swing.plaf.ColorUIResource;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -29,16 +40,6 @@ import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
-
-import javax.swing.*;
-import javax.swing.plaf.ColorUIResource;
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 public class SendMessagePane extends JPanel
 {
@@ -131,7 +132,7 @@ public class SendMessagePane extends JPanel
 		settingsPane.add(UIHelper.wrapInJPanel(contentTF, rowColor(i++)));
 
 		settingsPane.add(UIHelper.createParameterLabel("QoS", settingsIcon, parameterAlignment, rowColor(i)));
-		JPanel panel = UIHelper.createJComboBox(AppConstants.QOS_VALUES, new Dimension(70, 22));
+		JPanel panel = UIHelper.createJComboBox(AppConstants.qosValues(account.getProtocol()), new Dimension(70, 22));
 		qosCB = (JComboBox) (panel.getComponent(0));
 		settingsPane.add(UIHelper.wrapInJPanel(panel, rowColor(i++)));
 

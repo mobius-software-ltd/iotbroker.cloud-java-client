@@ -388,7 +388,7 @@ public class LogInPane extends JPanel
 			settingsPane.add(UIHelper.wrapInJPanel(retainCB, rowColor(i++)));
 
 			settingsPane.add(UIHelper.createParameterLabel("QoS:", settingsIcn, parameterAlignment, rowColor(i)));
-			JPanel panel = UIHelper.createJComboBox(AppConstants.QOS_VALUES, new Dimension(72, 24));
+			JPanel panel = UIHelper.createJComboBox(AppConstants.ALL, new Dimension(72, 24));
 			qosCB = (JComboBox<Integer>) (panel.getComponent(0));
 			settingsPane.add(UIHelper.wrapInJPanel(panel, rowColor(i++)));
 		}
@@ -463,7 +463,7 @@ public class LogInPane extends JPanel
 		certificateTF = UIHelper.createHintTextField("certificate path", tfDimension);
 		certificateTF.setEnabled(false);
 		certificateTF.setDisabledTextColor(Color.GRAY);
-		certificateButton = UIHelper.createBrowseButton(parameterAlignment, "Select certificate");
+		certificateButton = UIHelper.createBrowseButton(parameterAlignment, "Browse");
 		certificateButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -502,8 +502,8 @@ public class LogInPane extends JPanel
 		});
 
 		certificateButton.setEnabled(false);
-		securityPane.add(UIHelper.wrapInJPanel(certificateButton, rowColor(i++)));
-		securityPane.add(UIHelper.wrapInJPanel(certificateTF, rowColor(i)));
+		securityPane.add(UIHelper.createParameterLabel("Certificate:", securityIcn, parameterAlignment, rowColor(i++)));
+		securityPane.add(UIHelper.wrapInJPanel(certificateButton, rowColor(i)));
 
 		securityPane.add(UIHelper.createParameterLabel("Password:", securityIcn, parameterAlignment, rowColor(i)));
 		certificatePasswordTF = UIHelper.createHintTextField("certificate password", tfDimension);

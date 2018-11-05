@@ -234,11 +234,9 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 				{
 				case MQTT:
 					client = new MqttClient(account);
-					;
 					break;
 				case WEBSOCKETS:
 					client = new MqttClient(account);
-					;
 					break;
 				case MQTTSN:
 					client = new MqttsnClient(account);
