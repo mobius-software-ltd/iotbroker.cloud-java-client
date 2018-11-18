@@ -34,10 +34,12 @@ public class HintDialogTextField extends HintTextField
 	private static final long serialVersionUID = -7413423837551286778L;
 	private boolean textAreaIsShown = false;
 	private String text = "";
-
+	private String hint;
+	
 	public HintDialogTextField(String hint, Border border)
-	{
+	{		
 		super(hint, border);
+		this.hint=hint;
 	}
 
 	@Override public void focusGained(FocusEvent e)
@@ -53,7 +55,7 @@ public class HintDialogTextField extends HintTextField
 		// shown"
 		super.setText("");
 
-		JOptionPane.showMessageDialog(null, new JScrollPane(textArea), "Will", JOptionPane.PLAIN_MESSAGE);
+		JOptionPane.showMessageDialog(null, new JScrollPane(textArea), hint, JOptionPane.PLAIN_MESSAGE);
 
 		text = textArea.getText().trim();
 

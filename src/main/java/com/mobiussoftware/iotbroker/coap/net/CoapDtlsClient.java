@@ -1,7 +1,5 @@
 package com.mobiussoftware.iotbroker.coap.net;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
@@ -20,6 +18,7 @@ import com.mobius.software.iot.dal.crypto.DtlsStateHandler;
 import com.mobius.software.iot.dal.crypto.HandshakeHandler;
 import com.mobius.software.iot.dal.crypto.MessageType;
 import com.mobiussoftware.iotbroker.network.ConnectionListener;
+import com.mobiussoftware.iotbroker.network.TLSHelper;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -160,13 +159,7 @@ public class CoapDtlsClient extends UDPClient implements DtlsStateHandler
 
 	private KeyStore readKeystore() throws Exception
 	{
-		File file = new File(certPath);
-		if (!file.exists())
-			return null;
-
-		FileInputStream fis = new FileInputStream(file);
-		KeyStore ks = KeyStore.getInstance("JKS");
-		ks.load(fis, certPwd.toCharArray());
+		KeyStore ks = TLSHelper.getKeyStore(certPath, certPwd);
 		return ks;
 	}
 }

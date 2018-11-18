@@ -80,7 +80,7 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 		if (!account.isSecure())
 			this.client = new UDPClient(address, WORKER_THREADS);
 		else
-			this.client = new SnDtlsClient(address, WORKER_THREADS, account.getCertificatePath(), account.getCertificatePassword());
+			this.client = new SnDtlsClient(address, WORKER_THREADS, account.getCertificate(), account.getCertificatePassword());
 	}
 
 	@Override

@@ -72,7 +72,7 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 		if (!account.isSecure())
 			this.client = new UDPClient(address, WORKER_THREADS);
 		else
-			this.client = new CoapDtlsClient(address, WORKER_THREADS, account.getCertificatePath(), account.getCertificatePassword());
+			this.client = new CoapDtlsClient(address, WORKER_THREADS, account.getCertificate(), account.getCertificatePassword());
 	}
 
 	@Override

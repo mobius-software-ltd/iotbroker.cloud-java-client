@@ -37,7 +37,7 @@ public class UIConstants
 	static final int MAIN_FRAME_WIDTH = 445;
 	static final int MAIN_FRAME_HEIGHT = 533;
 	static final int LOGIN_FRAME_WIDTH = 418;
-	static final int LOGIN_FRAME_HEIGHT = 680;
+	static final int LOGIN_FRAME_HEIGHT = 720;
 	static final int LOGO_FRAME_WIDTH = 299;
 	static final int LOGO_FRAME_HEIGHT = 287;
 	static final Color APP_BG_COLOR = Color.white;

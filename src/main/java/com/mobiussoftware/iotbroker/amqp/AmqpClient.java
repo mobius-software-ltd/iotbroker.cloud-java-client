@@ -116,7 +116,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 		if (!account.isSecure())
 			client = new TCPClient(address, WORKER_THREADS);
 		else
-			client = new AmqpTlsClient(address, WORKER_THREADS, account.getCertificatePath(), account.getCertificatePassword());
+			client = new AmqpTlsClient(address, WORKER_THREADS, account.getCertificate(), account.getCertificatePassword());
 	}
 
 	public Long getKeepalivePeriod()

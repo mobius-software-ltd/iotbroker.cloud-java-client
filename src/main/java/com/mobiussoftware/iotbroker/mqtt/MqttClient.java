@@ -75,13 +75,13 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 			if (!account.isSecure())
 				this.client = new WSClient(address, WORKER_THREADS);
 			else
-				this.client = new WSSClient(address, WORKER_THREADS, account.getCertificatePath(), account.getCertificatePassword());
+				this.client = new WSSClient(address, WORKER_THREADS, account.getCertificate(), account.getCertificatePassword());
 			break;
 		default:
 			if (!account.isSecure())
 				this.client = new TCPClient(address, WORKER_THREADS);
 			else
-				this.client = new MqttTlsClient(address, WORKER_THREADS, account.getCertificatePath(), account.getCertificatePassword());
+				this.client = new MqttTlsClient(address, WORKER_THREADS, account.getCertificate(), account.getCertificatePassword());
 			break;
 		}
 	}

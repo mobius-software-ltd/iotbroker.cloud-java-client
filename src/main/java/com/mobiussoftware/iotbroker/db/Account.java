@@ -43,14 +43,14 @@ import com.mobiussoftware.iotbroker.ui.Protocol;
 	@DatabaseField(columnName = "is_default", canBeNull = true) private boolean isDefault;
 
 	@DatabaseField(columnName = "is_secure", canBeNull = true) private boolean isSecure;
-	@DatabaseField(columnName = "certificate_path", canBeNull = true) private String certificatePath;
+	@DatabaseField(columnName = "certificate", canBeNull = true) private String certificate;
 	@DatabaseField(columnName = "certificate_password", canBeNull = true) private String certificatePassword;
 	
 	public Account()
 	{
 	}
 
-	public Account(Protocol protocol, String username, String password, String clientId, String serverHost, int serverPort, boolean cleanSession, int keepAlive, String will, String willTopic, boolean retain, int qos, boolean isDefault, boolean isSecure, String certificatePath, String certificatePassword)
+	public Account(Protocol protocol, String username, String password, String clientId, String serverHost, int serverPort, boolean cleanSession, int keepAlive, String will, String willTopic, boolean retain, int qos, boolean isDefault, boolean isSecure, String certificate, String certificatePassword)
 	{
 		this.protocol = protocol;
 		this.username = username;
@@ -66,7 +66,7 @@ import com.mobiussoftware.iotbroker.ui.Protocol;
 		this.qos = qos;
 		this.isDefault = isDefault;
 		this.isSecure = isSecure;
-		this.certificatePath = certificatePath;
+		this.certificate = certificate;
 		this.certificatePassword = certificatePassword;
 	}
 
@@ -220,14 +220,14 @@ import com.mobiussoftware.iotbroker.ui.Protocol;
 		this.isSecure = isSecure;
 	}
 
-	public String getCertificatePath()
+	public String getCertificate()
 	{
-		return certificatePath;
+		return certificate;
 	}
 
-	public void setCertificatePath(String certificatePath)
+	public void setCertificate(String certificate)
 	{
-		this.certificatePath = certificatePath;
+		this.certificate = certificate;
 	}
 
 	public String getCertificatePassword()

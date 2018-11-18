@@ -7,7 +7,6 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.File;
 import java.util.Random;
 
 import javax.swing.*;
@@ -222,12 +221,6 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 		@Override
 		public Void doInBackground()
 		{
-			if (account.isSecure() && !account.getCertificatePath().isEmpty() && !new File(account.getCertificatePath()).exists())
-			{
-				logger.warn("certificate file not found: " + account.getCertificatePath());
-				return null;
-			}
-
 			try
 			{
 				switch (account.getProtocol())

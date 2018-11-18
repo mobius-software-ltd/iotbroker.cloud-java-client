@@ -262,7 +262,7 @@ public class UIHelper
 		return builder.toString();
 	}
 
-	private static void createRedBorder(final JTextField tf)
+	public static void createRedBorder(final JTextField tf)
 	{
 		tf.setBorder(BorderFactory.createLineBorder(Color.red));
 		tf.requestFocusInWindow();

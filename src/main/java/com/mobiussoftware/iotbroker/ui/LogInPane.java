@@ -3,10 +3,8 @@ package com.mobiussoftware.iotbroker.ui;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
 
 import org.apache.log4j.Logger;
 
@@ -30,9 +28,12 @@ import org.apache.log4j.Logger;
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
 
+
+
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
+import com.mobiussoftware.iotbroker.network.TLSHelper;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 
@@ -60,9 +61,8 @@ public class LogInPane extends JPanel
 	private HintTextField keepAliveTF;
 	private HintDialogTextField willTF;
 	private HintTextField willTopicTF;
-	private JButton certificateButton;
+	private HintDialogTextField certificateTF;
 	private HintTextField certificatePasswordTF;
-	private HintTextField certificateTF;
 	private JCheckBox retainCB;
 	private JCheckBox securityCB;
 	private JComboBox<Integer> qosCB;
@@ -130,6 +130,20 @@ public class LogInPane extends JPanel
 	{
 		logger.info("LogIn button clicked!");
 
+		if(securityCB.isSelected() && certificateTF.getText()!=null && certificateTF.getText().length()>0)
+		{
+			try
+			{
+				TLSHelper.getKeyStore(certificateTF.getText(), certificatePasswordTF.getText());
+			}
+			catch(Exception ex)
+			{
+				ex.printStackTrace();
+				UIHelper.createRedBorder(certificateTF);
+				return;
+			}
+		}
+		
 		if (!UIHelper.validateTF(usernameTF, passwordTF, clientIdTF, hostNameTF) || !UIHelper.validateNumTF(portTF) || !UIHelper.validateKeepaliveTF(keepAliveTF))
 			return;
 
@@ -453,57 +467,17 @@ public class LogInPane extends JPanel
 			{
 				AbstractButton abstractButton = (AbstractButton) e.getSource();
 				boolean selected = abstractButton.getModel().isSelected();
-				certificateButton.setEnabled(selected);
 				certificateTF.setEnabled(selected);
 				certificatePasswordTF.setEnabled(selected);
 			}
 		});
 		securityPane.add(UIHelper.wrapInJPanel(securityCB, rowColor(i++)));
 
-		certificateTF = UIHelper.createHintTextField("certificate path", tfDimension);
-		certificateTF.setEnabled(false);
-		certificateTF.setDisabledTextColor(Color.GRAY);
-		certificateButton = UIHelper.createBrowseButton(parameterAlignment, "Browse");
-		certificateButton.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				JFileChooser fileChooser = new JFileChooser();
-				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				fileChooser.setFileFilter(new FileFilter()
-				{
+		certificateTF = UIHelper.createTextArea("certificate",tfDimension);
 
-					public String getDescription()
-					{
-						return "Supported (*.jks, *.pfx)";
-					}
-
-					public boolean accept(File f)
-					{
-						if (f.isDirectory())
-						{
-							return true;
-						}
-						else
-						{
-							String filename = f.getName().toLowerCase();
-							return filename.endsWith(".jks") || filename.endsWith(".pfx");
-						}
-					}
-				});
-				int rVal = fileChooser.showOpenDialog(null);
-				if (rVal == JFileChooser.APPROVE_OPTION)
-				{
-					String certPath = fileChooser.getSelectedFile().getAbsolutePath();
-					certificateTF.focusGained(null);
-					certificateTF.setText(certPath);
-				}
-			}
-		});
-
-		certificateButton.setEnabled(false);
-		securityPane.add(UIHelper.createParameterLabel("Certificate:", securityIcn, parameterAlignment, rowColor(i++)));
-		securityPane.add(UIHelper.wrapInJPanel(certificateButton, rowColor(i)));
+		//certificateButton.setEnabled(false);
+		securityPane.add(UIHelper.createParameterLabel("Certificate:", securityIcn, parameterAlignment, rowColor(i)));
+		securityPane.add(UIHelper.wrapInJPanel(certificateTF, rowColor(i++)));
 
 		securityPane.add(UIHelper.createParameterLabel("Password:", securityIcn, parameterAlignment, rowColor(i)));
 		certificatePasswordTF = UIHelper.createHintTextField("certificate password", tfDimension);
