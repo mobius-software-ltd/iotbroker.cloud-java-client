@@ -55,7 +55,8 @@ public class WSSClient extends WSClient
 	protected URI getUri()
 	{
 		String type = "wss";
-		String url = type + "://" + this.address.getHostName() + ":" + String.valueOf(this.address.getPort()) + "/" + type;
+		String prefix = "ws";
+		String url = type + "://" + this.address.getHostName() + ":" + String.valueOf(this.address.getPort()) + "/" + prefix;
 		URI uri;
 		try
 		{
