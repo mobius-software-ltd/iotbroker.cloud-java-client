@@ -6,7 +6,7 @@ IoTBroker.cloud Java Client is an application that allows you to connect to the 
 AMQP or COAP protocols. IoTBroker.cloud Java Client gives the opportunity to exchange messages using protocols mentioned above. Your data can be also encrypted with TLS or DTLS secure protocols.   
 
 Below you can find a brief description of each protocol that can help you make your choice. 
-If you need to get more information, you can find it in our [blog](https://www.iotbroker.cloud/blog/MQTT).
+If you need to get more information, you can find it in our [blog](https://www.iotbroker.cloud/clientApps/Java/MQTT).
  
 MQTT is a lightweight publish-subscribe based messaging protocol built for use over TCP/IP.  
 MQTT was designed to provide devices with limited resources an easy way to communicate effectively. 
