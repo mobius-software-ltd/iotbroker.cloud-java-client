@@ -8,7 +8,7 @@
 	<version>1.0-SNAPSHOT</version>
 
 	<properties>
-		<mqtt.parser.version>1.0.3</mqtt.parser.version>
+		<mqtt.parser.version>1.0.5</mqtt.parser.version>
 		<mqtt.sn.parser.version>1.0.4</mqtt.sn.parser.version>
 		<coap.parser.version>1.0.0</coap.parser.version>
 		<amqp.parser.version>1.0.2</amqp.parser.version>
