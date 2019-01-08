@@ -9,10 +9,10 @@
 
 	<properties>
 		<mqtt.parser.version>1.0.5</mqtt.parser.version>
-		<mqtt.sn.parser.version>1.0.4</mqtt.sn.parser.version>
+		<mqtt.sn.parser.version>1.0.5</mqtt.sn.parser.version>
 		<coap.parser.version>1.0.0</coap.parser.version>
-		<amqp.parser.version>1.0.2</amqp.parser.version>
-		<dtls.async.client.version>1.0.10</dtls.async.client.version>
+		<amqp.parser.version>1.0.3</amqp.parser.version>
+		<dtls.async.client.version>1.0.14</dtls.async.client.version>
 		<io.netty.version>4.1.30.Final</io.netty.version>
 		<java.compiler.version>1.7</java.compiler.version>
 	</properties>
