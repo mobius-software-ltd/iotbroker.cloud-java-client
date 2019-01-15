@@ -158,7 +158,7 @@ public class TCPClient implements NetworkChannel<AMQPHeader>
 	{
 		if (isConnected())
 		{
-			logger.info("message " + message + " is being sent");
+			logger.info("outgoing: " + message);
 			channel.writeAndFlush(message);
 		}
 	}

@@ -36,21 +36,7 @@ import com.mobius.software.amqp.parser.avps.SectionCode;
 import com.mobius.software.amqp.parser.avps.SendCode;
 import com.mobius.software.amqp.parser.avps.TerminusDurability;
 import com.mobius.software.amqp.parser.header.api.AMQPHeader;
-import com.mobius.software.amqp.parser.header.impl.AMQPAttach;
-import com.mobius.software.amqp.parser.header.impl.AMQPBegin;
-import com.mobius.software.amqp.parser.header.impl.AMQPClose;
-import com.mobius.software.amqp.parser.header.impl.AMQPDetach;
-import com.mobius.software.amqp.parser.header.impl.AMQPDisposition;
-import com.mobius.software.amqp.parser.header.impl.AMQPEnd;
-import com.mobius.software.amqp.parser.header.impl.AMQPFlow;
-import com.mobius.software.amqp.parser.header.impl.AMQPOpen;
-import com.mobius.software.amqp.parser.header.impl.AMQPProtoHeader;
-import com.mobius.software.amqp.parser.header.impl.AMQPTransfer;
-import com.mobius.software.amqp.parser.header.impl.SASLChallenge;
-import com.mobius.software.amqp.parser.header.impl.SASLInit;
-import com.mobius.software.amqp.parser.header.impl.SASLMechanisms;
-import com.mobius.software.amqp.parser.header.impl.SASLOutcome;
-import com.mobius.software.amqp.parser.header.impl.SASLResponse;
+import com.mobius.software.amqp.parser.header.impl.*;
 import com.mobius.software.amqp.parser.sections.AMQPData;
 import com.mobius.software.amqp.parser.sections.AMQPSection;
 import com.mobius.software.amqp.parser.sections.MessageHeader;
@@ -527,7 +513,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 			{
 				usedIncomingMappings.put(name, handle);
 				usedIncomingHandles.put(handle, name);
-
+				
 				byte qos = (byte) QoS.AT_LEAST_ONCE.getValue();
 				try
 				{
@@ -576,11 +562,10 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 			client.send(disposition);
 		}
 
-		String topicName = null;
-		if (handle == null || !usedOutgoingHandles.containsKey(handle))
+		if (handle == null || !usedIncomingHandles.containsKey(handle))
 			return;
 
-		topicName = usedOutgoingHandles.get(handle);
+		String topicName = usedIncomingHandles.get(handle);
 		Message message = new Message(account, topicName, new String(data.getData()), true, (byte) qos.getValue(), false, false);
 		try
 		{
