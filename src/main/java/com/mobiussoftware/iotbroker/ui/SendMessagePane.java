@@ -87,7 +87,8 @@ public class SendMessagePane extends JPanel
 
 		sendMsgBtnListener = new MouseAdapter()
 		{
-			@Override public void mouseClicked(MouseEvent arg0)
+			@Override
+			public void mouseClicked(MouseEvent arg0)
 			{
 				arg0.getComponent().removeMouseListener(this);
 				sendMessageAction();
@@ -107,7 +108,9 @@ public class SendMessagePane extends JPanel
 		return rowNumber % 2 == 0 ? UIConstants.ROW_EVEN_COLOR : UIConstants.ROW_ODD_COLOR;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" }) private void addSettingsPaneElements()
+	@SuppressWarnings(
+	{ "unchecked", "rawtypes" })
+	private void addSettingsPaneElements()
 	{
 		UIManager.put("ComboBox.background", new ColorUIResource(Color.white));
 		UIManager.put("ComboBox.selectionBackground", UIConstants.SELECTION_COLOR);
@@ -150,11 +153,17 @@ public class SendMessagePane extends JPanel
 	{
 		if (UIHelper.validateTF(topicTF) && UIHelper.validateDialogTF(contentTF))
 		{
-			addProgressBar();
-
-			SendTask task = new SendTask(contentTF.getText(), topicTF.getText(), qosCB.getSelectedIndex(), retainCB.isSelected(), duplicateCB.isSelected());
-			task.addPropertyChangeListener(propertyChangeListener());
-			task.execute();
+			boolean isUdpMessageOverflow = contentTF.getText().length() >= 1400 && account.getProtocol().isUdp();
+			if (!isUdpMessageOverflow)
+			{
+				addProgressBar();
+				SendTask task = new SendTask(contentTF.getText(), topicTF.getText(), qosCB.getSelectedIndex(), retainCB.isSelected(), duplicateCB.isSelected());
+				task.addPropertyChangeListener(propertyChangeListener());
+				task.execute();
+				JOptionPane.showMessageDialog(Main.mainPane.getParent(), "Message sent");
+			}
+			else
+				JOptionPane.showMessageDialog(Main.mainPane.getParent(), "UDP message content must be less then 1400 symbols");
 		}
 		else
 		{
@@ -166,7 +175,8 @@ public class SendMessagePane extends JPanel
 	{
 		return new PropertyChangeListener()
 		{
-			@Override public void propertyChange(PropertyChangeEvent evt)
+			@Override
+			public void propertyChange(PropertyChangeEvent evt)
 			{
 				if (evt.getPropertyName() == "progress")
 				{
@@ -198,7 +208,8 @@ public class SendMessagePane extends JPanel
 		SendMessagePane.this.repaint();
 	}
 
-	@Override protected void paintComponent(Graphics g)
+	@Override
+	protected void paintComponent(Graphics g)
 	{
 		Image bgImage = UIConstants.BG_IMAGE;
 		g.drawImage(bgImage, 0, 0, null);
@@ -218,8 +229,7 @@ public class SendMessagePane extends JPanel
 		g2d.fillRect(0, 0, getWidth(), getHeight());
 	}
 
-	class SendTask
-			extends NetworkTask<Void, Void>
+	class SendTask extends NetworkTask<Void, Void>
 	{
 
 		private Message messageObj;
@@ -229,7 +239,8 @@ public class SendMessagePane extends JPanel
 			this.messageObj = new Message(account, topic, content, false, (byte) qos, retain, duplicate);
 		}
 
-		@Override public Void doInBackground()
+		@Override
+		public Void doInBackground()
 		{
 			try
 			{
@@ -257,7 +268,8 @@ public class SendMessagePane extends JPanel
 			Main.getCurrentClient().publish(topic, content, retain, dup);
 		}
 
-		@Override protected void done()
+		@Override
+		protected void done()
 		{
 
 			listener.messageSent(messageObj);

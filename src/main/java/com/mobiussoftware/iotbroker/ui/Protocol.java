@@ -22,7 +22,7 @@ package com.mobiussoftware.iotbroker.ui;
 
 public enum Protocol
 {
-	MQTT("MQTT"), MQTTSN("MQTT-SN"), CoAP("CoAP"), AMQP("AMQP"),WEBSOCKETS("WS");
+	MQTT("MQTT"), MQTTSN("MQTT-SN"), CoAP("CoAP"), AMQP("AMQP"), WEBSOCKETS("WS");
 
 	private final String value;
 
@@ -31,8 +31,14 @@ public enum Protocol
 		this.value = value;
 	}
 
-	@Override public String toString()
+	@Override
+	public String toString()
 	{
 		return value;
+	}
+
+	public boolean isUdp()
+	{
+		return this == MQTTSN || this == CoAP;
 	}
 }

@@ -1,5 +1,10 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
+
+import javax.swing.*;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -26,10 +31,6 @@ import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 
 public class MessagesListPane extends JPanel implements ClientListener
 {
@@ -64,14 +65,13 @@ public class MessagesListPane extends JPanel implements ClientListener
 		messagesPane = new JPanel();
 		messagesPane.setBackground(Color.white);
 		messagesPane.setMinimumSize(new Dimension(410, 280));
-		messagesPane.setPreferredSize(new Dimension(410, msgCount * 200));
-		// messagesPane.setBorder(BorderFactory.createLineBorder(Color.lightGray));
 
 		JScrollPane scrollPane = new JScrollPane(messagesPane);
-		scrollPane.setPreferredSize(new Dimension(450, 1000));
-		scrollPane.setMinimumSize(new Dimension(450, 280));
+		scrollPane.setPreferredSize(new Dimension(450, 0));
+		scrollPane.setMinimumSize(new Dimension(450, 0));
 		scrollPane.setMaximumSize(new Dimension(450, 1000));
-
+		scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+		
 		JPanel wrapper = new JPanel(new BorderLayout());
 		wrapper.add(scrollPane, BorderLayout.CENTER);
 

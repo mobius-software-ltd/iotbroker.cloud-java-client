@@ -39,6 +39,7 @@ import javax.swing.plaf.basic.BasicProgressBarUI;
 
 import com.mobiussoftware.iotbroker.ui.elements.CustomComboBoxUI;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
+import com.mobiussoftware.iotbroker.ui.elements.HintPasswordField;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 
 public class UIHelper
@@ -109,6 +110,7 @@ public class UIHelper
 	static JPanel wrapInScrollAndBorderLayout(JPanel panel, String borderLayoutAlignment)
 	{
 		JScrollPane scrollPane = new JScrollPane(panel);
+		scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
 		JPanel wrapper = new JPanel(new BorderLayout());
 		wrapper.add(scrollPane, borderLayoutAlignment);
@@ -166,6 +168,17 @@ public class UIHelper
 		tf.setMinimumSize(dimension);
 		tf.setPreferredSize(tf.getMinimumSize());
 
+		return tf;
+	}
+
+	static HintPasswordField createHintPasswordTextField(String hint, Dimension dimension)
+	{
+		HintPasswordField tf = new HintPasswordField(hint, BorderFactory.createLineBorder(Color.lightGray));
+		tf.setHorizontalAlignment(JTextField.RIGHT);
+		tf.setFont(UIConstants.REGULAR_FONT);
+		tf.setMinimumSize(dimension);
+		tf.setPreferredSize(tf.getMinimumSize());
+		
 		return tf;
 	}
 
@@ -287,9 +300,9 @@ public class UIHelper
 		});
 	}
 
-	static boolean validateTF(HintTextField... textFields)
+	static boolean validateTF(JTextField... textFields)
 	{
-		for (final HintTextField tf : textFields)
+		for (final JTextField tf : textFields)
 		{
 			if (!tf.isValid())
 				continue;
@@ -340,7 +353,7 @@ public class UIHelper
 				else
 				{
 					int keepalive = Integer.parseInt(content);
-					if (keepalive < 0 || keepalive > 65535) 
+					if (keepalive < 0 || keepalive > 65535)
 					{
 						createRedBorder(tf);
 						return false;
@@ -353,7 +366,7 @@ public class UIHelper
 			createRedBorder(tf);
 			return false;
 		}
-		
+
 		return true;
 	}
 

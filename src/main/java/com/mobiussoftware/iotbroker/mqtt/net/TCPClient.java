@@ -1,6 +1,7 @@
 package com.mobiussoftware.iotbroker.mqtt.net;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -123,6 +124,12 @@ public class TCPClient implements NetworkChannel<MQMessage>
 					}
 
 				});
+				
+				if (!future.await(5L, TimeUnit.SECONDS))
+				{
+					future.cancel(true);
+					listener.connectFailed();
+				}
 			}
 			catch (Exception e)
 			{

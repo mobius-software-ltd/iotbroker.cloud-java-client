@@ -115,4 +115,6 @@ public class UIConstants
 	{
 		return new ImageIcon(initImage(path));
 	}
+	
+	public static final String MAIN_TITLE = "iotbroker.cloud ";
 }

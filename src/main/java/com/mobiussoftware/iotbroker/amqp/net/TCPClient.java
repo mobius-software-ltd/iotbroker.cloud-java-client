@@ -1,6 +1,7 @@
 package com.mobiussoftware.iotbroker.amqp.net;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -102,7 +103,7 @@ public class TCPClient implements NetworkChannel<AMQPHeader>
 					{
 						try
 						{
-							channel = future.channel();
+							channel = channelFuture.channel();
 						}
 						catch (Exception e)
 						{
@@ -119,8 +120,13 @@ public class TCPClient implements NetworkChannel<AMQPHeader>
 							listener.connectFailed();
 						}
 					}
-
 				});
+				
+				if (!future.await(5L, TimeUnit.SECONDS))
+				{
+					future.cancel(true);
+					listener.connectFailed();
+				}
 			}
 			catch (Exception e)
 			{

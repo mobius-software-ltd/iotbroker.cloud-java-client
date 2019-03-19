@@ -28,13 +28,12 @@ import org.apache.log4j.Logger;
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
 
-
-
 import com.mobiussoftware.iotbroker.dal.api.DBInterface;
 import com.mobiussoftware.iotbroker.dal.impl.DBHelper;
 import com.mobiussoftware.iotbroker.db.Account;
 import com.mobiussoftware.iotbroker.network.TLSHelper;
 import com.mobiussoftware.iotbroker.ui.elements.HintDialogTextField;
+import com.mobiussoftware.iotbroker.ui.elements.HintPasswordField;
 import com.mobiussoftware.iotbroker.ui.elements.HintTextField;
 
 public class LogInPane extends JPanel
@@ -53,7 +52,7 @@ public class LogInPane extends JPanel
 	private JPanel securityPaneWrapper;
 	private JComboBox<String> protocolCB;
 	private HintTextField usernameTF;
-	private HintTextField passwordTF;
+	private HintPasswordField passwordTF;
 	private HintTextField clientIdTF;
 	private HintTextField hostNameTF;
 	private HintTextField portTF;
@@ -62,7 +61,7 @@ public class LogInPane extends JPanel
 	private HintDialogTextField willTF;
 	private HintTextField willTopicTF;
 	private HintDialogTextField certificateTF;
-	private HintTextField certificatePasswordTF;
+	private HintPasswordField certificatePasswordTF;
 	private JCheckBox retainCB;
 	private JCheckBox securityCB;
 	private JComboBox<Integer> qosCB;
@@ -130,24 +129,30 @@ public class LogInPane extends JPanel
 	{
 		logger.info("LogIn button clicked!");
 
-		if(securityCB.isSelected() && certificateTF.getText()!=null && certificateTF.getText().length()>0)
+		if (securityCB.isSelected() && certificateTF.getText() != null && certificateTF.getText().length() > 0)
 		{
 			try
 			{
 				TLSHelper.getKeyStore(certificateTF.getText(), certificatePasswordTF.getText());
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				ex.printStackTrace();
 				UIHelper.createRedBorder(certificateTF);
 				return;
 			}
 		}
-		
+
 		if (!UIHelper.validateTF(usernameTF, passwordTF, clientIdTF, hostNameTF) || !UIHelper.validateNumTF(portTF) || !UIHelper.validateKeepaliveTF(keepAliveTF))
 			return;
 
 		Account account = getAccountObject();
+		if (account.getProtocol().isUdp() && willTF.getText().length() >= 1400)
+		{
+			JOptionPane.showMessageDialog(this.getParent(), "UDP message content must be less then 1400 symbols");
+			return;
+		}
+
 		try
 		{
 			DBInterface dbInterface = DBHelper.getInstance();
@@ -310,7 +315,7 @@ public class LogInPane extends JPanel
 
 		passwordLabel = UIHelper.createParameterLabel("Password:", passwordIcn, parameterLabelAlignment, rowColor(regInfoColorCount));
 		regInfoPane.add(passwordLabel);
-		passwordTF = UIHelper.createHintTextField("password", tfDimension);
+		passwordTF = UIHelper.createHintPasswordTextField("password", tfDimension);
 		regInfoPane.add(UIHelper.wrapInJPanel(passwordTF, rowColor(regInfoColorCount++)));
 	}
 
@@ -473,14 +478,14 @@ public class LogInPane extends JPanel
 		});
 		securityPane.add(UIHelper.wrapInJPanel(securityCB, rowColor(i++)));
 
-		certificateTF = UIHelper.createTextArea("certificate",tfDimension);
+		certificateTF = UIHelper.createTextArea("certificate", tfDimension);
 
 		//certificateButton.setEnabled(false);
 		securityPane.add(UIHelper.createParameterLabel("Certificate:", securityIcn, parameterAlignment, rowColor(i)));
 		securityPane.add(UIHelper.wrapInJPanel(certificateTF, rowColor(i++)));
 
 		securityPane.add(UIHelper.createParameterLabel("Password:", securityIcn, parameterAlignment, rowColor(i)));
-		certificatePasswordTF = UIHelper.createHintTextField("certificate password", tfDimension);
+		certificatePasswordTF = UIHelper.createHintPasswordTextField("certificate password", tfDimension);
 		certificatePasswordTF.setEnabled(false);
 		securityPane.add(UIHelper.wrapInJPanel(certificatePasswordTF, rowColor(i++)));
 	}

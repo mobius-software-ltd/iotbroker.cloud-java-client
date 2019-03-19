@@ -1,9 +1,13 @@
 package com.mobiussoftware.iotbroker.ui;
 
 import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 import javax.swing.JFrame;
 import javax.swing.Timer;
@@ -73,7 +77,8 @@ public class Main
 						int delay = 200;
 						Timer timer = new Timer(delay, new ActionListener()
 						{
-							@Override public void actionPerformed(ActionEvent e)
+							@Override
+							public void actionPerformed(ActionEvent e)
 							{
 								Main.createAndShowLoadingPane(defAccount);
 							}
@@ -105,17 +110,30 @@ public class Main
 
 		JFrame frame = new JFrame("Log In");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-		frame.getContentPane().add(new LogInPane());
-
 		frame.pack();
+		
+		frame.getContentPane().add(new LogInPane());
+		
 		frame.setVisible(true);
 		frame.setSize(new Dimension(UIConstants.LOGIN_FRAME_WIDTH, UIConstants.LOGIN_FRAME_HEIGHT));
 
 		// frame.setLocation(SCREEN_DIMENSION.width/2-frame.getSize().width/2,
 		// SCREEN_DIMENSION.height/2-frame.getSize().height/2);
 		setLocation(frame);
+		frame.setResizable(false);
 
+		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		WindowListener exitListener = new WindowAdapter()
+		{
+			@Override
+			public void windowClosing(WindowEvent e)
+			{
+				disposeLogInPane();
+				showAccountMgmtPane();
+			}
+		};
+		frame.addWindowListener(exitListener);
+		
 		logInPane = frame;
 	}
 
@@ -127,17 +145,17 @@ public class Main
 		}
 	}
 
-	static MainPane createAndShowMainPane(Account account)
-			throws Exception
+	static MainPane createAndShowMainPane(Account account) throws Exception
 	{
 		MainPane frame = new MainPane(account);
-		frame.setTitle(account.getProtocol().toString());
+		frame.setTitle(UIConstants.MAIN_TITLE + account.getProtocol().toString());
 		frame.pack();
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.setSize(new Dimension(UIConstants.MAIN_FRAME_WIDTH, UIConstants.MAIN_FRAME_HEIGHT));
 
 		setLocation(frame);
+		frame.setResizable(false);
 
 		mainPane = frame;
 
@@ -157,16 +175,21 @@ public class Main
 
 		// UIDefaults def = UIManager.getLookAndFeelDefaults();
 
-		JFrame frame = new JFrame("Accounts");
+		JFrame frame = new JFrame(UIConstants.MAIN_TITLE);
+
+		Image logoImage = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.LOGO_FILE_PATH).getImage();
+		frame.setIconImage(logoImage);
+
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-		frame.getContentPane().add(new AccountMgmtPane(frame));
-
 		frame.pack();
+		
+		frame.getContentPane().add(new AccountMgmtPane(frame));
+		
 		frame.setVisible(true);
 		frame.setSize(new Dimension(UIConstants.ACCNT_MGMT_FRAME_WIDTH, UIConstants.ACCNT_MGMT_FRAME_HEIGHT));
 
 		setLocation(frame);
+		frame.setResizable(false);
 
 		accountMgmtPane = frame;
 	}
@@ -174,7 +197,7 @@ public class Main
 	static void hideAccountMgmtPane()
 	{
 		if (accountMgmtPane != null)
-			accountMgmtPane.setVisible(false);		
+			accountMgmtPane.setVisible(false);
 	}
 
 	static void showAccountMgmtPane()
@@ -182,28 +205,28 @@ public class Main
 		if (accountMgmtPane == null)
 			createAndShowAccountMgmtPane();
 		else if (!accountMgmtPane.isVisible())
-			accountMgmtPane.setVisible(true);				
+			accountMgmtPane.setVisible(true);
 	}
 
 	static void disposeAccountMgmtPane()
 	{
 		if (accountMgmtPane != null)
-			accountMgmtPane.dispose();		
+			accountMgmtPane.dispose();
 	}
 
 	public static void createAndShowLoadingPane(Account account)
 	{
-		JFrame frame = new JFrame(account.getProtocol().toString());
+		JFrame frame = new JFrame(UIConstants.MAIN_TITLE + account.getProtocol().toString());
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-
+		frame.pack();
+		
 		frame.getContentPane().add(new LoadingPane(account));
 
-		frame.pack();
 		frame.setVisible(true);
 		frame.setSize(new Dimension(UIConstants.LOGO_FRAME_WIDTH, UIConstants.LOGO_FRAME_HEIGHT));
-		frame.setResizable(false);
 
 		setLocation(frame);
+		frame.setResizable(false);
 
 		logoPane = frame;
 	}

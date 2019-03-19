@@ -1,5 +1,8 @@
 package com.mobiussoftware.iotbroker.ui.elements;
 
+import java.awt.Color;
+import java.awt.event.FocusEvent;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -19,10 +22,11 @@ package com.mobiussoftware.iotbroker.ui.elements;
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.border.Border;
-import java.awt.*;
-import java.awt.event.FocusEvent;
 
 @SuppressWarnings("unused") 
 public class HintDialogTextField extends HintTextField
@@ -55,7 +59,9 @@ public class HintDialogTextField extends HintTextField
 		// shown"
 		super.setText("");
 
-		JOptionPane.showMessageDialog(null, new JScrollPane(textArea), hint, JOptionPane.PLAIN_MESSAGE);
+		JScrollPane scrollPane = new JScrollPane(textArea);
+		scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+		JOptionPane.showMessageDialog(null, scrollPane, hint, JOptionPane.PLAIN_MESSAGE);
 
 		text = textArea.getText().trim();
 

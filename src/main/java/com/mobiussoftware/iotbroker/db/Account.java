@@ -70,6 +70,12 @@ import com.mobiussoftware.iotbroker.ui.Protocol;
 		this.certificatePassword = certificatePassword;
 	}
 
+	@Override
+	public String toString()
+	{
+		return "Account [id=" + id + ", protocol=" + protocol + ", username=" + username + ", password=" + password + ", clientId=" + clientId + ", serverHost=" + serverHost + ", serverPort=" + serverPort + ", cleanSession=" + cleanSession + ", keepAlive=" + keepAlive + ", will=" + will + ", willTopic=" + willTopic + ", retain=" + retain + ", qos=" + qos + ", isDefault=" + isDefault + ", isSecure=" + isSecure + ", certificate=" + certificate + ", certificatePassword=" + certificatePassword + "]";
+	}
+
 	public int getId()
 	{
 		return id;
