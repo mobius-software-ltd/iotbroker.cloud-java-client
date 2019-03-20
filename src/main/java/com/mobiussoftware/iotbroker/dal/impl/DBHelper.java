@@ -107,6 +107,12 @@ public class DBHelper
 		return accountDao.getWrappedIterable();
 	}
 
+	@Override public Account getAccountByCertificate(String certificate) throws SQLException 
+	{
+		List<Account> list = accountDao.queryForEq("certificate", certificate);
+		return CollectionUtils.isNotEmpty(list) ? list.get(0) : null;
+	}
+	
 	@Override public void storeAccount(Account account)
 			throws SQLException
 	{
@@ -132,8 +138,7 @@ public class DBHelper
 		return topicDao.queryForId(id);
 	}
 
-	@Override
-	public DBTopic getTopicByName(String name) throws SQLException
+	@Override public DBTopic getTopicByName(String name) throws SQLException
 	{
 		List<DBTopic> topics = topicDao.queryBuilder().where().eq("name", name).query();
 		return CollectionUtils.isEmpty(topics) ? null : topics.get(0);
@@ -145,8 +150,7 @@ public class DBHelper
 		topicDao.create(topic);
 	}
 
-	@Override
-	public void updateTopic(DBTopic topic) throws SQLException
+	@Override public void updateTopic(DBTopic topic) throws SQLException
 	{
 		topicDao.update(topic);
 	}

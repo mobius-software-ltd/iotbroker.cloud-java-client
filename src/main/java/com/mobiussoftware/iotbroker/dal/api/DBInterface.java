@@ -1,5 +1,8 @@
 package com.mobiussoftware.iotbroker.dal.api;
 
+import java.sql.SQLException;
+import java.util.List;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -21,11 +24,8 @@ package com.mobiussoftware.iotbroker.dal.api;
 */
 import com.j256.ormlite.dao.CloseableWrappedIterable;
 import com.mobiussoftware.iotbroker.db.Account;
-import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.db.DBTopic;
-
-import java.sql.SQLException;
-import java.util.List;
+import com.mobiussoftware.iotbroker.db.Message;
 
 public interface DBInterface
 {
@@ -67,6 +67,8 @@ public interface DBInterface
 	Account getDefaultAccount()
 			throws SQLException;
 
+	Account getAccountByCertificate(String certificate) throws SQLException;
+	
 	void markAsDefault(Account account)
 			throws SQLException;
 
