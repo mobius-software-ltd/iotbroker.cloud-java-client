@@ -67,6 +67,7 @@ public class MessagesListPane extends JPanel implements ClientListener
 		messagesPane = new JPanel();
 		messagesPane.setBackground(Color.white);
 		messagesPane.setMinimumSize(new Dimension(410, 280));
+		messagesPane.setLayout(new GridBagLayout());
 
 		JScrollPane scrollPane = new JScrollPane(messagesPane);
 		scrollPane.setPreferredSize(new Dimension(450, 0));
@@ -80,13 +81,11 @@ public class MessagesListPane extends JPanel implements ClientListener
 		this.add(wrapper);
 
 		addMessagesPaneElements();
-		addEmptySpace();
 	}
 
 	private void addMessagesPaneElements()
 	{
 		messagesPane.removeAll();
-		messagesPane.setLayout(new GridBagLayout());
 		try
 		{
 			final DBInterface dbInterface = DBHelper.getInstance();
@@ -103,6 +102,8 @@ public class MessagesListPane extends JPanel implements ClientListener
 
 			for (Message msg : messages)
 				addMessagesPaneElement(msg);
+			
+			addEmptySpace();
 		}
 		catch (Exception e)
 		{
@@ -126,7 +127,7 @@ public class MessagesListPane extends JPanel implements ClientListener
 		emptySpace.add(Box.createRigidArea(new Dimension(50, 5)));
 		messagesPane.add(emptySpace, c);
 	}
-	
+
 	public void addMessagesPaneElement(Message msg)
 	{
 		Color bgColor = messagesPane.getComponentCount() % 2 == 0 ? Color.white : UIConstants.ROW_ODD_COLOR;
@@ -199,17 +200,13 @@ public class MessagesListPane extends JPanel implements ClientListener
 	@Override
 	public void messageSent(Message messageObj)
 	{
-		//addMessagesPaneElement(messageObj);
 		addMessagesPaneElements();
-		messagesPane.revalidate();
 	}
 
 	@Override
 	public void messageReceived(Message message)
 	{
-		//addMessagesPaneElement(message);
 		addMessagesPaneElements();
-		messagesPane.revalidate();
 	}
 
 	@Override

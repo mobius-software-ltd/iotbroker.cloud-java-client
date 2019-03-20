@@ -156,11 +156,14 @@ public class LogInPane extends JPanel
 		try
 		{
 			DBInterface dbInterface = DBHelper.getInstance();
-			Account currAccount = dbInterface.getAccountByCertificate(account.getCertificate());
-			if (currAccount != null)
+			if (account.getCertificate() != null && account.getCertificate().length() > 0)
 			{
-				JOptionPane.showMessageDialog(this.getParent(), "Certificate already exists");
-				return;
+				Account currAccount = dbInterface.getAccountByCertificate(account.getCertificate());
+				if (currAccount != null)
+				{
+					JOptionPane.showMessageDialog(this.getParent(), "Certificate already exists");
+					return;
+				}
 			}
 
 			dbInterface.storeAccount(account);
