@@ -109,11 +109,13 @@ public class Main
 	{
 
 		JFrame frame = new JFrame("Log In");
+		
+		Image logoImage = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.LOGO_FILE_PATH).getImage();
+		frame.setIconImage(logoImage);
+		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.pack();
-		
 		frame.getContentPane().add(new LogInPane());
-		
 		frame.setVisible(true);
 		frame.setSize(new Dimension(UIConstants.LOGIN_FRAME_WIDTH, UIConstants.LOGIN_FRAME_HEIGHT));
 
@@ -148,6 +150,10 @@ public class Main
 	static MainPane createAndShowMainPane(Account account) throws Exception
 	{
 		MainPane frame = new MainPane(account);
+		
+		Image logoImage = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.LOGO_FILE_PATH).getImage();
+		frame.setIconImage(logoImage);
+		
 		frame.setTitle(UIConstants.MAIN_TITLE + account.getProtocol().toString());
 		frame.pack();
 		frame.setVisible(true);
@@ -217,11 +223,13 @@ public class Main
 	public static void createAndShowLoadingPane(Account account)
 	{
 		JFrame frame = new JFrame(UIConstants.MAIN_TITLE + account.getProtocol().toString());
+		
+		Image logoImage = UIConstants.initImageIcon(UIConstants.IMAGES_PATH + UIConstants.LOGO_FILE_PATH).getImage();
+		frame.setIconImage(logoImage);
+		
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frame.pack();
-		
 		frame.getContentPane().add(new LoadingPane(account));
-
 		frame.setVisible(true);
 		frame.setSize(new Dimension(UIConstants.LOGO_FRAME_WIDTH, UIConstants.LOGO_FRAME_HEIGHT));
 

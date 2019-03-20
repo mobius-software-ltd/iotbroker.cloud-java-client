@@ -2,6 +2,8 @@ package com.mobiussoftware.iotbroker.ui;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.Collections;
+import java.util.Comparator;
 
 import javax.swing.*;
 
@@ -71,32 +73,45 @@ public class MessagesListPane extends JPanel implements ClientListener
 		scrollPane.setMinimumSize(new Dimension(450, 0));
 		scrollPane.setMaximumSize(new Dimension(450, 1000));
 		scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-		
+
 		JPanel wrapper = new JPanel(new BorderLayout());
 		wrapper.add(scrollPane, BorderLayout.CENTER);
 
 		this.add(wrapper);
 
 		addMessagesPaneElements();
+		addEmptySpace();
 	}
 
 	private void addMessagesPaneElements()
 	{
+		messagesPane.removeAll();
 		messagesPane.setLayout(new GridBagLayout());
 		try
 		{
 			final DBInterface dbInterface = DBHelper.getInstance();
 
-			for (Message msg : dbInterface.getMessages(account))
+			java.util.List<Message> messages = dbInterface.getMessages(account);
+			Collections.sort(messages, new Comparator<Message>()
 			{
+				@Override
+				public int compare(Message o1, Message o2)
+				{
+					return Integer.compare(o2.getId(), o1.getId());
+				}
+			});
+
+			for (Message msg : messages)
 				addMessagesPaneElement(msg);
-			}
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
+	}
 
+	private void addEmptySpace()
+	{
 		GridBagConstraints c = new GridBagConstraints();
 		c.weighty = 1;
 		c.gridy = msgCount;
@@ -111,7 +126,7 @@ public class MessagesListPane extends JPanel implements ClientListener
 		emptySpace.add(Box.createRigidArea(new Dimension(50, 5)));
 		messagesPane.add(emptySpace, c);
 	}
-
+	
 	public void addMessagesPaneElement(Message msg)
 	{
 		Color bgColor = messagesPane.getComponentCount() % 2 == 0 ? Color.white : UIConstants.ROW_ODD_COLOR;
@@ -181,25 +196,29 @@ public class MessagesListPane extends JPanel implements ClientListener
 		messagesPane.add(Box.createRigidArea(new Dimension(5, 5)), c);
 	}
 
-	@Override public void messageSent(Message messageObj)
+	@Override
+	public void messageSent(Message messageObj)
 	{
-		addMessagesPaneElement(messageObj);
+		//addMessagesPaneElement(messageObj);
+		addMessagesPaneElements();
 		messagesPane.revalidate();
 	}
 
-	@Override public void messageReceived(Message message)
+	@Override
+	public void messageReceived(Message message)
 	{
-		addMessagesPaneElement(message);
+		//addMessagesPaneElement(message);
+		addMessagesPaneElements();
 		messagesPane.revalidate();
-
 	}
 
-	@Override public void stateChanged(ConnectionState state)
+	@Override
+	public void stateChanged(ConnectionState state)
 	{
-
 	}
 
-	@Override protected void paintComponent(Graphics g)
+	@Override
+	protected void paintComponent(Graphics g)
 	{
 		Image bgImage = UIConstants.BG_IMAGE;
 		g.drawImage(bgImage, 0, 0, null);
@@ -219,8 +238,7 @@ public class MessagesListPane extends JPanel implements ClientListener
 		g2d.fillRect(0, 0, getWidth(), getHeight());
 	}
 
-	private class TwoColorRoundedRect
-			extends JPanel
+	private class TwoColorRoundedRect extends JPanel
 	{
 
 		private static final long serialVersionUID = 5629986014016100634L;
@@ -236,7 +254,8 @@ public class MessagesListPane extends JPanel implements ClientListener
 			super.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
 		}
 
-		@Override protected void paintComponent(Graphics g)
+		@Override
+		protected void paintComponent(Graphics g)
 		{
 			int areaWidth = getWidth();
 			// System.out.println("area width is " + areaWidth);
