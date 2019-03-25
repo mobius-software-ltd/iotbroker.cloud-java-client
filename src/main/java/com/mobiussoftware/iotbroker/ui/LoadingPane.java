@@ -185,9 +185,7 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 			case CONNECTION_LOST:
 				Main.disposeMainPane();
 				Main.showAccountMgmtPane();
-
 				JOptionPane.showMessageDialog(this.getParent(), "Connection closed by the server.");
-
 				closeConnection();
 				break;
 			case CONNECTION_FAILED:

@@ -121,7 +121,7 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 
 	public void closeChannel()
 	{
-		if (client != null)
+		if (client != null && client.isConnected())
 			client.shutdown();
 	}
 
@@ -147,15 +147,13 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 	{
 		if (account.isCleanSession())
 			clearAccountTopics();
-		
-		setState(ConnectionState.CONNECTION_ESTABLISHED);
 
 		if (timers != null)
 			timers.stopAllTimers();
 
 		timers = new TimersMap(this, client, RESEND_PERIOND, account.getKeepAlive() * 1000L);
-		if (account.getKeepAlive() > 0)
-			timers.startPingTimer();
+		setState(ConnectionState.CONNECTING);
+		timers.storeConnectTimer(timers.getPingreqMessage());
 	}
 
 	public void disconnect()
@@ -187,9 +185,7 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 			break;
 		}
 
-		CoapMessage coapMessage = CoapMessage.builder().version(VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.PUT).messageID(0).payload(content)
-				.option(new CoapOption(CoapOptionType.URI_PATH.getValue(), nameBytes.length, nameBytes))
-				.option(new CoapOption((int) CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).option(new CoapOption(CoapOptionType.ACCEPT.getValue(), 2, qosValue)).build();
+		CoapMessage coapMessage = CoapMessage.builder().version(VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.PUT).messageID(0).payload(content).option(new CoapOption(CoapOptionType.URI_PATH.getValue(), nameBytes.length, nameBytes)).option(new CoapOption((int) CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).option(new CoapOption(CoapOptionType.ACCEPT.getValue(), 2, qosValue)).build();
 		timers.store(coapMessage);
 		// set message id = token id
 		int messageID = Integer.parseInt(new String(coapMessage.getToken()));
@@ -219,10 +215,8 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 				break;
 			}
 
-			CoapMessage coapMessage = CoapMessage.builder().version(VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.GET).messageID(0).payload(new byte[0])
-					.option(new CoapOption(CoapOptionType.OBSERVE.getValue(), 4, new byte[]
-					{ 0x00, 0x00, 0x00, 0x00 })).option(new CoapOption(CoapOptionType.URI_PATH.getValue(), nameBytes.length, nameBytes))
-					.option(new CoapOption(CoapOptionType.ACCEPT.getValue(), 2, qosValue)).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
+			CoapMessage coapMessage = CoapMessage.builder().version(VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.GET).messageID(0).payload(new byte[0]).option(new CoapOption(CoapOptionType.OBSERVE.getValue(), 4, new byte[]
+			{ 0x00, 0x00, 0x00, 0x00 })).option(new CoapOption(CoapOptionType.URI_PATH.getValue(), nameBytes.length, nameBytes)).option(new CoapOption(CoapOptionType.ACCEPT.getValue(), 2, qosValue)).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
 			timers.store(coapMessage);
 			// set message id = token id
 			int messageID = Integer.parseInt(new String(coapMessage.getToken()));
@@ -234,9 +228,8 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 	public void unsubscribe(String[] topics)
 	{
 		byte[] nodeIdBytes = account.getClientId().getBytes();
-		CoapMessage.Builder builder = CoapMessage.builder().version(VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.GET).messageID(0).payload(new byte[0])
-				.option(new CoapOption(CoapOptionType.OBSERVE.getValue(), 4, new byte[]
-				{ 0x00, 0x00, 0x00, 0x01 })).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes));
+		CoapMessage.Builder builder = CoapMessage.builder().version(VERSION).type(CoapType.CONFIRMABLE).code(CoapCode.GET).messageID(0).payload(new byte[0]).option(new CoapOption(CoapOptionType.OBSERVE.getValue(), 4, new byte[]
+		{ 0x00, 0x00, 0x00, 0x01 })).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes));
 		for (int i = 0; i < topics.length; i++)
 		{
 			byte[] nameBytes = topics[i].getBytes();
@@ -253,6 +246,8 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 
 	public void packetReceived(CoapMessage message)
 	{
+		System.out.println("IN:" + message);
+
 		CoapType type = message.getType();
 		if ((message.getCode() == CoapCode.POST || message.getCode() == CoapCode.PUT) && type != CoapType.ACKNOWLEDGEMENT)
 		{
@@ -264,9 +259,7 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 				byte[] textBytes = "text/plain".getBytes();
 				byte[] nodeIdBytes = account.getClientId().getBytes();
 
-				CoapMessage ack = CoapMessage.builder().version(VERSION).type(CoapType.ACKNOWLEDGEMENT).code(CoapCode.BAD_OPTION).messageID(message.getMessageID()).token(message.getToken())
-						.payload(new byte[0]).option(new CoapOption(CoapOptionType.CONTENT_FORMAT.getValue(), textBytes.length, textBytes))
-						.option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
+				CoapMessage ack = CoapMessage.builder().version(VERSION).type(CoapType.ACKNOWLEDGEMENT).code(CoapCode.BAD_OPTION).messageID(message.getMessageID()).token(message.getToken()).payload(new byte[0]).option(new CoapOption(CoapOptionType.CONTENT_FORMAT.getValue(), textBytes.length, textBytes)).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
 				client.send(ack);
 				return;
 			}
@@ -289,8 +282,7 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 		{
 		case CONFIRMABLE:
 			byte[] nodeIdBytes = account.getClientId().getBytes();
-			CoapMessage response = CoapMessage.builder().version(message.getVersion()).type(CoapType.ACKNOWLEDGEMENT).code(message.getCode()).messageID(message.getMessageID())
-					.token(message.getToken()).payload(new byte[0]).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
+			CoapMessage response = CoapMessage.builder().version(message.getVersion()).type(CoapType.ACKNOWLEDGEMENT).code(message.getCode()).messageID(message.getMessageID()).token(message.getToken()).payload(new byte[0]).option(new CoapOption(CoapOptionType.NODE_ID.getValue(), nodeIdBytes.length, nodeIdBytes)).build();
 			client.send(response);
 			break;
 		case NON_CONFIRMABLE:
@@ -320,7 +312,7 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 								topic = new DBTopic(account, name, qos);
 								dbInterface.createTopic(topic);
 							}
-							
+
 							if (topicListener != null)
 								topicListener.finishAddingTopic(topic.getName(), topic.getQos());
 						}
@@ -351,6 +343,18 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 							logger.error("An error occured while deleting topic," + ex.getMessage(), ex);
 						}
 					}
+				}
+			}
+			else if (message.getCode() == CoapCode.PUT && message.getMessageID() == 0)
+			{
+				if (connectionState == ConnectionState.CONNECTING)
+				{
+					setState(ConnectionState.CONNECTION_ESTABLISHED);
+
+					timers.cancelConnectTimer();
+
+					if (account.getKeepAlive() > 0)
+						timers.startPingTimer();
 				}
 			}
 			else if (message.getToken() != null)
