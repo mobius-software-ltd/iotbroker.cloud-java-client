@@ -102,7 +102,7 @@ public class MessagesListPane extends JPanel implements ClientListener
 
 			for (Message msg : messages)
 				addMessagesPaneElement(msg);
-			
+
 			addEmptySpace();
 		}
 		catch (Exception e)
@@ -141,12 +141,13 @@ public class MessagesListPane extends JPanel implements ClientListener
 		topic.setFont(UIConstants.REGULAR_BOLD_FONT);
 		topic.setBorder(BorderFactory.createEmptyBorder(5, 5, 2, 5));
 
-		JLabel text = new JLabel("<html>" + msg.getContents() + "</html>", SwingConstants.LEFT);
-		text.setFont(UIConstants.REGULAR_FONT);
-		text.setBorder(BorderFactory.createEmptyBorder(1, 5, 3, 5));
-
+		JTextArea area = new JTextArea(msg.getContents());
+		area.setEditable(false);
+		area.setLineWrap(true); 
+		area.setWrapStyleWord(true);
+		
 		messageData.add(topic);
-		messageData.add(text);
+		messageData.add(area);
 
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.BOTH;
