@@ -139,14 +139,15 @@ public class SendMessagePane extends JPanel
 		qosCB = (JComboBox) (panel.getComponent(0));
 		settingsPane.add(UIHelper.wrapInJPanel(panel, rowColor(i++)));
 
-		settingsPane.add(UIHelper.createParameterLabel("Retain", settingsIcon, parameterAlignment, rowColor(i)));
 		retainCB = UIHelper.createJCheckBox(rowColor(i));
-		settingsPane.add(UIHelper.wrapInJPanel(retainCB, rowColor(i++)));
-
-		settingsPane.add(UIHelper.createParameterLabel("Duplicate", settingsIcon, parameterAlignment, rowColor(i)));
 		duplicateCB = UIHelper.createJCheckBox(rowColor(i));
-		// duplicateCB.requestFocusInWindow();
-		settingsPane.add(UIHelper.wrapInJPanel(duplicateCB, rowColor(i++)));
+		if (account.getProtocol() != Protocol.CoAP)
+		{
+			settingsPane.add(UIHelper.createParameterLabel("Retain", settingsIcon, parameterAlignment, rowColor(i)));
+			settingsPane.add(UIHelper.wrapInJPanel(retainCB, rowColor(i++)));
+			settingsPane.add(UIHelper.createParameterLabel("Duplicate", settingsIcon, parameterAlignment, rowColor(i)));
+			settingsPane.add(UIHelper.wrapInJPanel(duplicateCB, rowColor(i++)));
+		}
 	}
 
 	private void sendMessageAction()
