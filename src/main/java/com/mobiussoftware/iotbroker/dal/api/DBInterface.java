@@ -44,7 +44,7 @@ public interface DBInterface
 	DBTopic getTopic(String id)
 			throws SQLException;
 
-	DBTopic getTopicByName(String name)
+	DBTopic getTopicByName(String name, Account account)
 		throws SQLException;
 	
 	void createTopic(DBTopic topic)

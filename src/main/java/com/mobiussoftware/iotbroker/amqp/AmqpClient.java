@@ -517,7 +517,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 				byte qos = (byte) QoS.AT_LEAST_ONCE.getValue();
 				try
 				{
-					DBTopic topic = dbInterface.getTopicByName(name);
+					DBTopic topic = dbInterface.getTopicByName(name, account);
 					if (topic != null)
 					{
 						topic.setQos(qos);
@@ -607,7 +607,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 		try
 		{
 			logger.info("deleting  topic " + topicName + " from DB");
-			DBTopic dbTopic = dbInterface.getTopicByName(topicName);
+			DBTopic dbTopic = dbInterface.getTopicByName(topicName, account);
 			dbInterface.deleteTopic(String.valueOf(dbTopic.getId()));
 			if (topicListener != null)
 				topicListener.finishDeletingTopic(dbTopic.getName());

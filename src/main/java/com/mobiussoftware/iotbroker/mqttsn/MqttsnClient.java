@@ -434,7 +434,7 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 			byte qos = (byte) realQos.getValue();
 			try
 			{
-				DBTopic topic = dbInterface.getTopicByName(name);
+				DBTopic topic = dbInterface.getTopicByName(name, account);
 				if (topic != null)
 				{
 					topic.setQos(qos);

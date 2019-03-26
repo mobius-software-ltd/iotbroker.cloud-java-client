@@ -138,9 +138,9 @@ public class DBHelper
 		return topicDao.queryForId(id);
 	}
 
-	@Override public DBTopic getTopicByName(String name) throws SQLException
+	@Override public DBTopic getTopicByName(String name, Account account) throws SQLException
 	{
-		List<DBTopic> topics = topicDao.queryBuilder().where().eq("name", name).query();
+		List<DBTopic> topics = topicDao.queryBuilder().where().eq("name", name).and().eq("account_id", account).query();
 		return CollectionUtils.isEmpty(topics) ? null : topics.get(0);
 	}
 	

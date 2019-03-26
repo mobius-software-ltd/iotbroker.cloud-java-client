@@ -323,7 +323,7 @@ public class MqttClient implements ConnectionListener<MQMessage>, MQDevice, Netw
 				byte qos = (byte) QoS.calculate(expectedQos, actualQos).getValue();
 				try
 				{
-					DBTopic topic = dbInterface.getTopicByName(name);
+					DBTopic topic = dbInterface.getTopicByName(name, account);
 					if (topic != null)
 					{
 						topic.setQos(qos);

@@ -301,7 +301,7 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 						byte qos = originalMessage.options().fetchAccept().byteValue();
 						try
 						{
-							DBTopic topic = dbInterface.getTopicByName(name);
+							DBTopic topic = dbInterface.getTopicByName(name, account);
 							if (topic != null)
 							{
 								topic.setQos(qos);
@@ -330,7 +330,7 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 						String name = originalMessage.options().fetchUriPath();
 						try
 						{
-							com.mobiussoftware.iotbroker.db.DBTopic topic = dbInterface.getTopicByName(name);
+							com.mobiussoftware.iotbroker.db.DBTopic topic = dbInterface.getTopicByName(name, account);
 							if (topic != null)
 							{
 								dbInterface.deleteTopic(String.valueOf(topic.getId()));
