@@ -176,11 +176,17 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 				}
 				catch (Exception e)
 				{
-					logger.error("Error occured while createAndShowMainPane from LoadingPanel");
-					e.printStackTrace();
+					logger.error("Error occured while createAndShowMainPane from LoadingPanel", e);
 					Main.showAccountMgmtPane();
 				}
 				connectingTask.cancel(true);
+				break;
+			case CONNECTION_FAILED:
+				JOptionPane.showMessageDialog(this.getParent(), "Connection failed.");
+				Main.disposeLogoPane();
+				connectingTask.cancel(true);
+				closeConnection();
+				DBHelper.getInstance().unmarkAsDefault(account);
 				break;
 			case CONNECTION_LOST:
 				Main.disposeMainPane();
@@ -188,12 +194,7 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 				JOptionPane.showMessageDialog(this.getParent(), "Connection closed by the server.");
 				closeConnection();
 				break;
-			case CONNECTION_FAILED:
-				JOptionPane.showMessageDialog(this.getParent(), "Connection failed.");
-				closeConnection();
-				DBHelper.getInstance().unmarkAsDefault(account);
-				break;
-
+				
 			case CHANNEL_CREATING:
 			case CONNECTING:
 			case NONE:

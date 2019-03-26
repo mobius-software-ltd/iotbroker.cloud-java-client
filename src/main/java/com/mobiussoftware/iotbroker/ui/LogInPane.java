@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 /**
@@ -151,6 +152,18 @@ public class LogInPane extends JPanel
 		{
 			JOptionPane.showMessageDialog(this.getParent(), "UDP message content must be less then 1400 symbols");
 			return;
+		}
+
+		if (account.isSecure())
+		{
+			if (StringUtils.isNotEmpty(account.getCertificate()))
+			{
+				if (!TLSHelper.isPasswordValid(account.getCertificate(), account.getCertificatePassword()))
+				{
+					JOptionPane.showMessageDialog(this.getParent(), "Invalid certificate/password pair");
+					return;
+				}
+			}
 		}
 
 		try

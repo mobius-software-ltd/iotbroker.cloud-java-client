@@ -121,7 +121,7 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 
 	public void closeChannel()
 	{
-		if (client != null && client.isConnected())
+		if (client != null)
 			client.shutdown();
 	}
 
