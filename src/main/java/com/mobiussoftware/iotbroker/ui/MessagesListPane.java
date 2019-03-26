@@ -145,6 +145,7 @@ public class MessagesListPane extends JPanel implements ClientListener
 		area.setEditable(false);
 		area.setLineWrap(true); 
 		area.setWrapStyleWord(true);
+		area.setAlignmentX(SwingConstants.CENTER);
 		
 		messageData.add(topic);
 		messageData.add(area);
@@ -164,7 +165,7 @@ public class MessagesListPane extends JPanel implements ClientListener
 		extraData.setPreferredSize(extraData.getMinimumSize());
 		extraData.setLayout(new BoxLayout(extraData, BoxLayout.Y_AXIS));
 
-		JLabel direction = new JLabel(msg.isIncoming() ? "in" : "out", SwingConstants.CENTER);
+		JLabel direction = new JLabel(msg.isIncoming() ? "in" : "out", SwingConstants.RIGHT);
 		direction.setFont(UIConstants.REGULAR_FONT);
 		direction.setForeground(Color.white);
 		direction.setAlignmentX(Component.CENTER_ALIGNMENT);
