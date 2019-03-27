@@ -209,7 +209,7 @@ public class MqttsnClient implements ConnectionListener<SNMessage>, SNDevice, Ne
 		{
 			SNQoS realQos = SNQoS.AT_MOST_ONCE;
 			SNTopic topic;
-			if (reverseMappedTopics.containsKey(topic1))
+			if (reverseMappedTopics.containsKey(topic1) && !(topic1.contains("+") || topic1.endsWith("#")))
 				topic = new IdentifierTopic(reverseMappedTopics.get(topic1), realQos);
 			else
 				topic = new FullTopic(topic1, realQos);
