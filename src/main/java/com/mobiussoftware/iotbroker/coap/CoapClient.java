@@ -151,7 +151,7 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 		if (timers != null)
 			timers.stopAllTimers();
 
-		timers = new TimersMap(this, client, RESEND_PERIOND, account.getKeepAlive() * 1000L);
+		timers = new TimersMap(this, client, RESEND_PERIOND, 10000L/*account.getKeepAlive() * 1000L*/);
 		setState(ConnectionState.CONNECTING);
 		timers.storeConnectTimer(timers.getPingreqMessage());
 	}
@@ -174,10 +174,10 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 		qosValue[0] = 0x00;
 		switch (topic.getQos())
 		{
-		case AT_LEAST_ONCE:
+		case AT_MOST_ONCE:
 			qosValue[1] = 0x00;
 			break;
-		case AT_MOST_ONCE:
+		case AT_LEAST_ONCE:
 			qosValue[1] = 0x01;
 			break;
 		case EXACTLY_ONCE:
@@ -246,8 +246,6 @@ public class CoapClient implements ConnectionListener<CoapMessage>, NetworkClien
 
 	public void packetReceived(CoapMessage message)
 	{
-		System.out.println("IN:" + message);
-
 		CoapType type = message.getType();
 		if ((message.getCode() == CoapCode.POST || message.getCode() == CoapCode.PUT) && type != CoapType.ACKNOWLEDGEMENT)
 		{
