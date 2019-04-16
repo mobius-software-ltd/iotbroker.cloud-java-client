@@ -42,9 +42,7 @@ public class TLSHelper
 
 			Object o;
 			while ((o = reader.readObject()) != null)
-			{
-				if (StringUtils.isEmpty(ksPassword))
-					return false;
+			{				
 				if (o instanceof PEMEncryptedKeyPair)
 				{
 					try
