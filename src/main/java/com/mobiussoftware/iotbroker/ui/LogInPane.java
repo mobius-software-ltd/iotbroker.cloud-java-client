@@ -526,7 +526,7 @@ public class LogInPane extends JPanel
 		String will = willTF.getText();
 		String willTopic = willTopicTF.getText();
 		boolean retain = retainCB.isSelected();
-		int qos = qosCB.getSelectedIndex();
+		int qos = (int) qosCB.getSelectedItem();
 
 		boolean isSecure = securityCB.isSelected();
 		String certificatePath = certificateTF.getText() != null ? certificateTF.getText() : "";

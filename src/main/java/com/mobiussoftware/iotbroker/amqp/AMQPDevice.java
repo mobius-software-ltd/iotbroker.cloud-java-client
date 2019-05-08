@@ -23,6 +23,7 @@ package com.mobiussoftware.iotbroker.amqp;
 import java.util.List;
 
 import com.mobius.software.amqp.parser.avps.OutcomeCode;
+import com.mobius.software.amqp.parser.avps.ReceiveCode;
 import com.mobius.software.amqp.parser.avps.RoleCode;
 import com.mobius.software.amqp.parser.sections.AMQPData;
 import com.mobius.software.amqp.parser.wrappers.AMQPSymbol;
@@ -39,7 +40,7 @@ public interface AMQPDevice
 
     void processFlow(Integer channel);
 
-    void processTransfer(AMQPData data, Long handle,Boolean settled, Long deliveryId);
+    void processTransfer(AMQPData data, Long handle, ReceiveCode receiveCode, Long deliveryId);
 
     void processDisposition(Long first,Long last);
 

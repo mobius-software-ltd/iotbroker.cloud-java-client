@@ -141,7 +141,7 @@ public class SendMessagePane extends JPanel
 
 		retainCB = UIHelper.createJCheckBox(rowColor(i));
 		duplicateCB = UIHelper.createJCheckBox(rowColor(i));
-		if (account.getProtocol() != Protocol.CoAP)
+		if (account.getProtocol() != Protocol.CoAP && account.getProtocol() != Protocol.AMQP)
 		{
 			settingsPane.add(UIHelper.createParameterLabel("Retain", settingsIcon, parameterAlignment, rowColor(i)));
 			settingsPane.add(UIHelper.wrapInJPanel(retainCB, rowColor(i++)));
@@ -158,7 +158,7 @@ public class SendMessagePane extends JPanel
 			if (!isUdpMessageOverflow)
 			{
 				addProgressBar();
-				SendTask task = new SendTask(contentTF.getText(), topicTF.getText(), qosCB.getSelectedIndex(), retainCB.isSelected(), duplicateCB.isSelected());
+				SendTask task = new SendTask(contentTF.getText(), topicTF.getText(), (int) qosCB.getSelectedItem(), retainCB.isSelected(), duplicateCB.isSelected());
 				task.addPropertyChangeListener(propertyChangeListener());
 				task.execute();
 				JOptionPane.showMessageDialog(Main.mainPane.getParent(), "Message sent");
@@ -259,7 +259,7 @@ public class SendMessagePane extends JPanel
 		{
 			byte[] content = contentTF.getText().getBytes();
 			String topicName = topicTF.getText();
-			QoS qos = QoS.valueOf(qosCB.getSelectedIndex());
+			QoS qos = QoS.valueOf((int) qosCB.getSelectedItem());
 			Boolean retain = retainCB.isSelected();
 			Boolean dup = duplicateCB.isSelected();
 

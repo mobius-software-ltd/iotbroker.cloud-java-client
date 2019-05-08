@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import javax.swing.*;
@@ -64,7 +65,6 @@ public class TopicListPane extends JPanel implements TopicListener
 	private HintTextField topicInput;
 	private JComboBox<Integer> dropDown;
 
-	private MouseListener addTopicBtnListener;
 	private JPanel addTopicBtn;
 
 	TopicListPane(Account account)
@@ -121,22 +121,26 @@ public class TopicListPane extends JPanel implements TopicListener
 
 		this.add(addTopic);
 
-		addTopicBtnListener = new MouseAdapter()
+		addTopicBtn = UIHelper.createButton("Add", getMouseListener());
+		this.add(addTopicBtn);
+
+		addTopicListElements(topics);
+		addAddTopicElements(addTopic);
+	}
+
+	private MouseListener getMouseListener()
+	{
+		return new MouseAdapter()
 		{
 			@Override
 			public void mouseClicked(MouseEvent arg0)
 			{
 				// System.out.println("Add button clicked!");
-				arg0.getComponent().removeMouseListener(this);
+				//arg0.getComponent().removeMouseListener(this);
 				addTopicAction();
 				dropDown.setSelectedIndex(0);
 			}
 		};
-		addTopicBtn = UIHelper.createButton("Add", addTopicBtnListener);
-		this.add(addTopicBtn);
-
-		addTopicListElements(topics);
-		addAddTopicElements(addTopic);
 	}
 
 	// adding subelements to topicList panel
@@ -282,12 +286,12 @@ public class TopicListPane extends JPanel implements TopicListener
 	private void deleteListRow(String name)
 	{
 		TopicComponent topicComponent = componentsMap.remove(name);
-		if(topicComponent != null) 
+		if (topicComponent != null)
 		{
-			for(Component component : topicComponent.getComponents())
+			for (Component component : topicComponent.getComponents())
 				topics.remove(component);
 		}
-		
+
 		topics.revalidate();
 		topics.repaint();
 	}
@@ -364,21 +368,15 @@ public class TopicListPane extends JPanel implements TopicListener
 
 	private void addTopicAction()
 	{
-
 		if (UIHelper.validateTF(topicInput))
 		{
-
-			int qos = dropDown.getSelectedIndex();
+			int qos = (int) dropDown.getSelectedItem();
 
 			addProgressBar();
 
 			AddTopicTask task = new AddTopicTask(topicInput.getText(), qos);
 			task.addPropertyChangeListener(propertyChangeListener());
 			task.execute();
-		}
-		else
-		{
-			addTopicBtn.addMouseListener(addTopicBtnListener);
 		}
 	}
 
@@ -405,17 +403,15 @@ public class TopicListPane extends JPanel implements TopicListener
 	public void finishAddingTopic(String topicName, int qosVal)
 	{
 		TopicComponent curr = componentsMap.get(topicName);
-		if(curr != null) 
+		if (curr != null)
 		{
-			JLabel qos = (JLabel)curr.getComponents()[1];
+			JLabel qos = (JLabel) curr.getComponents()[1];
 			qos.setText("QoS:" + qosVal);
 			topics.revalidate();
 			topics.repaint();
 		}
-		else 
+		else
 			addTopicListRow(topicName, qosVal);
-		
-		addTopicBtn.addMouseListener(addTopicBtnListener);
 	}
 
 	@Override
@@ -504,14 +500,36 @@ public class TopicListPane extends JPanel implements TopicListener
 		{
 			try
 			{
-				Main.getCurrentClient().subscribe(new com.mobius.software.mqtt.parser.avps.Topic[]
-				{ new com.mobius.software.mqtt.parser.avps.Topic(new Text(topicName), QoS.valueOf(qosVal)) });
+				if (!topicExists())
+				{
+					Main.getCurrentClient().subscribe(new com.mobius.software.mqtt.parser.avps.Topic[]
+					{ new com.mobius.software.mqtt.parser.avps.Topic(new Text(topicName), QoS.valueOf(qosVal)) });
+				}
+				else
+					finishAddingTopic(topicName, qosVal);
 			}
 			catch (Exception e)
 			{
 				e.printStackTrace();
 			}
 			return super.doInBackground();
+		}
+
+		private boolean topicExists()
+		{
+			try
+			{
+				final DBInterface dbInterface = DBHelper.getInstance();
+				for (DBTopic tp : dbInterface.getTopics(account))
+				{
+					if (Objects.equals(tp.getName(), topicName) && Objects.equals(tp.getQos(), (byte) qosVal))
+						return true;
+				}
+			}
+			catch (Exception e)
+			{
+			}
+			return false;
 		}
 
 		@Override

@@ -94,6 +94,8 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 
 	private Long idleTimeout;
 
+	private ConcurrentHashMap<String, Long> pendingSubscribes = new ConcurrentHashMap<>();
+	
 	public AmqpClient(Account account) throws Exception
 	{
 		this.dbInterface = DBHelper.getInstance();
@@ -199,20 +201,22 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 
 	public void subscribe(Topic[] topics)
 	{
-		for (int i = 0; i < topics.length; i++)
+		for(Topic topic : topics)
 		{
-			Long currentHandler = usedIncomingMappings.get(topics[i].getName().toString());
-			if (currentHandler == null)
-				currentHandler = nextHandle.incrementAndGet();
+			Long currHandler = usedIncomingMappings.get(topic.getName().toString());
+			if (currHandler == null)
+				currHandler = nextHandle.incrementAndGet();
 
+			pendingSubscribes.put(topic.getName().toString(), currHandler);
+			
 			AMQPAttach attach = new AMQPAttach();
 			attach.setChannel(channel);
-			attach.setName(topics[i].getName().toString());
-			attach.setHandle(currentHandler);
+			attach.setName(topic.getName().toString());
+			attach.setHandle(currHandler);
 			attach.setRole(RoleCode.RECEIVER);
 			attach.setSndSettleMode(SendCode.MIXED);
 			AMQPTarget target = new AMQPTarget();
-			target.setAddress(topics[i].getName().toString());
+			target.setAddress(topic.getName().toString());
 			target.setDurable(TerminusDurability.NONE);
 			target.setTimeout(0L);
 			target.setDynamic(false);
@@ -379,7 +383,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 				break;
 			case TRANSFER:
 				AMQPTransfer transfer = (AMQPTransfer) message;
-				processTransfer(((AMQPData) transfer.getData()), transfer.getHandle(), transfer.getSettled(), transfer.getDeliveryId());
+				processTransfer(((AMQPData) transfer.getData()), transfer.getHandle(), transfer.getRcvSettleMode(), transfer.getDeliveryId());
 				break;
 			default:
 				break;
@@ -514,27 +518,31 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 				usedIncomingMappings.put(name, handle);
 				usedIncomingHandles.put(handle, name);
 				
-				byte qos = (byte) QoS.AT_LEAST_ONCE.getValue();
-				try
+				Long currHandle = pendingSubscribes.remove(name);
+				if (currHandle != null)
 				{
-					DBTopic topic = dbInterface.getTopicByName(name, account);
-					if (topic != null)
+					byte qos = (byte) QoS.AT_LEAST_ONCE.getValue();
+					try
 					{
-						topic.setQos(qos);
-						dbInterface.updateTopic(topic);
-					}
-					else
-					{
-						topic = new DBTopic(account, name, qos);
-						dbInterface.createTopic(topic);
-					}
+						DBTopic topic = dbInterface.getTopicByName(name, account);
+						if (topic != null)
+						{
+							topic.setQos(qos);
+							dbInterface.updateTopic(topic);
+						}
+						else
+						{
+							topic = new DBTopic(account, name, qos);
+							dbInterface.createTopic(topic);
+						}
 
-					if (topicListener != null)
-						topicListener.finishAddingTopic(topic.getName(), topic.getQos());
-				}
-				catch (Exception ex)
-				{
-					logger.error("An error occured while saving topic," + ex.getMessage(), ex);
+						if (topicListener != null)
+							topicListener.finishAddingTopic(topic.getName(), topic.getQos());
+					}
+					catch (Exception ex)
+					{
+						logger.error("An error occured while saving topic," + ex.getMessage(), ex);
+					}
 				}
 			}
 		}
@@ -545,10 +553,10 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 		// not implemented for now
 	}
 
-	public void processTransfer(AMQPData data, Long handle, Boolean settled, Long deliveryId)
+	public void processTransfer(AMQPData data, Long handle, ReceiveCode receiveCode, Long deliveryId)
 	{
 		QoS qos = QoS.AT_LEAST_ONCE;
-		if (settled != null && settled)
+		if (receiveCode == ReceiveCode.FIRST)
 			qos = QoS.AT_MOST_ONCE;
 		else
 		{
@@ -603,7 +611,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 			logger.warn("received unrecognized detach handle=" + handle);
 			return;
 		}
-		
+
 		try
 		{
 			logger.info("deleting  topic " + topicName + " from DB");

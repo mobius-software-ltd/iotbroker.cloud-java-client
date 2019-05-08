@@ -73,8 +73,9 @@ public class MessagesListPane extends JPanel implements ClientListener
 		scrollPane.setPreferredSize(new Dimension(450, 0));
 		scrollPane.setMinimumSize(new Dimension(450, 0));
 		scrollPane.setMaximumSize(new Dimension(450, 1000));
-		scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-
+		scrollPane.getVerticalScrollBar().setUnitIncrement(26);
+		scrollPane.getHorizontalScrollBar().setEnabled(false);
+		
 		JPanel wrapper = new JPanel(new BorderLayout());
 		wrapper.add(scrollPane, BorderLayout.CENTER);
 
@@ -142,6 +143,7 @@ public class MessagesListPane extends JPanel implements ClientListener
 		topic.setBorder(BorderFactory.createEmptyBorder(5, 5, 2, 5));
 
 		JTextArea area = new JTextArea(msg.getContents());
+		area.setBorder(BorderFactory.createEmptyBorder(5, 5, 2, 5));
 		area.setEditable(false);
 		area.setLineWrap(true); 
 		area.setWrapStyleWord(true);
