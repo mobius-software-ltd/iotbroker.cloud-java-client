@@ -161,11 +161,11 @@ public class LoadingPane extends JPanel implements PropertyChangeListener, Clien
 				client.connect();
 				break;
 			case CHANNEL_FAILED:
+				connectingTask.cancel(true);
+				DBHelper.getInstance().unmarkAsDefault(account);
+				JOptionPane.showMessageDialog(new JFrame(), "Connection failed.", "", JOptionPane.PLAIN_MESSAGE, UIConstants.IC_TRASH);
 				Main.disposeLogoPane();
 				Main.showAccountMgmtPane();
-				connectingTask.cancel(true);
-				JOptionPane.showMessageDialog(this.getParent(), "Connection failed.");
-				DBHelper.getInstance().unmarkAsDefault(account);
 				break;
 			case CONNECTION_ESTABLISHED:
 				Main.disposeLogoPane();

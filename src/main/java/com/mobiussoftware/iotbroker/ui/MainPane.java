@@ -1,5 +1,19 @@
 package com.mobiussoftware.iotbroker.ui;
 
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Insets;
+
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.UIDefaults;
+import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.plaf.basic.BasicTabbedPaneUI;
+
 /**
 * Mobius Software LTD
 * Copyright 2015-2018, Mobius Software LTD
@@ -27,12 +41,6 @@ import com.mobiussoftware.iotbroker.db.Message;
 import com.mobiussoftware.iotbroker.network.ClientListener;
 import com.mobiussoftware.iotbroker.network.ConnectionState;
 import com.mobiussoftware.iotbroker.network.TopicListener;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.plaf.basic.BasicTabbedPaneUI;
-import java.awt.*;
 
 public class MainPane extends JFrame implements ClientListener
 {
@@ -191,7 +199,6 @@ public class MainPane extends JFrame implements ClientListener
 
 	@Override public void stateChanged(ConnectionState state)
 	{
-		System.out.println("MainPane state changed state=" + state.toString());
 		switch (state)
 		{
 		case CONNECTION_LOST:
