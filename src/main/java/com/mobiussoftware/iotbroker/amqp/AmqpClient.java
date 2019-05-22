@@ -95,7 +95,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 	private Long idleTimeout;
 
 	private ConcurrentHashMap<String, Long> pendingSubscribes = new ConcurrentHashMap<>();
-	
+
 	public AmqpClient(Account account) throws Exception
 	{
 		this.dbInterface = DBHelper.getInstance();
@@ -201,14 +201,14 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 
 	public void subscribe(Topic[] topics)
 	{
-		for(Topic topic : topics)
+		for (Topic topic : topics)
 		{
 			Long currHandler = usedIncomingMappings.get(topic.getName().toString());
 			if (currHandler == null)
 				currHandler = nextHandle.incrementAndGet();
 
 			pendingSubscribes.put(topic.getName().toString(), currHandler);
-			
+
 			AMQPAttach attach = new AMQPAttach();
 			attach.setChannel(channel);
 			attach.setName(topic.getName().toString());
@@ -412,7 +412,8 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 		if (client != null)
 		{
 			client.shutdown();
-			setState(ConnectionState.CONNECTION_LOST);
+			if (getConnectionState() != ConnectionState.NONE)
+				setState(ConnectionState.CONNECTION_LOST);
 		}
 	}
 
@@ -517,7 +518,7 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 			{
 				usedIncomingMappings.put(name, handle);
 				usedIncomingHandles.put(handle, name);
-				
+
 				Long currHandle = pendingSubscribes.remove(name);
 				if (currHandle != null)
 				{
@@ -637,7 +638,6 @@ public class AmqpClient implements ConnectionListener<AMQPHeader>, AMQPDevice, N
 	{
 		if (client.isConnected())
 			client.close();
-
 		setState(ConnectionState.NONE);
 		return;
 	}
